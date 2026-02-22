@@ -1,0 +1,263 @@
+:root {
+    --bg-deep: #0b1118;
+    --bg-sidebar: #0f172a;
+    --bg-card: #151e2d;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-orange: #f97316;
+    --accent-gold: #f59e0b;
+
+    --color-entradas: #10b981;
+    --color-saidas: #ef4444;
+    --color-saldo: #3b82f6;
+    --color-dividas: #f97316;
+    --color-previsao: #8b5cf6;
+    --color-apagar: #64748b;
+
+    --sidebar-width: 210px;
+    --transition: all 0.1s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 75%;
+    /* Reduzido de 80% para 75% */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    overflow: hidden;
+    /* Evita que a página toda role se possível */
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar - COMPACTAÇÃO EXTREMA */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    padding: 0.5rem;
+    /* Reduzido */
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* Permite rolar apenas o menu se necessário, mas o objetivo é que caiba */
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0.75rem;
+    /* Reduzido */
+}
+
+.brand-icon {
+    width: 24px;
+    height: 24px;
+    background-color: var(--accent-gold);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #000;
+    font-size: 0.7rem;
+}
+
+.brand-name h2 {
+    font-size: 0.8rem;
+}
+
+.brand-name span {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+.nav-group {
+    margin-bottom: 0.4rem;
+}
+
+/* Compactação radical no espaçamento entre grupos */
+
+.nav-label {
+    display: block;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    /* Padding mínimo */
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    transition: var(--transition);
+    margin-bottom: 1px;
+}
+
+.nav-item i,
+.nav-item svg {
+    width: 12px;
+    height: 12px;
+}
+
+.nav-item.active {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: var(--accent-orange);
+}
+
+.nav-item:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+}
+
+/* Main */
+.main-content {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.header-titles h1 {
+    font-size: 1.25rem;
+}
+
+.header-titles p {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.date-selector {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+}
+
+.btn-primary {
+    background-color: var(--accent-orange);
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+}
+
+.stat-value {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+/* Details */
+.details-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.section-card {
+    background: var(--bg-card);
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.chart-container {
+    height: 160px;
+    margin-top: 0.5rem;
+}
+
+/* Top Clients */
+.top-client-item {
+    margin-top: 0.5rem;
+}
+
+.client-info {
+    gap: 0.5rem;
+}
+
+.client-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+}
+
+.client-name span:first-child {
+    font-size: 0.75rem;
+}
+
+.client-name span:last-child {
+    font-size: 0.6rem;
+}
+
+.client-value {
+    font-size: 0.75rem;
+}
