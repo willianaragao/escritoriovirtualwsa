@@ -1,0 +1,835 @@
+/* ==============================================
+   PEDIDOS VIEW — mesmo padrão do DividasFixas
+   ============================================== */
+
+.pv-container {
+    min-height: 100vh;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    padding-bottom: 3rem;
+}
+
+/* ---- HEADER ---- */
+.pv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2.5rem 2.5rem 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pv-header-left h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.pv-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* ---- Month Button ---- */
+.pv-month-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+}
+
+.pv-month-btn:hover {
+    border-color: #f59e0b;
+}
+
+.pv-month-btn svg {
+    color: #64748b;
+}
+
+/* ---- Month Popup ---- */
+.pv-month-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    z-index: 200;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    min-width: 250px;
+    animation: pvDropDown 0.15s ease;
+}
+
+@keyframes pvDropDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pv-year-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.pv-year-btn {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pv-year-btn.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.pv-month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+}
+
+.pv-month-pill {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.pv-month-pill.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.pv-month-pill:hover:not(.active) {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+/* ---- TOTALS + SEARCH ROW ---- */
+.pv-totals-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 2.5rem 1.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1.25rem 1.75rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pv-total-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.pv-total-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.pv-total-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* ---- Search ---- */
+.pv-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pv-search-icon {
+    position: absolute;
+    left: 12px;
+    color: #64748b;
+    pointer-events: none;
+}
+
+.pv-search-input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 0.55rem 0.9rem 0.55rem 2.2rem;
+    font-size: 0.85rem;
+    outline: none;
+    width: 240px;
+    transition: border-color 0.2s, width 0.2s;
+}
+
+.pv-search-input:focus {
+    border-color: #f59e0b;
+    width: 280px;
+}
+
+.pv-search-input::placeholder {
+    color: #475569;
+}
+
+/* ---- TABLE WRAPPER ---- */
+.pv-table-wrapper {
+    margin: 0 2.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+}
+
+/* ---- TABLE ---- */
+.pv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.pv-table thead th {
+    background: #162032;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.85rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #334155;
+    white-space: nowrap;
+}
+
+.pv-th-right {
+    text-align: right !important;
+}
+
+.pv-table tbody tr {
+    border-bottom: 1px solid #1e3251;
+    transition: background 0.15s;
+}
+
+.pv-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.pv-table tbody tr:hover {
+    background: #1a2d47;
+}
+
+.pv-table tbody td {
+    padding: 1.1rem 1.5rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.pv-td-cliente {
+    color: #f1f5f9 !important;
+    font-weight: 600;
+}
+
+.pv-td-muted {
+    color: #94a3b8;
+}
+
+.pv-td-valor {
+    color: #f1f5f9;
+    font-weight: 700;
+}
+
+/* ---- STATUS BADGES ---- */
+.pv-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-width: 70px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.pv-badge-pago {
+    background: #052e16;
+    color: #4ade80;
+    border: 1px solid #16a34a;
+}
+
+.pv-badge-pendente {
+    background: #451a03;
+    color: #fbbf24;
+    border: 1px solid #f59e0b;
+}
+
+.pv-badge-receber {
+    background: #0d1f3c;
+    color: #60a5fa;
+    border: 1px solid #3b82f6;
+}
+
+.pv-badge-parcial {
+    background: #2e1065;
+    color: #c4b5fd;
+    border: 1px solid #7c3aed;
+}
+
+.pv-badge-aguardando {
+    background: #431407;
+    color: #fb923c;
+    border: 1px solid #ea580c;
+}
+
+/* ---- ACTIONS ---- */
+.pv-td-actions {
+    text-align: right;
+}
+
+.pv-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pv-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.pv-whatsapp-btn {
+    color: #10b981;
+}
+
+.pv-whatsapp-btn:hover {
+    background: #052e16;
+    color: #4ade80;
+}
+
+.pv-edit-btn {
+    color: #94a3b8;
+}
+
+.pv-edit-btn:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+.pv-delete-btn {
+    color: #ef4444;
+}
+
+.pv-delete-btn:hover {
+    background: #3a1010;
+    color: #f87171;
+}
+
+/* ---- EMPTY ---- */
+.pv-empty {
+    text-align: center !important;
+    padding: 2.5rem !important;
+    color: #475569;
+    font-style: italic;
+}
+
+/* ============================
+   EDIT MODAL
+   ============================ */
+.pv-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: pvFadeIn 0.15s ease;
+}
+
+@keyframes pvFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.pv-modal {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: pvSlideUp 0.2s ease;
+    overflow: hidden;
+}
+
+@keyframes pvSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.pv-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.4rem 1.6rem 1.2rem;
+    border-bottom: 1px solid #334155;
+    flex-shrink: 0;
+}
+
+.pv-modal-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.pv-modal-sub {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0.2rem 0 0;
+}
+
+.pv-modal-close {
+    background: #334155;
+    border: none;
+    border-radius: 8px;
+    color: #94a3b8;
+    padding: 0.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+}
+
+.pv-modal-close:hover {
+    background: #475569;
+    color: #f1f5f9;
+}
+
+.pv-modal-body {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.pv-modal-load {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.pv-modal-empty {
+    text-align: center;
+    padding: 3rem;
+    color: #475569;
+    font-style: italic;
+}
+
+/* Edit table */
+.pv-edit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.pv-edit-table thead th {
+    background: #0f172a;
+    color: #64748b;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 0.65rem 1.2rem;
+    text-align: left;
+    border-bottom: 1px solid #334155;
+}
+
+.pv-edit-table tbody tr {
+    border-bottom: 1px solid #1e3251;
+    transition: background 0.12s;
+}
+
+.pv-edit-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.pv-edit-table tbody tr:hover {
+    background: #162032;
+}
+
+.pv-edit-table tbody td {
+    padding: 0.75rem 1.2rem;
+    vertical-align: middle;
+}
+
+.pv-eit-name {
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.pv-eit-unit {
+    color: #64748b;
+    font-weight: 400;
+}
+
+.pv-eit-sub {
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.pv-eit-inp {
+    width: 80px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 7px;
+    color: #f1f5f9;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: right;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+    transition: border-color 0.15s;
+}
+
+.pv-eit-inp::-webkit-inner-spin-button,
+.pv-eit-inp::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+.pv-eit-inp:focus {
+    border-color: #f59e0b;
+}
+
+/* Modal footer */
+.pv-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.6rem;
+    border-top: 1px solid #334155;
+    flex-shrink: 0;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pv-modal-total {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.pv-modal-total span {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.pv-modal-total strong {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #f59e0b;
+}
+
+.pv-modal-actions {
+    display: flex;
+    gap: 0.65rem;
+}
+
+.pv-modal-cancel {
+    background: #334155;
+    border: none;
+    border-radius: 9px;
+    color: #94a3b8;
+    padding: 0.65rem 1.2rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.pv-modal-cancel:hover {
+    background: #475569;
+    color: #e2e8f0;
+}
+
+.pv-modal-save {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f59e0b;
+    border: none;
+    border-radius: 9px;
+    color: #0f172a;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.pv-modal-save:hover:not(:disabled) {
+    background: #fbbf24;
+    transform: translateY(-1px);
+}
+
+.pv-modal-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Spinner */
+.pv-spin {
+    animation: pvSpin 0.8s linear infinite;
+}
+
+@keyframes pvSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Wide modal ── */
+.pv-modal-wide {
+    max-width: 780px;
+}
+
+/* ── Edit sections ── */
+.pv-edit-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.pv-edit-section {
+    padding: 1.4rem 1.6rem;
+    border-bottom: 1px solid #1e3251;
+}
+
+.pv-edit-section:last-child {
+    border-bottom: none;
+}
+
+.pv-edit-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+/* ── Edit sub-total strip ── */
+.pv-edit-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    background: #0f172a;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.pv-edit-subtotal span {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.pv-edit-subtotal strong {
+    color: #f59e0b;
+    font-weight: 800;
+    font-size: 1rem;
+}
+
+/* ── Grid layouts ── */
+.pv-edit-grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.pv-edit-grid3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+@media (max-width: 600px) {
+
+    .pv-edit-grid2,
+    .pv-edit-grid3 {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-modal-wide {
+        max-width: 100%;
+    }
+}
+
+/* ── Field ── */
+.pv-edit-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.pv-edit-field label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.pv-edit-input,
+.pv-edit-select,
+.pv-edit-textarea {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #f1f5f9;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pv-edit-input:focus,
+.pv-edit-select:focus,
+.pv-edit-textarea:focus {
+    border-color: #f59e0b;
+}
+
+.pv-edit-select option {
+    background: #1e293b;
+}
+
+.pv-edit-textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
+/* ── Installment preview ── */
+.pv-parc-preview {
+    margin-top: 1rem;
+    background: #0f172a;
+    border: 1px solid #1e3251;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.pv-parc-title {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    border-bottom: 1px solid #1e3251;
+    background: #0a1120;
+}
+
+.pv-parc-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 1px solid #1a2840;
+    font-size: 0.84rem;
+}
+
+.pv-parc-row:last-child {
+    border-bottom: none;
+}
+
+.pv-parc-n {
+    min-width: 28px;
+    font-weight: 800;
+    color: #f59e0b;
+    font-size: 0.78rem;
+}
+
+.pv-parc-info {
+    color: #94a3b8;
+}

@@ -1,0 +1,72 @@
+.categorias-view-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.color-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.color-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.cell-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cell-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.table-card {
+    background: #1e293b;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 0 2.5rem 2.5rem;
+    overflow: hidden;
+}
+
+.table-title-area {
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.table-title-area h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.tag-icon {
+    color: #f59e0b;
+}
+
+.custom-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.action-btn.edit {
+    color: #f59e0b;
+}
+
+.action-btn.delete {
+    color: #ef4444;
+}

@@ -261,3 +261,70 @@ body {
 .client-value {
     font-size: 0.75rem;
 }
+
+/* Dividas View Specifics */
+.dividas-table-container {
+    width: 100%;
+}
+
+.dividas-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.dividas-table th {
+    text-align: left;
+    padding: 1rem 1.5rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dividas-table td {
+    padding: 1.2rem 1.5rem;
+    color: var(--text-main);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.dividas-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Badges */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-pago {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+}
+
+.badge-ativa {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+/* Action Buttons */
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 5px;
+    transition: var(--transition);
+    margin-left: 5px;
+}
+
+.action-btn:hover {
+    color: var(--text-main);
+}
+
+.action-btn svg {
+    width: 14px;
+    height: 14px;
+}

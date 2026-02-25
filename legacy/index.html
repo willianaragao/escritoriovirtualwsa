@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WSA Dashboard | Escritório Virtual</title>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-deep: #0b111a;
+            --bg-sidebar: #050a12;
+            --bg-card: #111a27;
+            --text-main: #ffffff;
+            --text-muted: #576b8a;
+            --accent-orange: #f59e0b;
+            --color-entradas: #10b981;
+            --color-saidas: #ef4444;
+            --color-saldo: #2563eb;
+            --color-previsao: #8b5cf6;
+            --color-dividas: #f59e0b;
+            --color-apagar: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 85%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - REPLICA EXATA ANTERIOR */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-sidebar);
+            height: 100vh;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3.5rem;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background-color: var(--accent-orange);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #000;
+            font-size: 1.2rem;
+        }
+
+        .brand-name h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .brand-name span {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .nav-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            color: var(--accent-orange);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .nav-item i,
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 2.5rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2.5rem;
+        }
+
+        .header-titles h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header-titles p {
+            color: #64748b;
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .date-selector {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 18px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-orange);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* Stats Cards - REPLICA DAS CORES E LAYOUT */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid transparent;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin-top: 15px;
+        }
+
+        .stat-icon-wrapper {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card.entradas {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .stat-card.entradas .stat-value {
+            color: #10b981;
+        }
+
+        .stat-card.entradas .stat-icon-wrapper i {
+            color: #10b981;
+        }
+
+        .stat-card.saidas {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .stat-card.saidas .stat-value {
+            color: #ef4444;
+        }
+
+        .stat-card.saidas .stat-icon-wrapper i {
+            color: #ef4444;
+        }
+
+        .stat-card.saldo {
+            background: rgba(37, 99, 235, 0.05);
+            border-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .stat-card.saldo .stat-value {
+            color: #3b82f6;
+        }
+
+        .stat-card.saldo .stat-icon-wrapper i {
+            color: #3b82f6;
+        }
+
+        .stat-detail-link {
+            font-size: 0.8rem;
+            color: #3b82f6;
+            margin-top: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-card.dividas {
+            background: rgba(245, 158, 11, 0.05);
+            border-color: rgba(245, 158, 11, 0.1);
+        }
+
+        .stat-card.dividas .stat-value {
+            color: #f59e0b;
+        }
+
+        .stat-card.dividas .stat-icon-wrapper i {
+            color: #f59e0b;
+        }
+
+        .stat-card.previsao {
+            background: rgba(139, 92, 246, 0.05);
+            border-color: rgba(139, 92, 246, 0.1);
+        }
+
+        .stat-card.previsao .stat-value {
+            color: #8b5cf6;
+        }
+
+        .stat-card.previsao .stat-icon-wrapper i {
+            color: #8b5cf6;
+        }
+
+        .previsao-details {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #64748b;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .previsao-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stat-card.apagar {
+            background: rgba(71, 85, 105, 0.05);
+            border-color: rgba(71, 85, 105, 0.1);
+        }
+
+        .stat-card.apagar .stat-value {
+            color: #fff;
+        }
+
+        .stat-card.apagar .stat-label {
+            color: #94a3b8;
+        }
+
+        /* Bottom Section - Integrated Card */
+        .bottom-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .bottom-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .bottom-card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .dots-menu {
+            color: #576b8a;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        .dashboard-content-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 3rem;
+        }
+
+        .chart-section h4,
+        .list-section h4 {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .top-client-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .client-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .client-rank-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+        }
+
+        .client-details .name {
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: block;
+        }
+
+        .client-details .tag {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .client-value {
+            color: #10b981;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-align: right;
+        }
+
+        .client-trend {
+            font-size: 0.7rem;
+            color: #10b981;
+            opacity: 0.6;
+            display: block;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Replicada -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">W</div>
+                <div class="brand-name">
+                    <h2>WSA Dashboard</h2>
+                    <span>Fábrica de Garrafas</span>
+                </div>
+            </div>
+
+            <nav>
+                <div class="nav-group">
+                    <span class="nav-label">Menu Principal</span>
+                    <a href="#" class="nav-item active" id="nav-dashboard"><i data-lucide="layout-dashboard"></i>
+                        Dashboard</a>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-label">Pedidos</span>
+                    <a href="#" class="nav-item"><i data-lucide="file-plus-2"></i> Novo Pedido</a>
+                    <a href="#" class="nav-item"><i data-lucide="alert-circle"></i> Pendentes</a>
+                    <a href="#" class="nav-item"><i data-lucide="file-check-2"></i> Pagos</a>
+                    <a href="#" class="nav-item"><i data-lucide="clock"></i> A receber</a>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-label">Cadastros</span>
+                    <a href="#" class="nav-item"><i data-lucide="users"></i> Clientes</a>
+                    <a href="#" class="nav-item"><i data-lucide="tag"></i> Categorias</a>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-label">Financeiro</span>
+                    <a href="#" class="nav-item"><i data-lucide="banknote"></i> Despesas</a>
+                    <a href="#" id="nav-dividas" class="nav-item"><i data-lucide="trending-down"></i> Dívidas fixas</a>
+                    <a href="#" class="nav-item"><i data-lucide="calendar"></i> Calendário de Pagamentos</a>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-label">Estoque</span>
+                    <a href="#" class="nav-item"><i data-lucide="package"></i> Controle de estoque</a>
+                    <a href="#" class="nav-item"><i data-lucide="line-chart"></i> Controle de Lucro Sob Produç...</a>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-label">Configurações</span>
+                    <a href="#" class="nav-item"><i data-lucide="database"></i> Migrar Dados</a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Dashboard Content -->
+        <main class="main-content">
+            <div id="dashboard-view">
+                <header class="header">
+                    <div class="header-titles">
+                        <h1>Dashboard Financeiro</h1>
+                        <p>Visão geral das finanças da WSA</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="date-selector">
+                            <i data-lucide="calendar"></i>
+                            <span>Fevereiro de 2026</span>
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                        <button class="btn-primary">+ Nova Transação</button>
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card entradas">
+                        <span class="stat-label">Entradas</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="trending-up"></i></div>
+                    </div>
+                    <div class="stat-card saidas">
+                        <span class="stat-label">Saídas</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="trending-down"></i></div>
+                    </div>
+                    <div class="stat-card saldo">
+                        <span class="stat-label">Saldo Atual</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="wallet"></i></div>
+                        <div class="stat-detail-link"><i data-lucide="chevron-down"></i> Ver detalhe</div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card dividas">
+                        <span class="stat-label">Dívidas Fixas</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="alert-circle"></i></div>
+                    </div>
+                    <div class="stat-card previsao">
+                        <span class="stat-label">Previsão de Recebimentos</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="clock"></i></div>
+                        <div class="previsao-details">
+                            <div class="previsao-row"><span>A Receber:</span><strong>R$ 0,00</strong></div>
+                            <div class="previsao-row"><span>Pendentes:</span><strong>R$ 0,00</strong></div>
+                        </div>
+                    </div>
+                    <div class="stat-card apagar">
+                        <span class="stat-label">A Pagar (Prev.)</span>
+                        <div class="stat-value">R$ 0,00</div>
+                        <div class="stat-icon-wrapper"><i data-lucide="credit-card"></i></div>
+                    </div>
+                </div>
+
+                <div class="bottom-card">
+                    <div class="bottom-card-header">
+                        <h3 class="bottom-card-title">Despesas por Categoria e Top Clientes</h3>
+                        <div class="dots-menu">...</div>
+                    </div>
+
+                    <div class="dashboard-content-grid">
+                        <div class="chart-section">
+                            <h4>Despesas por Categoria</h4>
+                            <div style="height: 250px;"><canvas id="expensesChart"></canvas></div>
+                        </div>
+
+                        <div class="list-section">
+                            <h4><i data-lucide="award"></i> Top Clientes Compradores</h4>
+                            <div id="topClientsMount"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-card" style="margin-top: 2rem;">
+                    <div class="bottom-card-header">
+                        <h3 class="bottom-card-title">Últimas Transações</h3>
+                    </div>
+                    <div id="transactionMount"></div>
+                </div>
+            </div>
+
+            <!-- Dívidas Fixas View -->
+            <div id="dividas-view" style="display: none;">
+                <header class="header">
+                    <div class="header-titles">
+                        <h1>Dívidas Fixas</h1>
+                        <p>Compromissos mensais recorrentes</p>
+                    </div>
+                    <div class="header-actions">
+                        <div class="date-selector">
+                            <i data-lucide="calendar"></i>
+                            <span>Fevereiro de 2026</span>
+                            <i data-lucide="chevron-down"></i>
+                        </div>
+                        <button class="btn-primary" style="background-color: #f59e0b; color: #fff;">+ Nova Dívida
+                            Fixa</button>
+                    </div>
+                </header>
+
+                <div class="dividas-summary" style="margin-bottom: 2rem;">
+                    <span style="color: #64748b; font-size: 0.9rem; font-weight: 600;">Total Mensal</span>
+                    <div id="total-dividas-fixas"
+                        style="color: #f59e0b; font-size: 2rem; font-weight: 800; margin-top: 5px;">R$ 0,00</div>
+                </div>
+
+                <div class="bottom-card" style="padding: 0;">
+                    <div class="dividas-table-container">
+                        <table class="dividas-table">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Vencimento</th>
+                                    <th>Status</th>
+                                    <th>Valor Mensal</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dividasFixasMount">
+                                <!-- JS will populate this -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+:root {
+  --bg-deep: #0b1118;
+  --bg-sidebar: #0f172a;
+  --bg-card: #151e2d;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-orange: #f97316;
+  --accent-gold: #f59e0b;
+
+  --color-entradas: #10b981;
+  --color-saidas: #ef4444;
+  --color-saldo: #3b82f6;
+  --color-dividas: #f97316;
+  --color-previsao: #8b5cf6;
+  --color-apagar: #64748b;
+
+  --sidebar-width: 240px;
+  --transition: all 0.2s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 85%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-deep);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

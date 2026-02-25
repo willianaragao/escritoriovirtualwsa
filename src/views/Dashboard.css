@@ -1,0 +1,785 @@
+/* ============================================================
+   DASHBOARD – Premium Dark Theme
+   ============================================================ */
+
+/* ── Donut chart ── */
+.db-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1.2rem;
+}
+
+.db-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 140px;
+}
+
+.db-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.85rem;
+}
+
+.db-legend-row.active,
+.db-legend-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.db-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.db-legend-label {
+    color: #94a3b8;
+    flex: 1;
+}
+
+.db-legend-pct {
+    font-weight: 700;
+    font-size: 0.82rem;
+}
+
+/* ── Ranking ── */
+.db-ranking-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 1.2rem;
+}
+
+.db-ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.db-client-card {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+}
+
+.db-client-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    transform: translateX(4px);
+    box-shadow: -3px 0 0 var(--accent, #f59e0b);
+}
+
+/* Rank badge */
+.db-client-rank {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+/* Info block */
+.db-client-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.db-client-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.35rem;
+}
+
+/* Progress bar */
+.db-client-bar-track {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.db-client-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* Value */
+.db-client-val {
+    font-weight: 800;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Category Cards (Below Chart) ── */
+.db-cat-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .db-cat-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.db-cat-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.db-cat-card.active,
+.db-cat-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--cat-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.db-cat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.db-cat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.db-cat-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+}
+
+.db-cat-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+}
+
+.db-cat-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.db-cat-pct-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* progress bar in card */
+.db-cat-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.db-cat-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+/* ── Financial Details Breakdown ── */
+.db-stat-detail-box {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.db-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.db-detail-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.db-detail-val {
+    color: #f1f5f9;
+    font-weight: 700;
+}
+
+/* Specific Adjustments for Previsao (reusing styles) */
+.previsao-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.previsao-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+}
+
+.previsao-row span {
+    color: #94a3b8;
+}
+
+.previsao-row strong {
+    color: #e2e8f0;
+}
+
+/* ── Month Picker Dropdown ── */
+.date-selector {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.db-month-picker {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    background: #0f172a;
+    border: 1px solid #1e3251;
+    border-radius: 12px;
+    padding: 1rem;
+    z-index: 100;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeInDown 0.2s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.db-mp-years {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #1e3251;
+}
+
+.db-mp-years button {
+    background: none;
+    border: 1px solid transparent;
+    color: #64748b;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.db-mp-years button.active {
+    background: #1e3251;
+    color: #f1f5f9;
+    border-color: #334155;
+}
+
+.db-mp-months {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.db-mp-months button {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.db-mp-months button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f1f5f9;
+}
+
+.db-mp-months button.active {
+    background: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+/* ── Collapsible Stats Animation ── */
+.db-collapsible-wrapper {
+    overflow: hidden;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    transform-origin: top;
+    transform: translateY(0);
+}
+
+.db-collapsible-wrapper.is-expanded {
+    max-height: 1000px;
+    /* Big enough for the cards */
+    margin-bottom: 2rem;
+}
+
+.db-collapsible-wrapper.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+
+.db-collapsible-content {
+    padding-bottom: 1px;
+    /* Avoid margin collapse */
+}
+
+/* ── Dashboard Expansion & UIMAX ── */
+.dashboard-content-grid.materia-mode {
+    display: block;
+    /* Remove 2-column grid to use full width */
+    width: 100%;
+}
+
+/* ── Carousel Navigation ── */
+.bottom-card {
+    position: relative;
+    backdrop-filter: blur(10px);
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-nav-arrows {
+    position: absolute;
+    top: 2rem;
+    right: 2.5rem;
+    display: flex;
+    gap: 0.75rem;
+    z-index: 10;
+}
+
+.carousel-arrow {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.carousel-arrow:hover {
+    background: #f59e0b;
+    color: #0f172a;
+    border-color: #f59e0b;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+/* ── Matéria Prima View ── */
+.db-materia-view {
+    width: 100%;
+    animation: fadeInScale 0.4s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.db-flow-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+    width: 100%;
+}
+
+@media (max-width: 1400px) {
+    .db-flow-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .db-flow-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.db-flow-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.db-flow-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.db-flow-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.db-flow-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.db-flow-info {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.db-flow-info span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+}
+
+.db-flow-info strong {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+}
+
+.db-flow-info small {
+    font-size: 0.7rem;
+    color: #64748b;
+    margin-top: 0.4rem;
+    font-weight: 600;
+}
+
+/* Editable field */
+.db-flow-editable {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fb923c;
+    border-bottom: 2px dashed rgba(251, 146, 60, 0.3);
+    padding-bottom: 2px;
+    cursor: pointer;
+}
+
+.db-flow-editable:hover {
+    border-color: rgba(251, 146, 60, 0.6);
+}
+
+.db-flow-editable input {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    width: 100%;
+    outline: none;
+    cursor: text;
+}
+
+/* Card variants with glowing icons */
+.db-flow-card.orange .db-flow-icon {
+    background: linear-gradient(135deg, #fb923c, #f59e0b);
+    color: #000;
+}
+
+.db-flow-card.blue .db-flow-icon {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+}
+
+.db-flow-card.purple .db-flow-icon {
+    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    color: #fff;
+}
+
+.db-flow-card.red .db-flow-icon {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+}
+
+.db-flow-card.indigo .db-flow-icon {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff;
+}
+
+.db-flow-card.blue strong {
+    color: #60a5fa;
+}
+
+.db-flow-card.purple strong {
+    color: #c084fc;
+}
+
+.db-flow-card.red strong {
+    color: #f87171;
+}
+
+.db-flow-card.indigo strong {
+    color: #818cf8;
+}
+
+/* ── Flow Bars ── */
+.db-flow-bars-section {
+    background: rgba(30, 41, 59, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.1);
+}
+
+.db-flow-bars-section h4 {
+    font-size: 1.1rem;
+    color: #e2e8f0;
+    margin-bottom: 2.5rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.db-flow-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.db-flow-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.db-fb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.db-fb-header span:first-child {
+    font-size: 0.95rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.db-fb-header span:last-child {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.db-fb-track {
+    height: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.db-fb-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+}
+
+.db-fb-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.15), transparent);
+}
+
+.db-fb-fill.orange {
+    background: linear-gradient(90deg, #fb923c, #f59e0b);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.db-fb-fill.blue {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+}
+
+.db-fb-fill.red {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.db-fb-fill.indigo {
+    background: linear-gradient(90deg, #6366f1, #4f46e5);
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+}
+
+.db-fb-fill.purple {
+    background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+/* ── Toggle Collapse Button ── */
+.db-toggle-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: -1.2rem 0 2rem;
+    position: relative;
+    z-index: 5;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.db-toggle-wrapper::before {
+    content: '';
+    position: absolute;
+    left: 4rem;
+    right: 4rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 50%, transparent);
+}
+
+.db-toggle-collapse {
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #64748b;
+    width: 48px;
+    height: 24px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 6;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    outline: none;
+}
+
+.db-toggle-collapse:hover {
+    background: #1e293b;
+    border-color: #f59e0b;
+    color: #f59e0b;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.db-toggle-collapse.collapsed {
+    background: #f59e0b;
+    color: #0f172a;
+    border-color: #f59e0b;
+}
+
+.db-toggle-collapse.collapsed:hover {
+    background: #fbbf24;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+
+.db-toggle-wrapper.is-collapsed {
+    margin-top: 1.5rem;
+    margin-bottom: 2.5rem;
+}

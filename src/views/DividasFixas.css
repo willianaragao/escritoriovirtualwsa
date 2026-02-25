@@ -1,0 +1,565 @@
+/* ==============================================
+   DÍVIDAS FIXAS — STYLES
+   ============================================== */
+
+.df-container {
+    min-height: 100vh;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    padding-bottom: 3rem;
+}
+
+/* --- HEADER --- */
+.df-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2.5rem 2.5rem 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.df-header-left h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.df-header-left p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0.25rem 0 0;
+}
+
+.df-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* --- Month Selector Button --- */
+.df-month-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+}
+
+.df-month-btn:hover {
+    border-color: #f59e0b;
+}
+
+.df-month-btn svg {
+    color: #64748b;
+}
+
+/* --- Month Popup --- */
+.df-month-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    z-index: 200;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    min-width: 240px;
+    animation: dropDown 0.15s ease;
+}
+
+@keyframes dropDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.df-month-year-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.df-year-btn {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.df-year-btn.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.df-month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+}
+
+.df-month-pill {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.df-month-pill.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.df-month-pill:hover:not(.active) {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+/* --- TOTALS ROW --- */
+.df-totals-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 2.5rem 1.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1.25rem 1.75rem;
+}
+
+.df-total-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.df-total-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.df-total-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f59e0b;
+    line-height: 1.1;
+}
+
+/* --- Nova Dívida Button --- */
+.df-btn-nova {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f59e0b;
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.df-btn-nova:hover {
+    background: #fbbf24;
+    transform: translateY(-1px);
+}
+
+/* --- TABLE WRAPPER --- */
+.df-table-wrapper {
+    margin: 0 2.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* --- TABLE --- */
+.df-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.df-table thead th {
+    background: #162032;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.85rem 1.5rem;
+    text-align: left;
+    border-bottom: 1px solid #334155;
+}
+
+.df-th-right {
+    text-align: right !important;
+}
+
+.df-table tbody tr {
+    border-bottom: 1px solid #1e3251;
+    transition: background 0.15s;
+}
+
+.df-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.df-table tbody tr:hover {
+    background: #1a2d47;
+}
+
+.df-table tbody td {
+    padding: 1.1rem 1.5rem;
+    vertical-align: middle;
+}
+
+.df-td-desc {
+    color: #f1f5f9 !important;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.df-td-venc {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.df-td-valor {
+    color: #f1f5f9;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* --- STATUS BADGES --- */
+.df-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-width: 58px;
+    text-align: center;
+}
+
+.badge-pago {
+    background: #f59e0b;
+    color: #0f172a;
+}
+
+.badge-ativa {
+    background: #ef4444;
+    color: #fff;
+}
+
+.badge-inativa {
+    background: #334155;
+    color: #94a3b8;
+}
+
+/* --- ACTIONS --- */
+.df-td-actions {
+    text-align: right;
+}
+
+.df-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.df-action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.df-edit-btn {
+    color: #94a3b8;
+}
+
+.df-edit-btn:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+.df-delete-btn {
+    color: #ef4444;
+}
+
+.df-delete-btn:hover {
+    background: #3a1010;
+    color: #f87171;
+}
+
+/* --- EMPTY STATE --- */
+.df-empty {
+    text-align: center !important;
+    padding: 2.5rem !important;
+    color: #475569;
+    font-style: italic;
+}
+
+/* =============================================
+   MODAL
+   ============================================= */
+
+.df-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.df-modal-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    padding: 1.75rem 2rem;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(18px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.df-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.df-modal-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin: 0;
+}
+
+.df-modal-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.3rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.df-modal-close:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+.df-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.df-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.df-field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.df-input {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.9rem;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.df-input:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+}
+
+.df-input::placeholder {
+    color: #475569;
+}
+
+.df-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Toggle Group */
+.df-toggle-group {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.df-toggle-btn {
+    flex: 1;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #94a3b8;
+    padding: 0.55rem 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.df-toggle-btn:hover {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+.df-toggle-btn.active-green {
+    background: #052e16;
+    border-color: #16a34a;
+    color: #4ade80;
+}
+
+.df-toggle-btn.active-amber {
+    background: #451a03;
+    border-color: #f59e0b;
+    color: #fbbf24;
+}
+
+.df-toggle-btn.active-gray {
+    background: #1e293b;
+    border-color: #64748b;
+    color: #cbd5e1;
+}
+
+/* Footer Buttons */
+.df-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.df-btn-cancel {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 0.6rem 1.3rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.df-btn-cancel:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+.df-btn-save {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #f59e0b;
+    color: #0f172a;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+
+.df-btn-save:hover:not(:disabled) {
+    background: #fbbf24;
+    transform: translateY(-1px);
+}
+
+.df-btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
