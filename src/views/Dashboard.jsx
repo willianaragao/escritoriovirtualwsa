@@ -450,21 +450,16 @@ const Dashboard = ({ onNavigate }) => {
 
             const saldo = entradas - saidas;
 
-            // Ajuste fino solicitado pelo usuário para alinhar com o extrato real:
-            // Banco: 6.832,46 | Caixa: Restante (Saldo - Banco)
-            const targetBanco = 6832.46;
+            // Ajuste de Sincronização (Fevereiro/2026)
+            // O cálculo nativo diverge do extrato real por falta de histórico de meios de pagamento.
+            // Aplicamos um offset para alinhar o sistema com a realidade informada pelo usuário.
             let finalBanco = banco;
             let finalCaixa = caixa;
 
-            // Aplicar o ajuste se estivermos no mês atual ou se o saldo bater com o total correto
-            if (Math.abs(saldo - 7079.94) < 1) {
-                finalBanco = targetBanco;
-                finalCaixa = saldo - targetBanco;
-            } else {
-                // Caso contrário, apenas garantimos que a soma de banco + caixa = saldo
-                // distribuindo as despesas (já feito no loop)
-                finalBanco = banco;
-                finalCaixa = caixa;
+            if (selectedMonth === 1 && selectedYear === 2026) {
+                const CAIXA_OFFSET = 2882.08; // Ajustado para Banco: 6.732,46 e Caixa: 297,48
+                finalCaixa = caixa + CAIXA_OFFSET;
+                finalBanco = banco - CAIXA_OFFSET;
             }
 
             setStats({
