@@ -11,20 +11,27 @@ import ClientesView from './views/ClientesView'
 import DespesasView from './views/DespesasView'
 import NovoPedidoView from './views/NovoPedidoView'
 import EstoqueView from './views/EstoqueView'
+import CalendarioPagamentos from './views/CalendarioPagamentos'
 import { Menu, User, AlertCircle, FileCheck2, Clock, LogOut } from 'lucide-react'
 import { supabase } from './lib/supabase'
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('wsa_user');
-    console.log('App initialized. Saved user:', savedUser);
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('wsa_user');
+      console.log('App initialized. Saved user exists:', !!savedUser);
+      if (!savedUser || savedUser === 'undefined' || savedUser === 'null') return null;
+      return JSON.parse(savedUser);
+    } catch (error) {
+      console.error('Error parsing saved user:', error);
+      localStorage.removeItem('wsa_user');
+      return null;
+    }
   });
 
   useEffect(() => {
-    console.log('Current active view:', activeView);
-    console.log('Current user:', user);
+    console.log('App State - ActiveView:', activeView, 'User:', user?.email || 'None');
   }, [activeView, user]);
 
   const handleLoginSuccess = (userData) => {
@@ -65,6 +72,8 @@ function App() {
           return <PedidosView status="a_receber" title="Pedidos a Receber" icon={Clock} />;
         case 'estoque':
           return <EstoqueView />;
+        case 'calendario':
+          return <CalendarioPagamentos />;
         default:
           return (
             <div style={{ padding: '2.5rem' }}>

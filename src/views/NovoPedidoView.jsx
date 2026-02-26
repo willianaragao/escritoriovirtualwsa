@@ -30,7 +30,7 @@ const STATUS_OPTIONS = [
     { value: 'pendente', label: 'Pendente' },
     { value: 'pago', label: 'Pago' },
     { value: 'parcialmente_pago', label: 'Parcialmente Pago' },
-    { value: 'aguardando_pagamento', label: 'Aguardando Pagamento' },
+    { value: 'a_receber', label: 'A receber' },
 ];
 
 /* Add days to a date string yyyy-mm-dd */

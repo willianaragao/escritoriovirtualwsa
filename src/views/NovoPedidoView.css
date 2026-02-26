@@ -680,7 +680,7 @@
     box-shadow: 0 0 6px rgba(134, 239, 172, .6);
 }
 
-.dot-aguardando_pagamento {
+.dot-a_receber {
     background: #60a5fa;
     box-shadow: 0 0 6px rgba(96, 165, 250, .6);
 }
@@ -701,7 +701,7 @@
     background: #052e16;
 }
 
-.np-status-opt.active:has(.dot-aguardando_pagamento) {
+.np-status-opt.active:has(.dot-a_receber) {
     border-color: #60a5fa;
     background: #0d1f3c;
 }

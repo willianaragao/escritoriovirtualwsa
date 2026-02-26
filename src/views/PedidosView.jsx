@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     Search, Calendar, ChevronDown,
     MessageCircle, Edit3, Trash2,
@@ -15,8 +15,8 @@ const MONTHS = [
 const STATUS_OPTIONS = [
     { value: 'pendente', label: 'Pendente' },
     { value: 'pago', label: 'Pago' },
-    { value: 'parcialmente_pago', label: 'Parcialmente Pago' },
-    { value: 'aguardando_pagamento', label: 'Aguardando Pagamento' },
+    { value: 'parcialmente_pago', label: 'Pago parcialmente' },
+    { value: 'a_receber', label: 'Aguardando pagamento' },
 ];
 
 const PAYMENT_OPTIONS = [
@@ -31,9 +31,9 @@ const PAYMENT_OPTIONS = [
 const STATUS_BADGE = {
     pendente: { label: 'Pendente', cls: 'pv-badge-pendente' },
     pago: { label: 'Pago', cls: 'pv-badge-pago' },
-    a_receber: { label: 'A receber', cls: 'pv-badge-receber' },
-    parcialmente_pago: { label: 'Parcialmente Pago', cls: 'pv-badge-parcial' },
-    aguardando_pagamento: { label: 'Aguardando Pagamento', cls: 'pv-badge-aguardando' },
+    a_receber: { label: 'Aguardando pagamento', cls: 'pv-badge-receber' },
+    parcialmente_pago: { label: 'Pago parcialmente', cls: 'pv-badge-parcial' },
+    aguardando_pagamento: { label: 'Aguardando pagamento', cls: 'pv-badge-receber' },
 };
 
 const TOTAL_COLOR = {
@@ -41,10 +41,10 @@ const TOTAL_COLOR = {
     pago: '#10b981',
     a_receber: '#3b82f6',
     parcialmente_pago: '#a78bfa',
-    aguardando_pagamento: '#fb923c',
+    aguardando_pagamento: '#3b82f6',
 };
 
-const A_RECEBER_STATUSES = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento'];
+const A_RECEBER_STATUSES = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento'];
 
 const fmt = val =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -82,24 +82,36 @@ const PedidosView = ({ status, title }) => {
     const [eStatus, setEStatus] = useState('');
     const [eObs, setEObs] = useState('');
     const [eEntrega, setEEntrega] = useState('');
+    const [eDataPagamento, setEDataPagamento] = useState('');
+    const [eMesReferencia, setEMesReferencia] = useState('');
+    const [eValorRecebido, setEValorRecebido] = useState('');
+    const [showStatusDrop, setShowStatusDrop] = useState(false);
+    const [showPayDrop, setShowPayDrop] = useState(false);
+    const [showMonthDrop, setShowMonthDrop] = useState(false);
+    const statusRef = useRef(null);
+    const payRef = useRef(null);
+    const monthRef = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (statusRef.current && !statusRef.current.contains(e.target)) setShowStatusDrop(false);
+            if (payRef.current && !payRef.current.contains(e.target)) setShowPayDrop(false);
+            if (monthRef.current && !monthRef.current.contains(e.target)) setShowMonthDrop(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
 
     /* ---- Fetch pedidos ---- */
     useEffect(() => {
         const fetchPedidos = async () => {
             setLoading(true);
             try {
-                const query = supabase
+                const { data, error } = await supabase
                     .from('pedidos')
                     .select('*, clientes(nome, telefone)')
                     .order('data_pedido', { ascending: false });
 
-                if (status === 'a_receber') {
-                    query.in('status', A_RECEBER_STATUSES);
-                } else {
-                    query.eq('status', status);
-                }
-
-                const { data, error } = await query;
                 if (error) throw error;
 
                 const filtered = (data || []).map(p => ({
@@ -107,12 +119,58 @@ const PedidosView = ({ status, title }) => {
                     data_pedido: p.data_pedido ? p.data_pedido.split('T')[0] : null
                 })).filter(p => {
                     if (!p.data_pedido) return false;
+
+                    const normalizedStatus = (p.status || '').toLowerCase().trim();
+                    const isDebit = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus);
+                    const isPending = normalizedStatus === 'pendente';
+                    const isPaid = normalizedStatus === 'pago' || Number(p.parcelas_pagas) > 0;
+
+                    // Match view category
+                    if (status === 'a_receber') {
+                        if (!isDebit) return false;
+                    } else if (status === 'pendente') {
+                        if (!isPending) return false;
+                    } else if (status === 'pago') {
+                        if (!isPaid) return false;
+                    } else {
+                        if (p.status !== status) return false;
+                    }
+
                     const d = new Date(p.data_pedido + 'T12:00:00');
-                    return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+                    let pMonth = d.getMonth();
+                    let pYear = d.getFullYear();
+
+                    // Priority to mes_referencia
+                    if (p.mes_referencia) {
+                        const monthsNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                        const refIdx = monthsNames.indexOf(p.mes_referencia.toLowerCase());
+                        if (refIdx !== -1) pMonth = refIdx;
+                    }
+
+                    return pMonth === selectedMonth && pYear === selectedYear;
                 });
 
                 setPedidos(filtered);
-                setTotal(filtered.reduce((acc, p) => acc + (p.valor_total || 0), 0));
+                const totalCalculado = filtered.reduce((acc, p) => {
+                    const valTotal = Number(p.valor_total) || 0;
+                    const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
+                    const pPagas = Number(p.parcelas_pagas) || 0;
+
+                    let valorPago = p.condicoes_pagamento?.valor_recebido
+                        ? Number(p.condicoes_pagamento.valor_recebido)
+                        : (valTotal / nParc) * pPagas;
+
+                    if (status === 'a_receber') {
+                        const pendente = valTotal - valorPago;
+                        return acc + pendente;
+                    }
+                    if (status === 'pago') {
+                        if (p.status === 'pago') return acc + valTotal;
+                        return acc + valorPago;
+                    }
+                    return acc + valTotal;
+                }, 0);
+                setTotal(totalCalculado);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -182,7 +240,25 @@ const PedidosView = ({ status, title }) => {
         (p.clientes?.nome || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const filteredTotal = filteredList.reduce((acc, p) => acc + (p.valor_total || 0), 0);
+    const filteredTotal = filteredList.reduce((acc, p) => {
+        const valTotal = Number(p.valor_total) || 0;
+        const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
+        const pPagas = Number(p.parcelas_pagas) || 0;
+
+        let valorPago = p.condicoes_pagamento?.valor_recebido
+            ? Number(p.condicoes_pagamento.valor_recebido)
+            : (valTotal / nParc) * pPagas;
+
+        if (status === 'a_receber') {
+            const pendente = valTotal - valorPago;
+            return acc + pendente;
+        }
+        if (status === 'pago') {
+            if (p.status === 'pago') return acc + valTotal;
+            return acc + valorPago;
+        }
+        return acc + valTotal;
+    }, 0);
 
     /* ---- Delete ---- */
     const handleDelete = async (pedido) => {
@@ -213,6 +289,16 @@ const PedidosView = ({ status, title }) => {
         setEStatus(pedido.status || '');
         setEObs(pedido.observacoes || '');
         setEEntrega(pedido.data_entrega ? pedido.data_entrega.split('T')[0] : '');
+        setEDataPagamento(pedido.data_pagamento ? pedido.data_pagamento.split('T')[0] : '');
+        setEMesReferencia(pedido.mes_referencia || '');
+
+        // Calculate received value from manual field or installments
+        const total = pedido.valor_total || 0;
+        const nParc = pedido.numero_parcelas || cond.numeroParcelas || 1;
+        const pPagas = pedido.parcelas_pagas || 0;
+
+        const manualVal = cond.valor_recebido;
+        setEValorRecebido(manualVal !== undefined ? Number(manualVal).toFixed(2) : ((total / nParc) * pPagas).toFixed(2));
 
         try {
             const { data, error } = await supabase
@@ -270,15 +356,21 @@ const PedidosView = ({ status, title }) => {
                 if (error) throw error;
             }
 
-            // 2. Build new condicoes_pagamento
             const condicoes = {
                 formaPagamento: eForma,
                 numeroParcelas: Number(eParcelas),
                 dataPrimeiraParcela: eData || '',
                 intervaloDias: Number(eIntervalo),
+                valor_recebido: parseFloat(eValorRecebido) || 0,
             };
 
             // 3. Update pedido row
+            // Logic to calculate parcelas_pagas from eValorRecebido
+            const valRecebido = parseFloat(eValorRecebido) || 0;
+            const precoParc = editTotal / Number(eParcelas);
+            let calculatedPagas = Math.round(valRecebido / precoParc);
+            if (eStatus === 'pago') calculatedPagas = Number(eParcelas);
+
             const { error: pedErr } = await supabase
                 .from('pedidos')
                 .update({
@@ -286,8 +378,10 @@ const PedidosView = ({ status, title }) => {
                     status: eStatus,
                     observacoes: eObs || null,
                     data_entrega: eEntrega || null,
+                    data_pagamento: eDataPagamento || null,
+                    mes_referencia: eMesReferencia || null,
                     numero_parcelas: Number(eParcelas),
-                    parcelas_pagas: eStatus === 'pago' ? Number(eParcelas) : (editPedido.parcelas_pagas || 0),
+                    parcelas_pagas: calculatedPagas,
                     condicoes_pagamento: condicoes,
                 })
                 .eq('id', editPedido.id);
@@ -386,7 +480,10 @@ const PedidosView = ({ status, title }) => {
                         ) : filteredList.length === 0 ? (
                             <tr><td colSpan={colSpan} className="pv-empty">Nenhum pedido encontrado.</td></tr>
                         ) : filteredList.map(p => {
-                            const badge = STATUS_BADGE[p.status] || STATUS_BADGE.pendente;
+                            let badge = STATUS_BADGE[p.status] || { label: p.status.replace('_', ' '), cls: 'pv-badge-pendente' };
+                            if (status === 'pago' && p.status !== 'pago') {
+                                badge = { label: 'Pago', cls: 'pv-badge-pago' };
+                            }
                             return (
                                 <tr key={p.id}>
                                     <td className="pv-td-cliente">{p.clientes?.nome || 'Cliente não identificado'}</td>
@@ -404,7 +501,38 @@ const PedidosView = ({ status, title }) => {
                                                 : '1x'}
                                         </td>
                                     )}
-                                    <td className="pv-td-valor">{fmt(p.valor_total)}</td>
+                                    <td className="pv-td-valor">
+                                        {status === 'a_receber' ? (
+                                            (() => {
+                                                const manual = p.condicoes_pagamento?.valor_recebido;
+                                                const pago = manual !== undefined ? Number(manual) : ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0));
+                                                const pendente = p.valor_total - pago;
+                                                return (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span>{fmt(pendente)}</span>
+                                                        {pago > 0 && (
+                                                            <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 'normal' }}>
+                                                                de {fmt(p.valor_total)}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : status === 'pago' && p.status !== 'pago' ? (
+                                            (() => {
+                                                const manual = p.condicoes_pagamento?.valor_recebido;
+                                                const pago = manual !== undefined ? Number(manual) : ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0));
+                                                return (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span>{fmt(pago)}</span>
+                                                        <span style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 'normal' }}>
+                                                            Pagamento Parcial
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : fmt(p.valor_total)}
+                                    </td>
                                     <td><span className={`pv-badge ${badge.cls}`}>{badge.label}</span></td>
                                     <td className="pv-td-actions">
                                         <div className="pv-actions">
@@ -437,7 +565,7 @@ const PedidosView = ({ status, title }) => {
                         {/* Header */}
                         <div className="pv-modal-header">
                             <div>
-                                <h2 className="pv-modal-title">Editar Pedido</h2>
+                                <h2 className="pv-modal-title">Detalhes do Pedido</h2>
                                 <p className="pv-modal-sub">{editPedido.clientes?.nome || 'Cliente não identificado'}</p>
                             </div>
                             <button className="pv-modal-close" onClick={closeEdit}><X size={18} /></button>
@@ -498,83 +626,151 @@ const PedidosView = ({ status, title }) => {
                                         </div>
                                     </div>
 
-                                    {/* ── Condições de Pagamento ── */}
+                                    {/* ── Detalhes do Pedido ── */}
                                     <div className="pv-edit-section">
-                                        <div className="pv-edit-section-title">
-                                            <CreditCard size={15} /> Condições de Pagamento
+                                        <div className="pv-edit-grid3">
+                                            {/* Status */}
+                                            <div className="pv-edit-field">
+                                                <label>Status do Pedido</label>
+                                                <div className="pv-status-dropdown" ref={statusRef}>
+                                                    <button type="button" className={`pv-status-trigger ${eStatus ? 'sel' : ''}`}
+                                                        onClick={() => setShowStatusDrop(!showStatusDrop)}>
+                                                        <span>{eStatus ? STATUS_OPTIONS.find(o => o.value === eStatus)?.label : 'Selecione...'}</span>
+                                                        <ChevronDown size={14} className={showStatusDrop ? 'open' : ''} />
+                                                    </button>
+                                                    {showStatusDrop && (
+                                                        <div className="pv-status-list">
+                                                            {STATUS_OPTIONS.map(opt => (
+                                                                <button key={opt.value} type="button" className={`pv-status-item ${eStatus === opt.value ? 'active' : ''}`}
+                                                                    onClick={() => { setEStatus(opt.value); setShowStatusDrop(false); }}>
+                                                                    <span className={`pv-status-dot dot-${opt.value}`} />
+                                                                    {opt.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Valor Recebido */}
+                                            <div className="pv-edit-field">
+                                                <label>Valor Recebido (R$)</label>
+                                                <input type="number" step="0.01" className="pv-edit-input"
+                                                    value={eValorRecebido}
+                                                    onChange={e => setEValorRecebido(e.target.value)} />
+                                                <small style={{ color: '#64748b', marginTop: '4px' }}>Total do pedido: {fmt(editTotal)}</small>
+                                            </div>
+
+                                            {/* Forma de Pagamento */}
+                                            <div className="pv-edit-field">
+                                                <label>Forma de Pagamento</label>
+                                                <div className="pv-status-dropdown" ref={payRef}>
+                                                    <button type="button" className={`pv-status-trigger ${eForma ? 'sel' : ''}`}
+                                                        onClick={() => setShowPayDrop(!showPayDrop)}>
+                                                        <span>{eForma ? PAYMENT_OPTIONS.find(o => o.value === eForma)?.label : 'Selecione...'}</span>
+                                                        <ChevronDown size={14} className={showPayDrop ? 'open' : ''} />
+                                                    </button>
+                                                    {showPayDrop && (
+                                                        <div className="pv-status-list">
+                                                            {PAYMENT_OPTIONS.map(opt => (
+                                                                <button key={opt.value} type="button" className={`pv-status-item ${eForma === opt.value ? 'active' : ''}`}
+                                                                    onClick={() => { setEForma(opt.value); setShowPayDrop(false); }}>
+                                                                    {opt.label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
+
+                                        <div className="pv-edit-grid3" style={{ marginTop: '1.2rem' }}>
+                                            <div className="pv-edit-field">
+                                                <label>Data de entrega</label>
+                                                <input type="date" className="pv-edit-input" value={eEntrega} onChange={e => setEEntrega(e.target.value)} />
+                                            </div>
+                                            <div className="pv-edit-field">
+                                                <label>Data de Pagamento</label>
+                                                <input type="date" className="pv-edit-input" value={eDataPagamento} onChange={e => setEDataPagamento(e.target.value)} />
+                                            </div>
+                                            <div className="pv-edit-field">
+                                                <label>Mês de Referência</label>
+                                                <div className="pv-status-dropdown" ref={monthRef}>
+                                                    <button type="button" className={`pv-status-trigger ${eMesReferencia ? 'sel' : ''}`}
+                                                        onClick={() => setShowMonthDrop(!showMonthDrop)}>
+                                                        <span>{eMesReferencia || 'Selecione o mês'}</span>
+                                                        <ChevronDown size={14} className={showMonthDrop ? 'open' : ''} />
+                                                    </button>
+                                                    {showMonthDrop && (
+                                                        <div className="pv-status-list" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                                            {MONTHS.map(m => (
+                                                                <button key={m} type="button" className={`pv-status-item ${eMesReferencia === m ? 'active' : ''}`}
+                                                                    onClick={() => { setEMesReferencia(m); setShowMonthDrop(false); }}>
+                                                                    {m}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ── Condições de Pagamento ── */}
+                                    <div className="pv-edit-section" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #334155', borderRadius: '12px', padding: '1.5rem' }}>
+                                        <div className="pv-edit-section-title" style={{ justifyContent: 'space-between', width: '100%' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span role="img" aria-label="money">💰</span> Condições de Pagamento
+                                            </div>
+                                            <button className="pv-manage-btn" type="button">
+                                                <CreditCard size={14} /> Gerenciar Parcelas
+                                            </button>
+                                        </div>
+                                        <small style={{ color: '#64748b', marginBottom: '1rem', display: 'block' }}>Valor Total: {fmt(editTotal)}</small>
 
                                         <div className="pv-edit-grid3">
                                             <div className="pv-edit-field">
-                                                <label>Nº de parcelas</label>
+                                                <label>Número de Parcelas</label>
                                                 <input type="number" min="1" className="pv-edit-input"
                                                     value={eParcelas}
                                                     onChange={e => setEParcelas(Number(e.target.value) || 1)} />
                                             </div>
                                             <div className="pv-edit-field">
-                                                <label>Data da 1ª parcela</label>
+                                                <label>Data da Primeira Parcela</label>
                                                 <input type="date" className="pv-edit-input"
                                                     value={eData}
                                                     onChange={e => setEData(e.target.value)} />
                                             </div>
                                             <div className="pv-edit-field">
-                                                <label>Intervalo (dias)</label>
+                                                <label>Intervalo entre Parcelas (dias)</label>
                                                 <input type="number" min="1" className="pv-edit-input"
                                                     value={eIntervalo}
                                                     onChange={e => setEIntervalo(Number(e.target.value) || 1)} />
                                             </div>
                                         </div>
 
-                                        <div className="pv-edit-field">
-                                            <label>Forma de pagamento</label>
-                                            <select className="pv-edit-select" value={eForma} onChange={e => setEForma(e.target.value)}>
-                                                <option value="">Selecione...</option>
-                                                {PAYMENT_OPTIONS.map(o => (
-                                                    <option key={o.value} value={o.value}>{o.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
                                         {/* Preview de parcelas */}
                                         {parcelasPreview.length > 0 && (
-                                            <div className="pv-parc-preview">
-                                                <div className="pv-parc-title">Preview das parcelas</div>
-                                                {parcelasPreview.map(p => (
-                                                    <div key={p.n} className="pv-parc-row">
-                                                        <span className="pv-parc-n">{p.n}ª</span>
-                                                        <span className="pv-parc-info">
-                                                            {p.data ? p.data.split('-').reverse().join('/') : '-'}
-                                                            {' — '}
-                                                            {fmt(p.val)}
-                                                        </span>
+                                            <div className="pv-parc-preview-modern">
+                                                <div className="pv-parc-summary">
+                                                    <div className="pv-ps-row"><span>Previsão de Parcelas:</span> <strong>Valor Total: {fmt(editTotal)}</strong></div>
+                                                    {parcelasPreview.map(p => (
+                                                        <div key={p.n} className="pv-ps-row thin">
+                                                            <span>Parcela {p.n}:</span>
+                                                            <span>{p.data ? p.data.split('-').reverse().join('/') : '-'} - <strong>{fmt(p.val)}</strong></span>
+                                                        </div>
+                                                    ))}
+                                                    <div className="pv-ps-footer">
+                                                        <span>Total das Parcelas:</span>
+                                                        <strong>{fmt(editTotal)}</strong>
                                                     </div>
-                                                ))}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* ── Finalização ── */}
+                                    {/* ── Observações ── */}
                                     <div className="pv-edit-section">
-                                        <div className="pv-edit-section-title">
-                                            <Check size={15} /> Finalização
-                                        </div>
-                                        <div className="pv-edit-grid2">
-                                            <div className="pv-edit-field">
-                                                <label>Status</label>
-                                                <select className="pv-edit-select" value={eStatus} onChange={e => setEStatus(e.target.value)}>
-                                                    <option value="">Selecione...</option>
-                                                    {STATUS_OPTIONS.map(o => (
-                                                        <option key={o.value} value={o.value}>{o.label}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="pv-edit-field">
-                                                <label>Data de entrega</label>
-                                                <input type="date" className="pv-edit-input"
-                                                    value={eEntrega}
-                                                    onChange={e => setEEntrega(e.target.value)} />
-                                            </div>
-                                        </div>
                                         <div className="pv-edit-field">
                                             <label>Observações</label>
                                             <textarea className="pv-edit-textarea" rows={3}
