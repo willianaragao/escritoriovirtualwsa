@@ -390,9 +390,15 @@ const Dashboard = ({ onNavigate }) => {
 
                     // Subtract from bank/cash based on payment method
                     const meio = (d.meio_pagamento || '').toLowerCase();
-                    if (meio === 'dinheiro') {
+                    const isExpBank = ['pix', 'boleto', 'cartao', 'cartao_credito', 'cartao_debito'].some(m => meio === m || meio.includes(m));
+                    const isExpCash = ['dinheiro', 'cheque'].some(m => meio === m || meio.includes(m));
+
+                    if (isExpCash) {
                         caixa -= val;
+                    } else if (isExpBank) {
+                        banco -= val;
                     } else {
+                        // Fallback: modern expenses are usually bank
                         banco -= val;
                     }
                 }
