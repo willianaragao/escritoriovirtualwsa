@@ -17,6 +17,7 @@ const CATEGORY_COLORS = {
     'Inss': { bg: '#2a1a3a', color: '#a78bfa', dot: '#8b5cf6' },
     'Internet': { bg: '#1a3a2a', color: '#34d399', dot: '#10b981' },
     'Alimentação': { bg: '#3a2a1a', color: '#fb923c', dot: '#f97316' },
+    'Retirada de Lucro': { bg: '#3a1a2a', color: '#f472b6', dot: '#db2777' }, // Pink theme for profit withdrawal
 };
 
 const PAYMENT_ICONS = {
@@ -89,15 +90,23 @@ const DespesasView = () => {
         observacoes: ''
     });
 
-    const ALL_CATEGORIES = [
-        'Alimentação', 'Combustivel', 'Contas', 'Manutenção', 'Inss', 'Internet',
-        'Transporte', 'Material', 'Serviços', 'Outros'
-    ];
+    const [dbCategories, setDbCategories] = useState([]);
 
     useEffect(() => {
         fetchDespesas();
+        fetchCategories();
         supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
     }, [activePeriod, customFrom, customTo, selectedCategory]);
+
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase.from('categorias').select('*').order('nome');
+            if (error) throw error;
+            setDbCategories(data || []);
+        } catch (err) {
+            console.error('Erro ao buscar categorias:', err);
+        }
+    };
 
     // Close calendar popup on outside click
     useEffect(() => {
@@ -170,8 +179,15 @@ const DespesasView = () => {
     const formatCurrency = (val) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-    const getCategoryStyle = (cat) =>
-        CATEGORY_COLORS[cat] || { bg: '#1e293b', color: '#94a3b8', dot: '#64748b' };
+    const getCategoryStyle = (cat) => {
+        const dbCat = dbCategories.find(c => c.nome === cat);
+        if (dbCat && dbCat.cor) {
+            // Helper to handle lighter/darker shades if needed, 
+            // but the table provides a direct color.
+            return { bg: `${dbCat.cor}20`, color: dbCat.cor, dot: dbCat.cor };
+        }
+        return CATEGORY_COLORS[cat] || { bg: '#1e293b', color: '#94a3b8', dot: '#64748b' };
+    };
 
     const getPaymentInfo = (meio) => {
         const key = (meio || '').toLowerCase();
@@ -448,8 +464,8 @@ const DespesasView = () => {
                                         onChange={e => setForm({ ...form, categoria: e.target.value })}
                                     >
                                         <option value="">Selecione uma categoria</option>
-                                        {ALL_CATEGORIES.map(c => (
-                                            <option key={c} value={c}>{c}</option>
+                                        {dbCategories.map(c => (
+                                            <option key={c.id} value={c.nome}>{c.nome}</option>
                                         ))}
                                     </select>
                                     <ChevronDown size={15} className="modal-select-chevron" />
