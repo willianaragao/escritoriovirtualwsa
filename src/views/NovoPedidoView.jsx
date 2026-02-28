@@ -111,6 +111,56 @@ const NovoPedidoView = () => {
         setCustomPrices(cp);
     };
 
+    /* ---- Load Custom Prices ---- */
+    useEffect(() => {
+        const updatePrices = async () => {
+            if (!selectedCliente) {
+                // If no client selected, use default prices from products
+                const cp = {};
+                produtos.forEach(p => { cp[p.id] = p.preco_unitario; });
+                setCustomPrices(cp);
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('clientes_produtos_precos')
+                    .select('*')
+                    .eq('cliente_id', selectedCliente.id);
+
+                if (error) throw error;
+
+                const cp = {};
+                // Start with default prices
+                produtos.forEach(p => { cp[p.id] = p.preco_unitario; });
+
+                // Override with custom prices if they exist
+                if (data && data.length > 0) {
+                    data.forEach(item => {
+                        cp[item.produto_id] = item.preco_personalizado;
+                    });
+                }
+
+                setCustomPrices(cp);
+
+                // Optional: Update prices of items already in cart?
+                // The user request emphasizes "na seleçao dos produtos" (in the product selection),
+                // but usually you want the cart to reflect the selected customer's prices too.
+                setCart(currentCart => currentCart.map(item => ({
+                    ...item,
+                    preco: cp[item.produto.id] ?? item.produto.preco_unitario
+                })));
+
+            } catch (err) {
+                console.error('Erro ao carregar preços personalizados:', err);
+            }
+        };
+
+        if (produtos.length > 0) {
+            updatePrices();
+        }
+    }, [selectedCliente, produtos]);
+
     /* ---- Helpers ---- */
     const fmt = val => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
