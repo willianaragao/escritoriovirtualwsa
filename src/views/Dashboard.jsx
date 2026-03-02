@@ -477,6 +477,9 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
     };
 
     const maxVal = topClients.length > 0 ? Math.max(...topClients.map(c => c.val)) : 0;
+    const pagoMP = chartSlices.find(s => s.label.toLowerCase().includes('matéria'))?.valor || 0;
+    const saldoDevedor = Math.max(0, materiaPrimaTarget - pagoMP - stats.saldo);
+    const previsaoTotal = stats.pendentes + stats.a_receber;
 
     return (
         <div className="dashboard-container">
@@ -681,7 +684,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-icon"><Package size={16} /></div>
                                     <div className="db-flow-info">
                                         <span>Pago em Matéria Prima</span>
-                                        <strong>{fmt(chartSlices.find(s => s.label.toLowerCase().includes('matéria'))?.valor || 0)}</strong>
+                                        <strong>{fmt(pagoMP)}</strong>
                                     </div>
                                 </div>
 
@@ -689,7 +692,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-icon"><AlertCircle size={16} /></div>
                                     <div className="db-flow-info">
                                         <span>Saldo Devedor</span>
-                                        <strong>{fmt(Math.max(0, materiaPrimaTarget - stats.saldo))}</strong>
+                                        <strong>{fmt(saldoDevedor)}</strong>
                                         <small>Faltam para quitar</small>
                                     </div>
                                 </div>
@@ -698,7 +701,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-icon"><Hourglass size={16} /></div>
                                     <div className="db-flow-info">
                                         <span>Previsão Recebimentos</span>
-                                        <strong>{fmt(stats.pendentes + stats.a_receber)}</strong>
+                                        <strong>{fmt(previsaoTotal)}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -732,10 +735,10 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-bar-row">
                                         <div className="db-fb-header">
                                             <span>Saldo Devedor</span>
-                                            <span>{fmt(materiaPrimaTarget - stats.saldo)}</span>
+                                            <span>{fmt(saldoDevedor)}</span>
                                         </div>
                                         <div className="db-fb-track">
-                                            <div className="db-fb-fill red" style={{ width: `${Math.min(100, (Math.max(0, materiaPrimaTarget - stats.saldo) / materiaPrimaTarget) * 100)}%` }} />
+                                            <div className="db-fb-fill red" style={{ width: `${Math.min(100, (saldoDevedor / materiaPrimaTarget) * 100)}%` }} />
                                         </div>
                                     </div>
 
@@ -743,15 +746,16 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-bar-row">
                                         <div className="db-fb-header">
                                             <span>Previsão de Recebimentos</span>
-                                            <span>{fmt(stats.pendentes + stats.a_receber)}</span>
+                                            <span>{fmt(previsaoTotal)}</span>
                                         </div>
                                         <div className="db-fb-track">
-                                            <div className="db-fb-fill indigo" style={{ width: `${Math.min(100, ((stats.pendentes + stats.a_receber) / materiaPrimaTarget) * 100)}%` }} />
+                                            <div className="db-fb-fill indigo" style={{ width: `${Math.min(100, (previsaoTotal / materiaPrimaTarget) * 100)}%` }} />
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+
                     )}
                 </div>
             </div>
