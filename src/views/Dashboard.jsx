@@ -691,7 +691,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                 <div className="db-flow-card red">
                                     <div className="db-flow-icon"><AlertCircle size={16} /></div>
                                     <div className="db-flow-info">
-                                        <span>Saldo Devedor</span>
+                                        <span>Saldo Devedor Matéria Prima</span>
                                         <strong>{fmt(saldoDevedor)}</strong>
                                         <small>Faltam para quitar</small>
                                     </div>
@@ -734,7 +734,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     {/* Barra Saldo Devedor */}
                                     <div className="db-flow-bar-row">
                                         <div className="db-fb-header">
-                                            <span>Saldo Devedor</span>
+                                            <span>Saldo Devedor Matéria Prima</span>
                                             <span>{fmt(saldoDevedor)}</span>
                                         </div>
                                         <div className="db-fb-track">
