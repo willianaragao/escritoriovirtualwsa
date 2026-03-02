@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Calendar, Search, ChevronDown,
     AlertCircle, FileCheck2, Clock,
-    TrendingUp, ArrowRightLeft, MessageCircle, MoreHorizontal
+    TrendingUp, ArrowRightLeft, MessageCircle, MoreHorizontal,
+    DollarSign, X, Check
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './CalendarioPagamentos.css';
@@ -21,11 +22,10 @@ const addDays = (dateStr, days) => {
     return d.toISOString().split('T')[0];
 };
 
-const CalendarioPagamentos = () => {
+const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
     const [activeTab, setActiveTab] = useState('todas'); // todas, pendentes, vencidas, pagas
     const [searchTerm, setSearchTerm] = useState('');
@@ -43,9 +43,13 @@ const CalendarioPagamentos = () => {
         geralCount: 0
     });
 
+    const [payModal, setPayModal] = useState({ open: false, item: null });
+    const [refMonth, setRefMonth] = useState('');
+    const [paymentSaving, setPaymentSaving] = useState(false);
+
     useEffect(() => {
         fetchParcelas();
-    }, []);
+    }, [selectedMonth, selectedYear]);
 
     const fetchParcelas = async () => {
         setLoading(true);
@@ -102,7 +106,8 @@ const CalendarioPagamentos = () => {
                         valor: precoParc,
                         vencimento,
                         dataPagamento,
-                        status: pStatus
+                        status: pStatus,
+                        mesRef: p.mes_referencia // Add this line
                     });
                 }
             });
@@ -125,20 +130,44 @@ const CalendarioPagamentos = () => {
         };
 
         list.forEach(p => {
-            s.geralVal += p.valor;
-            s.geralCount++;
+            // Check if status is globally overdue
+            const isVencidoGlobal = p.status === 'vencido';
 
-            if (p.status === 'pago') {
-                s.recebidoVal += p.valor;
-                s.recebidoCount++;
-            } else if (p.status === 'vencido') {
+            // Month/Year matching logic (for non-overdue stats)
+            const d = new Date(p.vencimento + 'T12:00:00');
+            let pMonth = d.getMonth();
+            let pYear = d.getFullYear();
+
+            if (p.mesRef) {
+                const refIdx = MONTHS.findIndex(m => m.toLowerCase() === p.mesRef.toLowerCase());
+                if (refIdx !== -1) pMonth = refIdx;
+            }
+
+            const isSamePeriod = pMonth === selectedMonth && pYear === selectedYear;
+
+            // Stats Logic:
+            // 1. Total Vencido is always global
+            if (isVencidoGlobal) {
                 s.vencidoVal += p.valor;
                 s.vencidoCount++;
-                s.aReceberVal += p.valor;
-                s.aReceberCount++;
-            } else {
-                s.aReceberVal += p.valor;
-                s.aReceberCount++;
+            }
+
+            // 2. Other stats and General total respect the selected period
+            if (isSamePeriod) {
+                s.geralVal += p.valor;
+                s.geralCount++;
+
+                if (p.status === 'pago') {
+                    s.recebidoVal += p.valor;
+                    s.recebidoCount++;
+                } else if (p.status === 'pendente') {
+                    s.aReceberVal += p.valor;
+                    s.aReceberCount++;
+                } else if (p.status === 'vencido') {
+                    // Already added to vencidoVal, but also add to aReceber as it's something to collect
+                    s.aReceberVal += p.valor;
+                    s.aReceberCount++;
+                }
             }
         });
 
@@ -146,21 +175,97 @@ const CalendarioPagamentos = () => {
     };
 
     const filtered = parcelas.filter(p => {
-        // Month/Year filter
-        const [y, m] = p.vencimento.split('-');
-        const sameMonth = parseInt(y) === selectedYear && (parseInt(m) - 1) === selectedMonth;
-        if (!sameMonth) return false;
+        const isVencido = p.status === 'vencido';
 
-        // Search terminology
-        if (searchTerm && !p.cliente.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        // Month/Year matching logic
+        const d = new Date(p.vencimento + 'T12:00:00');
+        let pMonth = d.getMonth();
+        let pYear = d.getFullYear();
 
-        // Tab filter
-        if (activeTab === 'pendentes' && !['pendente', 'vencido'].includes(p.status)) return false;
-        if (activeTab === 'vencidas' && p.status !== 'vencido') return false;
-        if (activeTab === 'pagas' && p.status !== 'pago') return false;
+        if (p.mesRef) {
+            const refIdx = MONTHS.findIndex(m => m.toLowerCase() === p.mesRef.toLowerCase());
+            if (refIdx !== -1) pMonth = refIdx;
+        }
+
+        const matchesPeriod = pMonth === selectedMonth && pYear === selectedYear;
+
+        // Rule: Show if matches period OR if it's overdue and tab is 'vencidas' (or 'todas'/'pendentes'?)
+        // The user specifically asked for "nos pedidos vencidos", so we prioritize the 'vencidas' tab.
+        if (activeTab === 'vencidas') {
+            if (!isVencido) return false;
+            // Overdue items show regardless of month
+        } else {
+            // For other tabs, respect the period
+            if (!matchesPeriod) return false;
+
+            // Sub-filters for other tabs
+            if (activeTab === 'pendentes' && !['pendente', 'vencido'].includes(p.status)) return false;
+            if (activeTab === 'pagas' && p.status !== 'pago') return false;
+        }
 
         return true;
     });
+
+    const handleOpenPayModal = (p) => {
+        setPayModal({ open: true, item: p });
+        setRefMonth(MONTHS[selectedMonth].toLowerCase());
+    };
+
+    const handleConfirmPayment = async () => {
+        if (!payModal.item) return;
+        setPaymentSaving(true);
+
+        try {
+            const pId = payModal.item.pedidoId;
+
+            // 1. Get original order to see current status and parcelas
+            const { data: pedido, error: fetchErr } = await supabase
+                .from('pedidos')
+                .select('*')
+                .eq('id', pId)
+                .single();
+
+            if (fetchErr) throw fetchErr;
+
+            const valParc = (Number(pedido.valor_total) || 0) / (totalParc || 1);
+            const totalRecebidoCalculado = valParc * incrementedPagas;
+
+            const updates = {
+                parcelas_pagas: incrementedPagas,
+                mes_referencia: refMonth
+            };
+
+            // Sync with conditions to avoid stale dashboard values
+            if (pedido.condicoes_pagamento) {
+                updates.condicoes_pagamento = {
+                    ...pedido.condicoes_pagamento,
+                    valor_recebido: totalRecebidoCalculado
+                };
+            }
+
+            // If all installments paid, mark whole order as paid
+            if (incrementedPagas >= totalParc) {
+                updates.status = 'pago';
+            } else {
+                updates.status = 'parcialmente_pago';
+            }
+
+            const { error: updateErr } = await supabase
+                .from('pedidos')
+                .update(updates)
+                .eq('id', pId);
+
+            if (updateErr) throw updateErr;
+
+            setPayModal({ open: false, item: null });
+            fetchParcelas();
+        } catch (err) {
+            console.error('Erro ao processar pagamento:', err);
+            alert('Erro ao processar pagamento.');
+        } finally {
+            setPaymentSaving(false);
+        }
+    };
 
     const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
 
@@ -308,6 +413,15 @@ const CalendarioPagamentos = () => {
                                         </td>
                                         <td className="cal-td-actions">
                                             <div className="cal-actions">
+                                                {p.status !== 'pago' && (
+                                                    <button
+                                                        className="cal-action-btn pay"
+                                                        title="Pagar"
+                                                        onClick={() => handleOpenPayModal(p)}
+                                                    >
+                                                        <DollarSign size={14} />
+                                                    </button>
+                                                )}
                                                 <button className="cal-action-btn" title="WhatsApp">
                                                     <MessageCircle size={14} />
                                                 </button>
@@ -323,6 +437,54 @@ const CalendarioPagamentos = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Payment Modal */}
+            {payModal.open && (
+                <div className="cal-modal-overlay" onClick={() => setPayModal({ open: false, item: null })}>
+                    <div className="cal-modal-box" onClick={e => e.stopPropagation()}>
+                        <div className="cal-modal-header">
+                            <h2>Confirmar Pagamento</h2>
+                            <button className="cal-modal-close" onClick={() => setPayModal({ open: false, item: null })}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="cal-modal-body">
+                            <p>Deseja marcar a <strong>Parcela {payModal.item?.parcela}</strong> de <strong>{payModal.item?.cliente}</strong> como paga?</p>
+                            <div className="cal-modal-info">
+                                <span>Valor: {fmt(payModal.item?.valor)}</span>
+                            </div>
+
+                            <div className="cal-field">
+                                <label>Mês de Referência (Dashboard)</label>
+                                <select
+                                    className="cal-input"
+                                    value={refMonth}
+                                    onChange={e => setRefMonth(e.target.value)}
+                                >
+                                    {MONTHS.map(m => (
+                                        <option key={m} value={m.toLowerCase()}>{m}</option>
+                                    ))}
+                                </select>
+                                <small>Este pagamento será contabilizado neste mês no dashboard.</small>
+                            </div>
+                        </div>
+
+                        <div className="cal-modal-footer">
+                            <button className="cal-btn-cancel" onClick={() => setPayModal({ open: false, item: null })}>
+                                Cancelar
+                            </button>
+                            <button className="cal-btn-confirm" onClick={handleConfirmPayment} disabled={paymentSaving}>
+                                {paymentSaving ? 'Processando...' : (
+                                    <>
+                                        <Check size={16} /> Confirmar Pagamento
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

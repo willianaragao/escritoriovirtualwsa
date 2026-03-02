@@ -204,7 +204,7 @@ const StatCard = ({ label, value, icon: Icon, variant, detail, onDetailClick, on
 /* ============================================================
    DASHBOARD
 ============================================================ */
-const Dashboard = ({ onNavigate }) => {
+const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
     const [topClients, setTopClients] = useState([]);
     const [stats, setStats] = useState({
         entradas: 0,
@@ -218,8 +218,7 @@ const Dashboard = ({ onNavigate }) => {
     });
     const [chartSlices, setChartSlices] = useState([]);
     const now = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    // Removed local selectedMonth/Year
     const [showSaldoDetail, setShowSaldoDetail] = useState(false);
     const [showMonthPicker, setShowMonthPicker] = useState(false);
     const [viewMode, setViewMode] = useState('chart'); // 'chart' or 'materia'
@@ -294,12 +293,11 @@ const Dashboard = ({ onNavigate }) => {
                     valorPago = 0;
                     valorPendente = val;
                 } else {
-                    if (p.condicoes_pagamento?.valor_recebido !== undefined) {
-                        valorPago = Number(p.condicoes_pagamento.valor_recebido);
-                    } else {
-                        const valorPorParcela = val / (numParcelas || 1);
-                        valorPago = valorPorParcela * parcelasPagas;
-                    }
+                    const valorPorParcela = val / (numParcelas || 1);
+                    const calcParcelas = valorPorParcela * parcelasPagas;
+                    const jsonRecebido = Number(p.condicoes_pagamento?.valor_recebido || 0);
+
+                    valorPago = Math.max(calcParcelas, jsonRecebido);
                     valorPendente = val - valorPago;
                 }
 

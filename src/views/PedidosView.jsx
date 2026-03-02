@@ -57,10 +57,9 @@ const addDays = (dateStr, days) => {
 };
 
 /* ============================================================ */
-const PedidosView = ({ status, title }) => {
+const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
     const now = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
     const [pedidos, setPedidos] = useState([]);
     const [total, setTotal] = useState(0);
@@ -156,9 +155,10 @@ const PedidosView = ({ status, title }) => {
                     const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
                     const pPagas = Number(p.parcelas_pagas) || 0;
 
-                    let valorPago = p.condicoes_pagamento?.valor_recebido
-                        ? Number(p.condicoes_pagamento.valor_recebido)
-                        : (valTotal / nParc) * pPagas;
+                    let valorPago = Math.max(
+                        Number(p.condicoes_pagamento?.valor_recebido || 0),
+                        (valTotal / nParc) * pPagas
+                    );
 
                     if (status === 'a_receber') {
                         const pendente = valTotal - valorPago;
@@ -245,9 +245,10 @@ const PedidosView = ({ status, title }) => {
         const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
         const pPagas = Number(p.parcelas_pagas) || 0;
 
-        let valorPago = p.condicoes_pagamento?.valor_recebido
-            ? Number(p.condicoes_pagamento.valor_recebido)
-            : (valTotal / nParc) * pPagas;
+        let valorPago = Math.max(
+            Number(p.condicoes_pagamento?.valor_recebido || 0),
+            (valTotal / nParc) * pPagas
+        );
 
         if (status === 'a_receber') {
             const pendente = valTotal - valorPago;
@@ -504,8 +505,10 @@ const PedidosView = ({ status, title }) => {
                                     <td className="pv-td-valor">
                                         {status === 'a_receber' ? (
                                             (() => {
-                                                const manual = p.condicoes_pagamento?.valor_recebido;
-                                                const pago = manual !== undefined ? Number(manual) : ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0));
+                                                const pago = Math.max(
+                                                    Number(p.condicoes_pagamento?.valor_recebido || 0),
+                                                    ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0))
+                                                );
                                                 const pendente = p.valor_total - pago;
                                                 return (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -520,8 +523,10 @@ const PedidosView = ({ status, title }) => {
                                             })()
                                         ) : status === 'pago' && p.status !== 'pago' ? (
                                             (() => {
-                                                const manual = p.condicoes_pagamento?.valor_recebido;
-                                                const pago = manual !== undefined ? Number(manual) : ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0));
+                                                const pago = Math.max(
+                                                    Number(p.condicoes_pagamento?.valor_recebido || 0),
+                                                    ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0))
+                                                );
                                                 return (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                         <span>{fmt(pago)}</span>

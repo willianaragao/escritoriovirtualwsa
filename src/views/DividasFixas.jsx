@@ -25,10 +25,9 @@ const EMPTY_FORM = {
     observacoes: ''
 };
 
-const DividasFixas = () => {
+const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
     const now = new Date();
-    const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-indexed
-    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
 
     const [dividas, setDividas] = useState([]);

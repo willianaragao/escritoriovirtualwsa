@@ -33,7 +33,7 @@ const today = () => {
     return d.toISOString().split('T')[0];
 };
 
-const getDateRange = (period) => {
+const getDateRange = (period, selectedMonth, selectedYear) => {
     const now = new Date();
     const fmt = (d) => d.toISOString().split('T')[0];
     switch (period) {
@@ -49,12 +49,14 @@ const getDateRange = (period) => {
             return { from: fmt(start), to: fmt(now) };
         }
         case 'Mês': {
-            const start = new Date(now.getFullYear(), now.getMonth(), 1);
-            return { from: fmt(start), to: fmt(now) };
+            const start = new Date(selectedYear, selectedMonth, 1);
+            const end = new Date(selectedYear, selectedMonth + 1, 0);
+            return { from: fmt(start), to: fmt(end) };
         }
         case 'Ano': {
-            const start = new Date(now.getFullYear(), 0, 1);
-            return { from: fmt(start), to: fmt(now) };
+            const start = new Date(selectedYear || now.getFullYear(), 0, 1);
+            const end = new Date(selectedYear || now.getFullYear(), 11, 31);
+            return { from: fmt(start), to: fmt(end) };
         }
         default:
             return null;
@@ -63,7 +65,7 @@ const getDateRange = (period) => {
 
 const PERIODS = ['Hoje', 'Ontem', 'Semana', 'Mês', 'Ano'];
 
-const DespesasView = () => {
+const DespesasView = ({ selectedMonth, selectedYear }) => {
     const [despesas, setDespesas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -96,7 +98,7 @@ const DespesasView = () => {
         fetchDespesas();
         fetchCategories();
         supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
-    }, [activePeriod, customFrom, customTo, selectedCategory]);
+    }, [activePeriod, customFrom, customTo, selectedCategory, selectedMonth, selectedYear]);
 
     const fetchCategories = async () => {
         try {
@@ -147,7 +149,7 @@ const DespesasView = () => {
                 from = customFrom;
                 to = customTo;
             } else {
-                const range = getDateRange(activePeriod);
+                const range = getDateRange(activePeriod, selectedMonth, selectedYear);
                 if (range) { from = range.from; to = range.to; }
             }
 

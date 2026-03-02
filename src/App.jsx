@@ -12,6 +12,7 @@ import DespesasView from './views/DespesasView'
 import NovoPedidoView from './views/NovoPedidoView'
 import EstoqueView from './views/EstoqueView'
 import CalendarioPagamentos from './views/CalendarioPagamentos'
+import ProducaoView from './views/ProducaoView'
 import { Menu, User, AlertCircle, FileCheck2, Clock, LogOut } from 'lucide-react'
 import { supabase } from './lib/supabase'
 
@@ -29,6 +30,10 @@ function App() {
       return null;
     }
   });
+
+  const now = new Date();
+  const [globalMonth, setGlobalMonth] = useState(now.getMonth());
+  const [globalYear, setGlobalYear] = useState(now.getFullYear());
 
   useEffect(() => {
     console.log('App State - ActiveView:', activeView, 'User:', user?.email || 'None');
@@ -50,30 +55,39 @@ function App() {
   }
 
   const renderView = () => {
+    const commonProps = {
+      selectedMonth: globalMonth,
+      setSelectedMonth: setGlobalMonth,
+      selectedYear: globalYear,
+      setSelectedYear: setGlobalYear
+    };
+
     try {
       switch (activeView) {
         case 'dashboard':
-          return <Dashboard onNavigate={setActiveView} />;
+          return <Dashboard onNavigate={setActiveView} {...commonProps} />;
         case 'novo-pedido':
           return <NovoPedidoView />;
         case 'dividas':
-          return <DividasFixas />;
+          return <DividasFixas {...commonProps} />;
         case 'categorias':
           return <Categorias />;
         case 'clientes':
           return <ClientesView />;
         case 'despesas':
-          return <DespesasView />;
+          return <DespesasView {...commonProps} />;
         case 'pendentes':
-          return <PedidosView status="pendente" title="Pedidos Pendentes" icon={AlertCircle} />;
+          return <PedidosView status="pendente" title="Pedidos Pendentes" icon={AlertCircle} {...commonProps} />;
         case 'pagos':
-          return <PedidosView status="pago" title="Pedidos Pagos" icon={FileCheck2} />;
+          return <PedidosView status="pago" title="Pedidos Pagos" icon={FileCheck2} {...commonProps} />;
         case 'a-receber':
-          return <PedidosView status="a_receber" title="Pedidos a Receber" icon={Clock} />;
+          return <PedidosView status="a_receber" title="Pedidos a Receber" icon={Clock} {...commonProps} />;
         case 'estoque':
           return <EstoqueView />;
         case 'calendario':
-          return <CalendarioPagamentos />;
+          return <CalendarioPagamentos {...commonProps} />;
+        case 'lucro':
+          return <ProducaoView {...commonProps} />;
         default:
           return (
             <div style={{ padding: '2.5rem' }}>

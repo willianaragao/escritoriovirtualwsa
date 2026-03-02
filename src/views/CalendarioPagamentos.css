@@ -403,3 +403,189 @@
     text-align: center;
     color: #64748b;
 }
+
+/* ── Payment Action Button ── */
+.cal-action-btn.pay {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.cal-action-btn.pay:hover {
+    background: #10b981;
+    color: #fff;
+    border-color: #10b981;
+}
+
+/* ── Modal Styles (Inspired by DividasFixas) ── */
+.cal-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.cal-modal-box {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.cal-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.cal-modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.cal-modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.cal-modal-close:hover {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+.cal-modal-body p {
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.cal-modal-info {
+    background: #1e293b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #10b981;
+}
+
+.cal-modal-info span {
+    font-weight: 700;
+    color: #10b981;
+    font-size: 1.1rem;
+}
+
+.cal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cal-field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+.cal-input {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #f1f5f9;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    outline: none;
+}
+
+.cal-input:focus {
+    border-color: #3b82f6;
+}
+
+.cal-field small {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+}
+
+.cal-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.cal-btn-cancel {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cal-btn-cancel:hover {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+.cal-btn-confirm {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.cal-btn-confirm:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.cal-btn-confirm:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
