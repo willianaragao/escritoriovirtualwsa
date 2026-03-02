@@ -51,7 +51,7 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         const saved = localStorage.getItem('wsa_producao_config_v3');
         return saved ? JSON.parse(saved) : {
             kgPorSaco: 25,
-            precoKgAlta: 13.90,
+            precoKgAlta: 13.40,
             precoKgBaixa: 13.90,
             produtos: DEFAULT_PRODUCTS
         };
@@ -548,22 +548,35 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
                                     {form.produtos.map((p, idx) => (
                                         <div key={idx} className="product-row">
-                                            <div style={{ flex: 1 }}>
-                                                <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Tipo</label>
-                                                <select value={p.tipo} onChange={e => updateProductRow(idx, 'tipo', e.target.value)} style={{ padding: '0.4rem' }}>
-                                                    {config.produtos.map(opt => <option key={opt.tipo} value={opt.tipo}>{opt.tipo}</option>)}
+                                            <div className="product-field">
+                                                <label>Tipo</label>
+                                                <select value={p.tipo} onChange={e => updateProductRow(idx, 'tipo', e.target.value)}>
+                                                    {config.produtos.map(opt => (
+                                                        <option key={opt.tipo} value={opt.tipo}>{opt.tipo}</option>
+                                                    ))}
                                                 </select>
                                             </div>
-                                            <div style={{ width: '70px' }}>
-                                                <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Qtd</label>
-                                                <input type="number" value={p.quantidade} onChange={e => updateProductRow(idx, 'quantidade', e.target.value)} style={{ padding: '0.4rem' }} />
+                                            <div className="product-field">
+                                                <label>Qtd</label>
+                                                <input
+                                                    type="number"
+                                                    value={p.quantidade}
+                                                    onChange={e => updateProductRow(idx, 'quantidade', e.target.value)}
+                                                />
                                             </div>
-                                            <div style={{ flex: 1 }}>
-                                                <label style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Unidade</label>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: '600', padding: '0.4rem 0' }}>{fmt(p.valor_un)}</div>
+                                            <div className="product-field">
+                                                <label>Preço Und</label>
+                                                <div className="product-value-display">
+                                                    {fmt(p.valor_un)}
+                                                </div>
                                             </div>
-                                            <button type="button" className="action-btn delete" style={{ background: '#451a1a', padding: '0.5rem' }} onClick={() => removeProductRow(idx)}>
-                                                <Trash size={16} color="#ef4444" />
+                                            <button
+                                                type="button"
+                                                className="action-btn delete"
+                                                style={{ height: '38px', width: '38px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                onClick={() => removeProductRow(idx)}
+                                            >
+                                                <Trash size={16} />
                                             </button>
                                         </div>
                                     ))}

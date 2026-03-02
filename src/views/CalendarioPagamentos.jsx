@@ -227,12 +227,18 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
 
             if (fetchErr) throw fetchErr;
 
-            const valParc = (Number(pedido.valor_total) || 0) / (totalParc || 1);
+            const totalParc = Number(pedido.numero_parcelas) || 1;
+            const currentPagas = Number(pedido.parcelas_pagas) || 0;
+            const incrementedPagas = Math.max(currentPagas + 1, payModal.item.parcela);
+
+            const valTotal = Number(pedido.valor_total) || 0;
+            const valParc = valTotal / totalParc;
             const totalRecebidoCalculado = valParc * incrementedPagas;
 
             const updates = {
                 parcelas_pagas: incrementedPagas,
-                mes_referencia: refMonth
+                mes_referencia: refMonth,
+                data_pagamento: new Date().toISOString().split('T')[0]
             };
 
             // Sync with conditions to avoid stale dashboard values
