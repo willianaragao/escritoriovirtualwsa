@@ -679,7 +679,14 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                         <div className="pv-status-list">
                                                             {PAYMENT_OPTIONS.map(opt => (
                                                                 <button key={opt.value} type="button" className={`pv-status-item ${eForma === opt.value ? 'active' : ''}`}
-                                                                    onClick={() => { setEForma(opt.value); setShowPayDrop(false); }}>
+                                                                    onClick={() => {
+                                                                        if (eForma && eForma !== opt.value && (eStatus === 'pago' || eStatus === 'parcialmente_pago')) {
+                                                                            // Feedback visual através de console ou state poderia ser adicionado aqui
+                                                                            alert(`Atenção: O saldo será transferido de ${eForma} para ${opt.value}`);
+                                                                        }
+                                                                        setEForma(opt.value);
+                                                                        setShowPayDrop(false);
+                                                                    }}>
                                                                     {opt.label}
                                                                 </button>
                                                             ))}

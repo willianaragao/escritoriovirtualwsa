@@ -495,7 +495,13 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
                                     <select
                                         className="modal-select"
                                         value={form.meio_pagamento}
-                                        onChange={e => setForm({ ...form, meio_pagamento: e.target.value })}
+                                        onChange={e => {
+                                            const newVal = e.target.value;
+                                            if (editingId && form.meio_pagamento !== newVal) {
+                                                alert(`Atenção: O valor desta despesa será transferido no saldo de ${form.meio_pagamento} para ${newVal}`);
+                                            }
+                                            setForm({ ...form, meio_pagamento: newVal });
+                                        }}
                                     >
                                         <option value="dinheiro">💵 Dinheiro</option>
                                         <option value="pix">⚡ PIX</option>
