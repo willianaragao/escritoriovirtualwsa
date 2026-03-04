@@ -144,7 +144,7 @@
 
 .np-client-btn.sel {
     color: #f1f5f9;
-    border-color: #10b981;
+    border-color: #f59e0b;
 }
 
 .np-dropdown {
@@ -190,7 +190,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: #10b981;
+    background: #f59e0b;
     color: #0f172a;
     border: none;
     border-radius: 10px;
@@ -234,7 +234,7 @@
 }
 
 .np-card.in-cart {
-    border-color: #10b981;
+    border-color: #f59e0b;
     box-shadow: 0 0 0 2px rgba(245, 158, 11, .1);
 }
 
@@ -309,7 +309,7 @@
 }
 
 .np-price-inp:focus {
-    border-color: #10b981;
+    border-color: #f59e0b;
 }
 
 .np-qty-lbl {
@@ -373,7 +373,7 @@
 }
 
 .np-qty-inp:focus {
-    border-color: #10b981;
+    border-color: #f59e0b;
 }
 
 .np-qty-inp.sm {
@@ -387,7 +387,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    background: #10b981;
+    background: #f59e0b;
     color: #0f172a;
     border: none;
     border-radius: 9px;
@@ -504,7 +504,7 @@
 .np-total-val {
     font-size: 1.55rem;
     font-weight: 800;
-    color: #10b981;
+    color: #f59e0b;
 }
 
 /* ---- PAYMENT GRID ---- */
@@ -678,7 +678,7 @@
 }
 
 .dot-pendente {
-    background: #10b981;
+    background: #f59e0b;
     box-shadow: 0 0 6px rgba(245, 158, 11, .6);
 }
 
@@ -688,8 +688,8 @@
 }
 
 .dot-parcialmente_pago {
-    background: #86efac;
-    box-shadow: 0 0 6px rgba(134, 239, 172, .6);
+    background: #fbbf24;
+    box-shadow: 0 0 6px rgba(251, 191, 36, .6);
 }
 
 .dot-a_receber {
@@ -699,8 +699,8 @@
 
 /* Active border color per status */
 .np-status-opt.active:has(.dot-pendente) {
-    border-color: #10b981;
-    background: #1c1505;
+    border-color: #f59e0b;
+    background: #451a03;
 }
 
 .np-status-opt.active:has(.dot-pago) {
@@ -709,8 +709,8 @@
 }
 
 .np-status-opt.active:has(.dot-parcialmente_pago) {
-    border-color: #86efac;
-    background: #052e16;
+    border-color: #fbbf24;
+    background: #451a03;
 }
 
 .np-status-opt.active:has(.dot-a_receber) {
