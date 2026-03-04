@@ -75,6 +75,117 @@
     pointer-events: none;
 }
 
+/* --- Month Selector Button --- */
+.despesas-month-selector {
+    position: relative;
+}
+
+.despesas-month-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #e2e8f0;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    white-space: nowrap;
+}
+
+.despesas-month-btn:hover {
+    border-color: #f59e0b;
+}
+
+.despesas-month-btn svg {
+    color: #64748b;
+}
+
+/* --- Month Popup --- */
+.despesas-month-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem;
+    z-index: 200;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    min-width: 240px;
+    animation: dropDown 0.15s ease;
+}
+
+@keyframes dropDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.despesas-month-year-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.despesas-year-btn {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.25rem 0.6rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.despesas-year-btn.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.despesas-month-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+}
+
+.despesas-month-pill {
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    padding: 0.3rem 0;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.despesas-month-pill.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #0f172a;
+    font-weight: 700;
+}
+
+.despesas-month-pill:hover:not(.active) {
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
 /* ---- Period Filter Bar ---- */
 .period-filter-bar {
     display: flex;

@@ -33,6 +33,21 @@ const today = () => {
     return d.toISOString().split('T')[0];
 };
 
+const normalizeCategory = (cat) => {
+    if (!cat) return 'Outros';
+    const mapping = {
+        'Alimentaçao': 'Alimentação',
+        'Alimentacao': 'Alimentação',
+        'Combustivel': 'Combustível',
+        'Combustivel ': 'Combustível',
+        'Manutencao': 'Manutenção',
+        'Manutencao ': 'Manutenção',
+        'Internert': 'Internet',
+        'Internt': 'Internet'
+    };
+    return mapping[cat] || cat;
+};
+
 const getDateRange = (period, selectedMonth, selectedYear) => {
     const now = new Date();
     const fmt = (d) => d.toISOString().split('T')[0];
@@ -65,7 +80,7 @@ const getDateRange = (period, selectedMonth, selectedYear) => {
 
 const PERIODS = ['Hoje', 'Ontem', 'Semana', 'Mês', 'Ano'];
 
-const DespesasView = ({ selectedMonth, selectedYear }) => {
+const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
     const [despesas, setDespesas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -73,10 +88,12 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
     const [customFrom, setCustomFrom] = useState('');
     const [customTo, setCustomTo] = useState('');
     const [showCalendar, setShowCalendar] = useState(false);
+    const [showMonthPicker, setShowMonthPicker] = useState(false); // Added month picker toggle
     const [selectedCategory, setSelectedCategory] = useState('');
     const [categories, setCategories] = useState([]);
     const [total, setTotal] = useState(0);
     const calendarRef = useRef(null);
+    const monthPickerRef = useRef(null); // Ref for month picker outside click
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -110,16 +127,24 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
         }
     };
 
-    // Close calendar popup on outside click
+    // Close calendar or month picker on outside click
     useEffect(() => {
         const handler = (e) => {
             if (calendarRef.current && !calendarRef.current.contains(e.target)) {
                 setShowCalendar(false);
             }
+            if (monthPickerRef.current && !monthPickerRef.current.contains(e.target)) {
+                setShowMonthPicker(false);
+            }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    const MONTH_NAMES = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
 
     const fetchDespesas = async () => {
         setLoading(true);
@@ -132,12 +157,10 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
             if (error) throw error;
 
             // 1. Normalize categories right at the source
-            const normalizedData = (data || []).map(d => {
-                let cat = d.categoria || 'Outros';
-                if (cat === 'Alimentaçao') cat = 'Alimentação';
-                if (cat === 'Internert') cat = 'Internet';
-                return { ...d, categoria: cat };
-            });
+            const normalizedData = (data || []).map(d => ({
+                ...d,
+                categoria: normalizeCategory(d.categoria)
+            }));
 
             // 2. Unique categories from normalized data (ensures clean filter list)
             const cats = [...new Set(normalizedData.map(d => d.categoria))].sort();
@@ -163,6 +186,7 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
             });
 
             setDespesas(filtered);
+            // Total here is the base total for the selected period/category
             setTotal(filtered.reduce((sum, d) => sum + (d.valor || 0), 0));
         } catch (err) {
             console.error('Error fetching despesas:', err);
@@ -199,6 +223,8 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
     const filteredList = despesas.filter(d =>
         d.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const displayTotal = filteredList.reduce((sum, d) => sum + (d.valor || 0), 0);
 
     const handleDelete = async (id) => {
         if (!confirm('Tem certeza que deseja excluir esta despesa?')) return;
@@ -244,14 +270,10 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
         if (!form.valor || isNaN(parseFloat(form.valor))) { alert('Informe um valor válido.'); return; }
         setSaving(true);
         try {
-            let normalizedCat = form.categoria || 'Outros';
-            if (normalizedCat === 'Alimentaçao') normalizedCat = 'Alimentação';
-            if (normalizedCat === 'Internert') normalizedCat = 'Internet';
-
             const payload = {
                 user_id: userId,
                 descricao: form.descricao.trim(),
-                categoria: normalizedCat,
+                categoria: normalizeCategory(form.categoria),
                 valor: parseFloat(form.valor),
                 meio_pagamento: form.meio_pagamento,
                 data: form.data,
@@ -296,11 +318,49 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
                             className="despesas-select"
                         >
                             <option value="">Todas as categorias</option>
-                            {categories.map(cat => (
-                                <option key={cat} value={cat}>{cat}</option>
+                            {dbCategories.map(cat => (
+                                <option key={cat.id} value={cat.nome}>{cat.nome}</option>
                             ))}
                         </select>
                         <ChevronDown size={14} className="select-chevron" />
+                    </div>
+
+                    {/* Month selector - NEW */}
+                    <div className="despesas-month-selector" ref={monthPickerRef}>
+                        <button
+                            className="despesas-month-btn"
+                            onClick={() => setShowMonthPicker(v => !v)}
+                        >
+                            <Calendar size={15} />
+                            <span>{MONTH_NAMES[selectedMonth]} de {selectedYear}</span>
+                            <ChevronDown size={14} />
+                        </button>
+                        {showMonthPicker && (
+                            <div className="despesas-month-popup">
+                                <div className="despesas-month-year-row">
+                                    {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
+                                        <button
+                                            key={y}
+                                            className={`despesas-year-btn ${y === selectedYear ? 'active' : ''}`}
+                                            onClick={() => setSelectedYear(y)}
+                                        >
+                                            {y}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="despesas-month-grid">
+                                    {MONTH_NAMES.map((m, idx) => (
+                                        <button
+                                            key={m}
+                                            className={`despesas-month-pill ${idx === selectedMonth ? 'active' : ''}`}
+                                            onClick={() => { setSelectedMonth(idx); setShowMonthPicker(false); setActivePeriod('Mês'); }}
+                                        >
+                                            {m.slice(0, 3)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Period Filter Bar */}
@@ -350,9 +410,11 @@ const DespesasView = ({ selectedMonth, selectedYear }) => {
             <div className="despesas-total-card">
                 <div className="despesas-total-left">
                     <span className="despesas-total-icon">💰</span>
-                    <span className="despesas-total-label">Total em Despesas</span>
+                    <span className="despesas-total-label">
+                        {searchTerm ? 'Soma das despesas filtradas' : 'Total em Despesas'}
+                    </span>
                 </div>
-                <span className="despesas-total-value">{formatCurrency(total)}</span>
+                <span className="despesas-total-value">{formatCurrency(displayTotal)}</span>
             </div>
 
             {/* Table Card */}

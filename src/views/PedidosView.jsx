@@ -84,6 +84,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [eDataPagamento, setEDataPagamento] = useState('');
     const [eMesReferencia, setEMesReferencia] = useState('');
     const [eValorRecebido, setEValorRecebido] = useState('');
+    const [eAddValor, setEAddValor] = useState('');
     const [showStatusDrop, setShowStatusDrop] = useState(false);
     const [showPayDrop, setShowPayDrop] = useState(false);
     const [showMonthDrop, setShowMonthDrop] = useState(false);
@@ -280,6 +281,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         setEditPedido(pedido);
         setEditLoading(true);
         setEditItens([]);
+        setEAddValor('');
 
         // Pre-fill payment fields from stored condições
         const cond = pedido.condicoes_pagamento || {};
@@ -357,29 +359,39 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 if (error) throw error;
             }
 
+            const addVal = parseFloat(eAddValor) || 0;
+            const currentRec = parseFloat(eValorRecebido) || 0;
+            const newValRecebido = currentRec + addVal;
+
             const condicoes = {
                 formaPagamento: eForma,
                 numeroParcelas: Number(eParcelas),
                 dataPrimeiraParcela: eData || '',
                 intervaloDias: Number(eIntervalo),
-                valor_recebido: parseFloat(eValorRecebido) || 0,
+                valor_recebido: newValRecebido,
             };
 
             // 3. Update pedido row
-            // Logic to calculate parcelas_pagas from eValorRecebido
-            const valRecebido = parseFloat(eValorRecebido) || 0;
+            // Auto-update status if payment covers total
+            let finalStatus = eStatus;
+            if (newValRecebido >= editTotal - 0.01) { // 0.01 for rounding issues
+                finalStatus = 'pago';
+            } else if (newValRecebido > 0 && finalStatus === 'pendente') {
+                finalStatus = 'parcialmente_pago';
+            }
+
             const precoParc = editTotal / Number(eParcelas);
-            let calculatedPagas = Math.round(valRecebido / precoParc);
-            if (eStatus === 'pago') calculatedPagas = Number(eParcelas);
+            let calculatedPagas = Math.round(newValRecebido / precoParc);
+            if (finalStatus === 'pago') calculatedPagas = Number(eParcelas);
 
             const { error: pedErr } = await supabase
                 .from('pedidos')
                 .update({
                     valor_total: editTotal,
-                    status: eStatus,
+                    status: finalStatus,
                     observacoes: eObs || null,
                     data_entrega: eEntrega || null,
-                    data_pagamento: eDataPagamento || null,
+                    data_pagamento: (finalStatus === 'pago' && !eDataPagamento) ? new Date().toISOString().split('T')[0] : (eDataPagamento || null),
                     mes_referencia: eMesReferencia || null,
                     numero_parcelas: Number(eParcelas),
                     parcelas_pagas: calculatedPagas,
@@ -391,7 +403,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             // 4. Reflect changes locally
             setPedidos(prev => prev.map(p =>
                 p.id === editPedido.id
-                    ? { ...p, valor_total: editTotal, status: eStatus, condicoes_pagamento: condicoes }
+                    ? { ...p, valor_total: editTotal, status: finalStatus, condicoes_pagamento: condicoes }
                     : p
             ));
             setTotal(prev => prev - (editPedido.valor_total || 0) + editTotal);
@@ -657,13 +669,30 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                 </div>
                                             </div>
 
-                                            {/* Valor Recebido */}
+                                            {/* Pagamentos */}
                                             <div className="pv-edit-field">
-                                                <label>Valor Recebido (R$)</label>
+                                                <label>Já Recebido (R$)</label>
                                                 <input type="number" step="0.01" className="pv-edit-input"
                                                     value={eValorRecebido}
                                                     onChange={e => setEValorRecebido(e.target.value)} />
-                                                <small style={{ color: '#64748b', marginTop: '4px' }}>Total do pedido: {fmt(editTotal)}</small>
+                                                <small style={{ color: '#64748b', marginTop: '4px', display: 'block' }}>
+                                                    Pendente: {fmt(editTotal - (parseFloat(eValorRecebido) || 0) - (parseFloat(eAddValor) || 0))}
+                                                </small>
+
+                                                <div style={{ marginTop: '0.75rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                                        <label style={{ fontSize: '0.75rem', color: '#f59e0b' }}>+ Adicionar Pagamento</label>
+                                                        <button type="button" className="pv-manage-btn" style={{ padding: '2px 6px', fontSize: '0.65rem' }}
+                                                            onClick={() => setEAddValor((editTotal - (parseFloat(eValorRecebido) || 0)).toFixed(2))}>
+                                                            Quitar Tudo
+                                                        </button>
+                                                    </div>
+                                                    <input type="number" step="0.01" className="pv-edit-input"
+                                                        style={{ borderColor: eAddValor > 0 ? '#f59e0b' : '#334155', background: eAddValor > 0 ? 'rgba(245, 158, 11, 0.05)' : '#0f172a' }}
+                                                        value={eAddValor}
+                                                        onChange={e => setEAddValor(e.target.value)}
+                                                        placeholder="0,00" />
+                                                </div>
                                             </div>
 
                                             {/* Forma de Pagamento */}

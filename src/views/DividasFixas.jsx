@@ -32,6 +32,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
     const [dividas, setDividas] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState(null);
 
     // Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,18 +41,30 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        fetchDividas();
+        supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
     }, []);
+
+    useEffect(() => {
+        fetchDividas();
+    }, [selectedMonth, selectedYear]);
 
     const fetchDividas = async () => {
         setLoading(true);
         try {
+            const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+            // Tenta buscar dividas com mes_referencia ou sem ele (fallback)
             const { data, error } = await supabase
                 .from('dividas_fixas_wsa')
                 .select('*')
+                .or(`mes_referencia.eq.${mesRef},mes_referencia.is.null`)
                 .order('vencimento', { ascending: true });
 
             if (error) throw error;
+
+            // Se houver registros específicos do mês, mostramos eles. 
+            // Caso contrário, poderíamos mostrar os modelos "null" se necessário,
+            // mas aqui vamos apenas carregar o que vier e o usuário decide se cria um novo no mês.
             setDividas(data || []);
         } catch (err) {
             console.error('Erro ao buscar dívidas:', err);
@@ -116,13 +129,18 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         if (!form.valor || isNaN(parseFloat(form.valor))) { alert('Informe um valor válido.'); return; }
         setSaving(true);
         try {
+            const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
             const payload = {
+                user_id: userId,
                 descricao: form.descricao.trim(),
                 vencimento: form.vencimento !== '' ? Number(form.vencimento) : null,
                 valor: parseFloat(form.valor),
                 ativa: form.ativa,
                 paga: form.paga,
-                observacoes: form.observacoes || null
+                observacoes: form.observacoes || null,
+                categoria: 'Fixa',
+                tipo: 'mensal',
+                mes_referencia: mesRef
             };
 
             let err;
