@@ -38,7 +38,7 @@
     align-items: center;
     gap: 0.5rem;
     background: #451a03;
-    border: 1px solid #f59e0b;
+    border: 1px solid #10b981;
     color: #fbbf24;
     border-radius: 10px;
     padding: 0.5rem 1rem;
@@ -103,13 +103,19 @@
 .np-search-input {
     width: 100%;
     box-sizing: border-box;
-    background: #0f172a;
-    border: 2px solid #f59e0b;
+    background-color: rgba(15, 23, 42, 0.4) !important;
+    border: 2px solid var(--accent-orange);
     border-radius: 10px;
-    color: #e2e8f0;
+    color: #fff !important;
     padding: 0.75rem 1rem 0.75rem 2.3rem;
     font-size: 0.9rem;
     outline: none;
+    transition: var(--transition-smooth);
+}
+
+.np-search-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+    -webkit-text-fill-color: white !important;
 }
 
 .np-search-input::placeholder {
@@ -138,7 +144,7 @@
 
 .np-client-btn.sel {
     color: #f1f5f9;
-    border-color: #f59e0b;
+    border-color: #10b981;
 }
 
 .np-dropdown {
@@ -175,7 +181,7 @@
 .np-drop-opt:hover,
 .np-drop-opt.active {
     background: #1a2d47;
-    color: #f59e0b;
+    color: #10b981;
 }
 
 .np-btn-orange {
@@ -184,7 +190,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: #f59e0b;
+    background: #10b981;
     color: #0f172a;
     border: none;
     border-radius: 10px;
@@ -228,7 +234,7 @@
 }
 
 .np-card.in-cart {
-    border-color: #f59e0b;
+    border-color: #10b981;
     box-shadow: 0 0 0 2px rgba(245, 158, 11, .1);
 }
 
@@ -303,7 +309,7 @@
 }
 
 .np-price-inp:focus {
-    border-color: #f59e0b;
+    border-color: #10b981;
 }
 
 .np-qty-lbl {
@@ -367,7 +373,7 @@
 }
 
 .np-qty-inp:focus {
-    border-color: #f59e0b;
+    border-color: #10b981;
 }
 
 .np-qty-inp.sm {
@@ -381,7 +387,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    background: #f59e0b;
+    background: #10b981;
     color: #0f172a;
     border: none;
     border-radius: 9px;
@@ -498,7 +504,7 @@
 .np-total-val {
     font-size: 1.55rem;
     font-weight: 800;
-    color: #f59e0b;
+    color: #10b981;
 }
 
 /* ---- PAYMENT GRID ---- */
@@ -523,20 +529,26 @@
 }
 
 .np-input {
-    background: #0f172a;
-    border: 1px solid #2a3a52;
+    background-color: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    color: #e2e8f0;
+    color: #fff !important;
     padding: 0.7rem 0.9rem;
     font-size: 0.9rem;
     outline: none;
     width: 100%;
     box-sizing: border-box;
-    transition: border-color 0.2s;
+    transition: var(--transition-smooth);
+}
+
+.np-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 30px #0f172a inset !important;
+    -webkit-text-fill-color: white !important;
 }
 
 .np-input:focus {
-    border-color: #f59e0b;
+    border-color: var(--accent-orange);
+    background-color: rgba(15, 23, 42, 0.6) !important;
 }
 
 .np-input::placeholder {
@@ -606,7 +618,7 @@
 }
 
 .np-select:focus {
-    border-color: #f59e0b;
+    border-color: #10b981;
 }
 
 .np-select option {
@@ -666,7 +678,7 @@
 }
 
 .dot-pendente {
-    background: #f59e0b;
+    background: #10b981;
     box-shadow: 0 0 6px rgba(245, 158, 11, .6);
 }
 
@@ -687,7 +699,7 @@
 
 /* Active border color per status */
 .np-status-opt.active:has(.dot-pendente) {
-    border-color: #f59e0b;
+    border-color: #10b981;
     background: #1c1505;
 }
 
@@ -801,7 +813,7 @@
 }
 
 .np-pay-item.active {
-    background: #f59e0b;
+    background: #10b981;
     color: #0f172a;
     font-weight: 700;
 }
@@ -834,7 +846,7 @@
 }
 
 .np-textarea:focus {
-    border-color: #f59e0b;
+    border-color: #10b981;
 }
 
 .np-textarea::placeholder {
@@ -848,7 +860,7 @@
     justify-content: center;
     gap: 0.5rem;
     width: 100%;
-    background: #f59e0b;
+    background: #10b981;
     color: #0f172a;
     border: none;
     border-radius: 10px;

@@ -62,10 +62,14 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
             if (error) throw error;
 
-            // Se houver registros específicos do mês, mostramos eles. 
-            // Caso contrário, poderíamos mostrar os modelos "null" se necessário,
-            // mas aqui vamos apenas carregar o que vier e o usuário decide se cria um novo no mês.
-            setDividas(data || []);
+            const mapByDesc = {};
+            data.forEach(d => {
+                if (!d.mes_referencia) mapByDesc[d.descricao] = d;
+            });
+            data.forEach(d => {
+                if (d.mes_referencia === mesRef) mapByDesc[d.descricao] = d;
+            });
+            setDividas(Object.values(mapByDesc));
         } catch (err) {
             console.error('Erro ao buscar dívidas:', err);
         } finally {
@@ -73,7 +77,9 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         }
     };
 
-    const totalMensal = dividas.reduce((acc, d) => acc + (d.valor || d.valor_mensal || 0), 0);
+    const totalMensal = dividas
+        .filter(d => !d.paga && d.ativa !== false)
+        .reduce((acc, d) => acc + (d.valor || d.valor_mensal || 0), 0);
 
     const formatCurrency = (val) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
@@ -116,11 +122,35 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     };
 
     const handleTogglePago = async (d) => {
-        const { error } = await supabase
-            .from('dividas_fixas_wsa')
-            .update({ paga: !d.paga })
-            .eq('id', d.id);
-        if (!error) fetchDividas();
+        const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+        try {
+            if (d.mes_referencia === mesRef) {
+                // It's already a monthly specific record, just switch its status
+                const { error } = await supabase
+                    .from('dividas_fixas_wsa')
+                    .update({ paga: !d.paga })
+                    .eq('id', d.id);
+                if (error) throw error;
+            } else {
+                // It's a MASTER record (null reference). 
+                // We create a CLONE for this month with the new status.
+                const { id, created_at, updated_at, ...rest } = d;
+                const payload = {
+                    ...rest,
+                    mes_referencia: mesRef,
+                    paga: !d.paga
+                };
+                const { error } = await supabase
+                    .from('dividas_fixas_wsa')
+                    .insert([payload]);
+                if (error) throw error;
+            }
+            fetchDividas();
+        } catch (err) {
+            console.error('Error toggling payment:', err);
+            alert('Erro ao alterar status de pagamento.');
+        }
     };
 
     const handleSave = async (e) => {
@@ -213,7 +243,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             {/* ===== TOTAL + BUTTON ROW ===== */}
             <div className="df-totals-row">
                 <div className="df-total-card">
-                    <span className="df-total-label">Total Mensal</span>
+                    <span className="df-total-label">Saldo Devedor (Aberto)</span>
                     <span className="df-total-value">{formatCurrency(totalMensal)}</span>
                 </div>
                 <button className="df-btn-nova" onClick={openNew}>
@@ -231,6 +261,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                             <th>Vencimento</th>
                             <th>Status</th>
                             <th>Valor Mensal</th>
+                            <th>Pago</th>
                             <th className="df-th-right">Ações</th>
                         </tr>
                     </thead>
@@ -250,11 +281,23 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                                     <td className="df-td-desc">{d.descricao}</td>
                                     <td className="df-td-venc">{d.vencimento ?? '-'}</td>
                                     <td>
-                                        <span className={`df-badge ${status.cls}`}>
+                                        <span
+                                            className={`df-badge ${status.cls}`}
+                                            onClick={() => handleTogglePago(d)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
                                             {status.label}
                                         </span>
                                     </td>
                                     <td className="df-td-valor">{formatCurrency(d.valor || d.valor_mensal)}</td>
+                                    <td className="df-td-pago-toggle">
+                                        <button
+                                            className={`df-btn-check ${d.paga ? 'checked' : ''}`}
+                                            onClick={() => handleTogglePago(d)}
+                                        >
+                                            <Check size={14} />
+                                        </button>
+                                    </td>
                                     <td className="df-td-actions">
                                         <div className="df-actions">
                                             <button

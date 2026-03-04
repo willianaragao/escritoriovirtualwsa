@@ -12,15 +12,25 @@ import {
 import { supabase } from '../lib/supabase';
 import './ClientesView.css';
 
-const ClientesView = () => {
+const ClientesView = ({ user }) => {
     const [clientes, setClientes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [selectedCliente, setSelectedCliente] = useState(null);
     const [produtos, setProdutos] = useState([]);
     const [customPrices, setCustomPrices] = useState({});
     const [saving, setSaving] = useState(false);
+    const [savingClient, setSavingClient] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    const [clientForm, setClientForm] = useState({
+        nome: '',
+        email: '',
+        telefone: '',
+        observacoes: ''
+    });
 
     useEffect(() => {
         fetchData();
@@ -73,6 +83,90 @@ const ClientesView = () => {
         }
     };
 
+    const openClientModal = (cliente = null) => {
+        if (cliente) {
+            setSelectedCliente(cliente);
+            setClientForm({
+                nome: cliente.nome || '',
+                email: cliente.email || '',
+                telefone: cliente.telefone || '',
+                observacoes: cliente.observacoes || ''
+            });
+        } else {
+            setSelectedCliente(null);
+            setClientForm({
+                nome: '',
+                email: '',
+                telefone: '',
+                observacoes: ''
+            });
+        }
+        setIsClientModalOpen(true);
+    };
+
+    const handleSaveClient = async () => {
+        if (!clientForm.nome) {
+            alert('O nome do cliente é obrigatório.');
+            return;
+        }
+
+        setSavingClient(true);
+        try {
+            if (selectedCliente) {
+                // Update
+                const { error } = await supabase
+                    .from('clientes')
+                    .update({
+                        ...clientForm,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', selectedCliente.id);
+
+                if (error) throw error;
+                alert('Cliente atualizado com sucesso!');
+            } else {
+                // Insert
+                const { error } = await supabase
+                    .from('clientes')
+                    .insert([{
+                        ...clientForm,
+                        user_id: user?.id
+                    }]);
+
+                if (error) throw error;
+                alert('Cliente cadastrado com sucesso!');
+            }
+            setIsClientModalOpen(false);
+            fetchData();
+        } catch (err) {
+            console.error('Error saving client:', err);
+            alert('Erro ao salvar cliente.');
+        } finally {
+            setSavingClient(false);
+        }
+    };
+
+    const handleDeleteClient = async (id) => {
+        if (!window.confirm('Tem certeza que deseja excluir este cliente?')) return;
+
+        setDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('clientes')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            alert('Cliente excluído com sucesso!');
+            fetchData();
+        } catch (err) {
+            console.error('Error deleting client:', err);
+            alert('Erro ao excluir cliente. Verifique se existem pedidos vinculados a ele.');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     const handleSavePrices = async () => {
         if (!selectedCliente) return;
         setSaving(true);
@@ -118,7 +212,7 @@ const ClientesView = () => {
                     <p>Gerencie seus clientes</p>
                 </div>
                 <div className="header-actions">
-                    <button className="btn-orange">
+                    <button className="btn-orange" onClick={() => openClientModal()}>
                         <Plus size={16} />
                         Novo Cliente
                     </button>
@@ -167,8 +261,8 @@ const ClientesView = () => {
                                         <td style={{ color: '#94a3b8' }}>{c.observacoes || '-'}</td>
                                         <td className="actions-cell">
                                             <button className="action-btn price-btn" title="Preços Personalizados" onClick={() => openPriceModal(c)}>$</button>
-                                            <button className="action-btn"><Edit3 size={16} /></button>
-                                            <button className="action-btn delete"><Trash2 size={16} /></button>
+                                            <button className="action-btn" onClick={() => openClientModal(c)} title="Editar"><Edit3 size={16} /></button>
+                                            <button className="action-btn delete" onClick={() => handleDeleteClient(c.id)} title="Excluir"><Trash2 size={16} /></button>
                                         </td>
                                     </tr>
                                 ))
@@ -177,6 +271,77 @@ const ClientesView = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Client Registration/Edit Modal */}
+            {isClientModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <div>
+                                <h2>{selectedCliente ? 'Editar Cliente' : 'Novo Cliente'}</h2>
+                                <p>{selectedCliente ? 'Atualize as informações do cliente' : 'Cadastre um novo cliente no sistema'}</p>
+                            </div>
+                            <button className="modal-close" onClick={() => setIsClientModalOpen(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label>Nome Completo*</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Ex: João Silva"
+                                    value={clientForm.nome}
+                                    onChange={(e) => setClientForm({ ...clientForm, nome: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Email</label>
+                                    <input
+                                        type="email"
+                                        className="form-input"
+                                        placeholder="email@exemplo.com"
+                                        value={clientForm.email}
+                                        onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Telefone</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="(00) 00000-0000"
+                                        value={clientForm.telefone}
+                                        onChange={(e) => setClientForm({ ...clientForm, telefone: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Observações</label>
+                                <textarea
+                                    className="form-textarea"
+                                    placeholder="Alguma observação importante sobre o cliente..."
+                                    value={clientForm.observacoes}
+                                    onChange={(e) => setClientForm({ ...clientForm, observacoes: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="modal-footer">
+                            <button className="btn-cancel" onClick={() => setIsClientModalOpen(false)}>Cancelar</button>
+                            <button className="btn-save" onClick={handleSaveClient} disabled={savingClient}>
+                                <Save size={18} />
+                                {savingClient ? 'Salvando...' : 'Salvar'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Price Customization Modal */}
             {isModalOpen && (

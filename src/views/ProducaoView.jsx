@@ -88,9 +88,21 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
             // 1. Dívidas Fixas (Obrigação do Mês): Fetch da tabela de dividas_fixas_wsa (Target: 14.717)
             const { data: divData } = await supabase.from('dividas_fixas_wsa').select('*');
-            const totalFixedBudget = (divData || []).reduce((acc, d) => {
+            const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+            const mapByDesc = {};
+
+            // First pass: master records
+            (divData || []).forEach(d => {
+                if (!d.mes_referencia) mapByDesc[d.descricao || d.nome] = d;
+            });
+            // Second pass: monthly specific records override master
+            (divData || []).forEach(d => {
+                if (d.mes_referencia === mesRef) mapByDesc[d.descricao || d.nome] = d;
+            });
+
+            const totalFixedBudget = Object.values(mapByDesc).reduce((acc, d) => {
                 if (d.ativa === false) return acc;
-                const nome = (d.nome || '').toLowerCase();
+                const nome = (d.nome || d.descricao || '').toLowerCase();
                 const cat = (d.categoria || '').toLowerCase();
                 const isMateriaPrima = nome.includes('alta') || nome.includes('baixa') || nome.includes('matéria') || nome.includes('materia') ||
                     cat.includes('alta') || cat.includes('baixa') || cat.includes('matéria') || cat.includes('materia');

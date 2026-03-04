@@ -4,7 +4,7 @@ import {
     AlertCircle, Clock, CreditCard,
     ChevronDown, Award, Crown, Medal,
     Landmark, Banknote, ChevronLeft, ChevronRight,
-    Target, ArrowRightLeft, Hourglass, Package, ChevronUp, GripHorizontal
+    Target, ArrowRightLeft, Hourglass, Package, ChevronUp, GripHorizontal, Sparkles
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './Dashboard.css';
@@ -224,14 +224,25 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
     const [viewMode, setViewMode] = useState('chart'); // 'chart' or 'materia'
     const [isCardsCollapsed, setIsCardsCollapsed] = useState(false);
     const [isEditingTarget, setIsEditingTarget] = useState(false);
-    const [materiaPrimaTarget, setMateriaPrimaTarget] = useState(() => {
-        return Number(localStorage.getItem('wsa_mp_target')) || 35291.25;
-    });
+    const [materiaPrimaTarget, setMateriaPrimaTarget] = useState(35291.25);
+
+    useEffect(() => {
+        const key = `wsa_mp_target_${selectedYear}_${selectedMonth}`;
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+            setMateriaPrimaTarget(Number(saved));
+        } else {
+            // Fallback to the old universal key if exists, or default
+            const oldUniversal = localStorage.getItem('wsa_mp_target');
+            setMateriaPrimaTarget(oldUniversal ? Number(oldUniversal) : 35291.25);
+        }
+    }, [selectedMonth, selectedYear]);
 
     const updateTarget = (val) => {
         const n = parseFloat(val) || 0;
         setMateriaPrimaTarget(n);
-        localStorage.setItem('wsa_mp_target', n);
+        const key = `wsa_mp_target_${selectedYear}_${selectedMonth}`;
+        localStorage.setItem(key, n);
     };
 
     const MONTH_NAMES = [
@@ -424,14 +435,20 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
             if (divErr) throw divErr;
 
-            const totalDivFixas = (divFix || []).reduce((acc, d) => {
-                // Se o registro tem mes_referencia, deve bater com o filtro
-                if (d.mes_referencia) {
-                    const [y, m] = d.mes_referencia.split('-');
-                    if (parseInt(y) !== selectedYear || (parseInt(m) - 1) !== selectedMonth) return acc;
-                }
+            const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+            const mapByDesc = {};
 
-                // Somente ativas e não pagas
+            // First pass: master records
+            (divFix || []).forEach(d => {
+                if (!d.mes_referencia) mapByDesc[d.descricao || d.nome] = d;
+            });
+            // Second pass: monthly specific records override master
+            (divFix || []).forEach(d => {
+                if (d.mes_referencia === mesRef) mapByDesc[d.descricao || d.nome] = d;
+            });
+
+            const totalDivFixas = Object.values(mapByDesc).reduce((acc, d) => {
+                // Somente ativas e não pagas (para o saldo devedor do dashboard)
                 if (d.ativa !== false && !d.paga) {
                     return acc + (Number(d.valor || d.valor_mensal) || 0);
                 }
@@ -468,6 +485,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
     const pagoMP = chartSlices.find(s => s.label.toLowerCase().includes('matéria'))?.valor || 0;
     const saldoDevedor = Math.max(0, materiaPrimaTarget - pagoMP - stats.saldo);
     const previsaoTotal = stats.pendentes + stats.a_receber;
+    const profit = previsaoTotal - (saldoDevedor + stats.dividas_fixas);
 
     return (
         <div className="dashboard-container">
@@ -611,7 +629,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                 <div className="db-ranking-list">
                                     {topClients.map((c, idx) => {
                                         const pct = (c.val / maxVal) * 100;
-                                        const accent = '#f59e0b';
+                                        const accent = '#10b981';
                                         return (
                                             <div key={c.rank} className="db-client-card"
                                                 style={{ '--accent': accent }}>
@@ -660,14 +678,6 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     </div>
                                 </div>
 
-                                <div className="db-flow-card blue">
-                                    <div className="db-flow-icon"><Wallet size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Saldo Atual</span>
-                                        <strong>{fmt(stats.saldo)}</strong>
-                                    </div>
-                                </div>
-
                                 <div className="db-flow-card purple">
                                     <div className="db-flow-icon"><Package size={16} /></div>
                                     <div className="db-flow-info">
@@ -676,20 +686,60 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     </div>
                                 </div>
 
-                                <div className="db-flow-card red">
-                                    <div className="db-flow-icon"><AlertCircle size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Saldo Devedor Matéria Prima</span>
-                                        <strong>{fmt(saldoDevedor)}</strong>
-                                        <small>Faltam para quitar</small>
-                                    </div>
-                                </div>
-
                                 <div className="db-flow-card indigo">
                                     <div className="db-flow-icon"><Hourglass size={16} /></div>
                                     <div className="db-flow-info">
                                         <span>Previsão Recebimentos</span>
                                         <strong>{fmt(previsaoTotal)}</strong>
+                                    </div>
+                                </div>
+
+                                <div className="db-flow-card red">
+                                    <div className="db-flow-icon"><AlertCircle size={16} /></div>
+                                    <div className="db-flow-info">
+                                        <span>Saldo Devedor MP + Dívidas Fixas</span>
+                                        <strong>{fmt(stats.dividas_fixas + saldoDevedor)}</strong>
+                                        <div className="db-flow-footer">
+                                            <small>Faltam para quitar</small>
+                                            <span
+                                                className="db-detail-toggle"
+                                                onClick={() => setShowSaldoDetail(!showSaldoDetail)}
+                                            >
+                                                {showSaldoDetail ? 'Ocultar detalhe' : 'Ver detalhe'}
+                                            </span>
+                                        </div>
+
+                                        {showSaldoDetail && (
+                                            <div className="db-saldo-detail-box">
+                                                <div className="db-detail-item">
+                                                    <span>Dívidas Fixas:</span>
+                                                    <span>{fmt(stats.dividas_fixas)}</span>
+                                                </div>
+                                                <div className="db-detail-item">
+                                                    <span>Saldo MP:</span>
+                                                    <span>{fmt(saldoDevedor)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="db-flow-card blue">
+                                    <div className="db-flow-icon"><Wallet size={16} /></div>
+                                    <div className="db-flow-info">
+                                        <span>Saldo Atual</span>
+                                        <strong>{fmt(stats.saldo)}</strong>
+                                    </div>
+                                </div>
+
+                                <div className="db-flow-card color-profit">
+                                    <div className="db-flow-icon"><Sparkles size={16} /></div>
+                                    <div className="db-flow-info">
+                                        <span>Lucro do Período</span>
+                                        <strong style={{ color: profit >= 0 ? 'var(--color-entradas)' : 'var(--color-saidas)' }}>
+                                            {fmt(profit)}
+                                        </strong>
+                                        <small>{profit >= 0 ? 'Resultado positivo' : 'Resultado negativo'}</small>
                                     </div>
                                 </div>
                             </div>

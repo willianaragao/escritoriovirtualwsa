@@ -73,7 +73,7 @@ function App() {
         case 'categorias':
           return <Categorias />;
         case 'clientes':
-          return <ClientesView />;
+          return <ClientesView user={user} />;
         case 'despesas':
           return <DespesasView {...commonProps} />;
         case 'pendentes':

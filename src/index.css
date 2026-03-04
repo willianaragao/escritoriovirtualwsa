@@ -1,21 +1,34 @@
 :root {
-  --bg-deep: #0b1118;
+  /* Core Palette - Deeper and more sophisticated */
+  --bg-deep: #020617;
   --bg-sidebar: #0f172a;
-  --bg-card: #151e2d;
+  --bg-card: #1e293b;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --accent-orange: #f97316;
-  --accent-gold: #f59e0b;
+  --accent-primary: #10b981;
+  --accent-secondary: #059669;
+  --accent-blue: #3b82f6;
 
+  /* Glassmorphism Tokens */
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-blur: blur(12px);
+
+  /* Status Colors - Refined */
   --color-entradas: #10b981;
   --color-saidas: #ef4444;
-  --color-saldo: #3b82f6;
+  --color-saldo: #10b981;
+  /* Changed to green */
   --color-dividas: #f97316;
   --color-previsao: #8b5cf6;
   --color-apagar: #64748b;
 
-  --sidebar-width: 240px;
-  --transition: all 0.2s ease;
+  /* Layout & Animation */
+  --sidebar-width: 260px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --border-radius-lg: 6px;
+  --border-radius-md: 4px;
 }
 
 * {
@@ -56,4 +69,46 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Global Input Sophistication */
+input,
+textarea,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="date"],
+textarea,
+select {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-md);
+  padding: 10px 14px;
+  transition: var(--transition-smooth);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-orange);
+  background-color: rgba(30, 41, 59, 0.7) !important;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+}
+
+/* Browser Autofill Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+  -webkit-text-fill-color: white !important;
 }
