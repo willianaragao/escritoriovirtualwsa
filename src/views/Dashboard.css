@@ -6,8 +6,10 @@
 .db-donut-wrap {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    justify-content: center;
+    gap: 3rem;
     margin-top: 1.2rem;
+    width: 100%;
 }
 
 .db-donut-legend {
@@ -54,11 +56,23 @@
 .db-ranking-title {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     font-size: 0.95rem;
     font-weight: 700;
     color: #e2e8f0;
     margin-bottom: 1.2rem;
+}
+
+.chart-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-section h4 {
+    text-align: center;
+    width: 100%;
 }
 
 .db-ranking-list {

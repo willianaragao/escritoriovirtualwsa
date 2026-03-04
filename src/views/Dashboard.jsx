@@ -38,8 +38,9 @@ const fmt = val =>
 /* ============================================================
    SVG DONUT CHART – hover levanta a fatia
 ============================================================ */
-const DonutChart = ({ slices }) => {
+const DonutChart = ({ slices = [] }) => {
     const [hovered, setHovered] = useState(null);
+    const isEmpty = slices.length === 0;
     const size = 240;
     const cx = size / 2;
     const cy = size / 2;
@@ -47,19 +48,25 @@ const DonutChart = ({ slices }) => {
     const r = 56;   // inner radius (hole)
     const LIFT = 10;   // px to lift on hover
 
-    /* Build arc paths */
+    /* Build arcs */
     const toRad = deg => (deg - 90) * (Math.PI / 180);
     const polar = (angle, radius) => [
         cx + radius * Math.cos(toRad(angle)),
         cy + radius * Math.sin(toRad(angle)),
     ];
 
+    const displaySlices = isEmpty
+        ? [{ label: 'Sem Despesas', pct: 100, valor: 0, color: '#1e293b', glow: 'rgba(51,65,85,0.2)' }]
+        : slices;
+
     let cumPct = 0;
-    const arcs = slices.map((s, i) => {
+    const arcs = displaySlices.map((s, i) => {
         const startPct = cumPct;
-        cumPct += s.pct;
+        const slicePct = s.pct;
+        cumPct += slicePct;
         const startDeg = startPct * 3.6;
-        const endDeg = cumPct * 3.6;
+        // Cap at 359.99 to allow the arc command to work for 100% slices
+        const endDeg = Math.min(cumPct * 3.6, 359.99);
         const midDeg = (startDeg + endDeg) / 2;
 
         const [x1, y1] = polar(startDeg, R);
@@ -67,11 +74,10 @@ const DonutChart = ({ slices }) => {
         const [x3, y3] = polar(endDeg, r);
         const [x4, y4] = polar(startDeg, r);
 
-        const large = s.pct > 50 ? 1 : 0;
+        const large = slicePct > 50 ? 1 : 0;
         const d = `M${x1},${y1} A${R},${R} 0 ${large} 1 ${x2},${y2}
                    L${x3},${y3} A${r},${r} 0 ${large} 0 ${x4},${y4} Z`;
 
-        // Lift direction
         const liftX = cx + LIFT * Math.cos(toRad(midDeg)) - cx;
         const liftY = cy + LIFT * Math.sin(toRad(midDeg)) - cy;
 
@@ -95,7 +101,7 @@ const DonutChart = ({ slices }) => {
                     </defs>
 
                     {arcs.map(a => {
-                        const isHov = hovered === a.i;
+                        const isHov = hovered === a.i && !isEmpty;
                         return (
                             <g key={a.i}
                                 style={{
@@ -103,21 +109,23 @@ const DonutChart = ({ slices }) => {
                                         ? `translate(${a.liftX}px, ${a.liftY}px)`
                                         : 'translate(0,0)',
                                     transition: 'transform 0.25s cubic-bezier(.34,1.56,.64,1)',
-                                    cursor: 'pointer',
+                                    cursor: isEmpty ? 'default' : 'pointer',
                                     filter: isHov ? `url(#glow${a.i}) drop-shadow(0 0 8px ${a.glow})` : 'none',
                                 }}
-                                onMouseEnter={() => setHovered(a.i)}
+                                onMouseEnter={() => !isEmpty && setHovered(a.i)}
                                 onMouseLeave={() => setHovered(null)}
                             >
                                 <path d={a.d} fill={a.color}
                                     opacity={hovered !== null && !isHov ? 0.45 : 1}
                                     style={{ transition: 'opacity 0.2s' }} />
+                                {isEmpty && (
+                                    <circle cx={cx} cy={cy} r={(R + r) / 2} fill="none" stroke="#2a3a52" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                                )}
                             </g>
                         );
                     })}
 
-                    {/* Centre label */}
-                    {hovered !== null ? (
+                    {hovered !== null && !isEmpty ? (
                         <>
                             <text x={cx} y={cy - 10} textAnchor="middle" fill="#f1f5f9"
                                 fontSize="13" fontWeight="700">{arcs[hovered].label}</text>
@@ -129,56 +137,64 @@ const DonutChart = ({ slices }) => {
                     ) : (
                         <>
                             <text x={cx} y={cy - 8} textAnchor="middle" fill="#64748b"
-                                fontSize="11" fontWeight="600">DESPESAS</text>
+                                fontSize="11" fontWeight="600">{isEmpty ? 'SEM' : 'DESPESAS'}</text>
                             <text x={cx} y={cy + 12} textAnchor="middle" fill="#f1f5f9"
-                                fontSize="13" fontWeight="700">por categoria</text>
+                                fontSize="13" fontWeight="700">{isEmpty ? 'DESPESAS' : 'por categoria'}</text>
                         </>
                     )}
                 </svg>
 
-                {/* Legend */}
                 <div className="db-donut-legend">
-                    {arcs.map(a => (
-                        <div key={a.i}
-                            className={`db-legend-row ${hovered === a.i ? 'active' : ''}`}
-                            onMouseEnter={() => setHovered(a.i)}
-                            onMouseLeave={() => setHovered(null)}
-                        >
-                            <span className="db-legend-dot" style={{ background: a.color }} />
-                            <span className="db-legend-label">{a.label}</span>
-                            <span className="db-legend-pct" style={{ color: a.color }}>{a.pct}%</span>
+                    {isEmpty ? (
+                        <div className="db-legend-row" style={{ opacity: 0.5, cursor: 'default' }}>
+                            <span className="db-legend-dot" style={{ background: '#1e293b' }} />
+                            <span className="db-legend-label">Nenhuma despesa</span>
+                            <span className="db-legend-pct">0%</span>
                         </div>
-                    ))}
+                    ) : (
+                        arcs.map(a => (
+                            <div key={a.i}
+                                className={`db-legend-row ${hovered === a.i ? 'active' : ''}`}
+                                onMouseEnter={() => setHovered(a.i)}
+                                onMouseLeave={() => setHovered(null)}
+                            >
+                                <span className="db-legend-dot" style={{ background: a.color }} />
+                                <span className="db-legend-label">{a.label}</span>
+                                <span className="db-legend-pct" style={{ color: a.color }}>{a.pct}%</span>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
-            {/* ── Value cards below chart ── */}
-            <div className="db-cat-cards">
-                {arcs.map(a => (
-                    <div
-                        key={a.i}
-                        className={`db-cat-card ${hovered === a.i ? 'active' : ''}`}
-                        style={{ '--cat-color': a.color }}
-                        onMouseEnter={() => setHovered(a.i)}
-                        onMouseLeave={() => setHovered(null)}
-                    >
-                        <div className="db-cat-header">
-                            <span className="db-cat-dot" style={{ background: a.color }} />
-                            <span className="db-cat-name">{a.label}</span>
+            {!isEmpty && (
+                <div className="db-cat-cards">
+                    {arcs.map(a => (
+                        <div
+                            key={a.i}
+                            className={`db-cat-card ${hovered === a.i ? 'active' : ''}`}
+                            style={{ '--cat-color': a.color }}
+                            onMouseEnter={() => setHovered(a.i)}
+                            onMouseLeave={() => setHovered(null)}
+                        >
+                            <div className="db-cat-header">
+                                <span className="db-cat-dot" style={{ background: a.color }} />
+                                <span className="db-cat-name">{a.label}</span>
+                            </div>
+                            <div className="db-cat-body">
+                                <span className="db-cat-val" style={{ color: a.color }}>
+                                    {fmt(a.valor)}
+                                </span>
+                                <span className="db-cat-pct-label">{a.pct}%</span>
+                            </div>
+                            <div className="db-cat-bar">
+                                <div className="db-cat-bar-fill"
+                                    style={{ width: `${a.pct}%`, background: a.color }} />
+                            </div>
                         </div>
-                        <div className="db-cat-body">
-                            <span className="db-cat-val" style={{ color: a.color }}>
-                                {fmt(a.valor)}
-                            </span>
-                            <span className="db-cat-pct-label">{a.pct}%</span>
-                        </div>
-                        <div className="db-cat-bar">
-                            <div className="db-cat-bar-fill"
-                                style={{ width: `${a.pct}%`, background: a.color }} />
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </>
     );
 };
@@ -609,14 +625,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                             {/* Donut chart */}
                             <div className="chart-section">
                                 <h4>Despesas por Categoria</h4>
-                                {chartSlices.length > 0 ? (
-                                    <DonutChart slices={chartSlices} />
-                                ) : (
-                                    <div className="db-empty-chart">
-                                        <AlertCircle size={32} />
-                                        <p>Nenhuma despesa registrada neste período.</p>
-                                    </div>
-                                )}
+                                <DonutChart slices={chartSlices} />
                             </div>
 
                             {/* Client ranking */}

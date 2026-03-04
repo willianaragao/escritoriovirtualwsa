@@ -58,6 +58,7 @@ const NovoPedidoView = () => {
 
     /* ---- Produtos ---- */
     const [produtos, setProdutos] = useState([]);
+    const [prodSearch, setProdSearch] = useState(''); // Added product search state
     const [quantities, setQuantities] = useState({});
     const [customPrices, setCustomPrices] = useState({});
 
@@ -170,6 +171,10 @@ const NovoPedidoView = () => {
 
     const cartTotal = cart.reduce((s, i) => s + i.qty * i.preco, 0);
     const parcelaValue = numeroParcelas > 1 ? cartTotal / numeroParcelas : cartTotal;
+
+    const filteredProdutos = produtos.filter(p =>
+        p.nome.toLowerCase().includes(prodSearch.toLowerCase())
+    );
 
     /* ---- Installments preview ---- */
     const parcelas = (() => {
@@ -338,12 +343,23 @@ const NovoPedidoView = () => {
 
             {/* CATALOG */}
             <div className="np-section">
-                <div className="np-section-title"><Package size={18} /> Catálogo de Produtos</div>
-                {produtos.length === 0 ? (
-                    <div className="np-empty">Nenhum produto cadastrado.</div>
+                <div className="np-catalog-header">
+                    <div className="np-section-title"><Package size={18} /> Catálogo de Produtos</div>
+                    <div className="np-prod-search">
+                        <Search size={14} />
+                        <input
+                            type="text"
+                            placeholder="Buscar produto no catálogo..."
+                            value={prodSearch}
+                            onChange={e => setProdSearch(e.target.value)}
+                        />
+                    </div>
+                </div>
+                {filteredProdutos.length === 0 ? (
+                    <div className="np-empty">Nenhum produto encontrado.</div>
                 ) : (
                     <div className="np-catalog-grid">
-                        {produtos.map(prod => {
+                        {filteredProdutos.map(prod => {
                             const qty = quantities[prod.id] || 1;
                             const preco = customPrices[prod.id] ?? prod.preco_unitario;
                             const inCart = cart.some(i => i.produto.id === prod.id);
