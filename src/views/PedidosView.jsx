@@ -414,7 +414,14 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             // 4. Reflect changes locally
             setPedidos(prev => prev.map(p =>
                 p.id === editPedido.id
-                    ? { ...p, valor_total: editTotal, status: finalStatus, condicoes_pagamento: condicoes }
+                    ? {
+                        ...p,
+                        valor_total: editTotal,
+                        status: finalStatus,
+                        condicoes_pagamento: condicoes,
+                        numero_parcelas: Number(eParcelas),
+                        parcelas_pagas: calculatedPagas
+                    }
                     : p
             ));
             setTotal(prev => prev - (editPedido.valor_total || 0) + editTotal);
