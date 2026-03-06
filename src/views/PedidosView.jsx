@@ -49,6 +49,8 @@ const A_RECEBER_STATUSES = ['a_receber', 'parcialmente_pago', 'aguardando_pagame
 const fmt = val =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
+const fmtW = val => fmt(val).replace(/\u00A0/g, ' ');
+
 const addDays = (dateStr, days) => {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T12:00:00');
@@ -214,7 +216,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         let produtosText = '';
         (itens || []).forEach(it => {
             const pName = it.produtos?.nome || 'Produto';
-            produtosText += `* ${it.quantidade}x ${pName} - ${fmt(it.preco_unitario)} = ${fmt(it.subtotal)}\n`;
+            produtosText += `* ${it.quantidade}x ${pName} - ${fmtW(it.preco_unitario)} = ${fmtW(it.subtotal)}\n`;
         });
 
         const msg = `PEDIDO - ${pedido.clientes?.nome}\n\n` +
@@ -222,9 +224,10 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             `Status: ${statusLabel} ${statusEmoji}\n\n` +
             `Produtos:\n${produtosText}\n` +
             `Forma de Pagamento: ${forma}\n` +
-            `Valor Total: ${fmt(pedido.valor_total)}`;
+            `Valor Total: ${fmtW(pedido.valor_total)}`;
 
-        const url = `https://wa.me/55${cleanTel}?text=${encodeURIComponent(msg)}`;
+        // Use encodeURIComponent to ensure all characters (including emojis) are valid in the URL
+        const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
     };
 
@@ -239,11 +242,11 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         let parcelasText = `Olá, *${editPedido.clientes?.nome}*! Segue o detalhamento das parcelas do seu pedido:\n\n`;
         parcelasPreview.forEach(p => {
             const dateFmt = p.data ? p.data.split('-').reverse().join('/') : '-';
-            parcelasText += `- *Parcela ${p.n}:* ${dateFmt} - ${fmt(p.val)}\n`;
+            parcelasText += `- *Parcela ${p.n}:* ${dateFmt} - ${fmtW(p.val)}\n`;
         });
-        parcelasText += `\n*Total:* ${fmt(editTotal)}`;
+        parcelasText += `\n*Total:* ${fmtW(editTotal)}`;
 
-        const url = `https://wa.me/55${cleanTel}?text=${encodeURIComponent(parcelasText)}`;
+        const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(parcelasText)}`;
         window.open(url, '_blank');
     };
 

@@ -14,6 +14,7 @@ const MONTHS = [
 ];
 
 const fmt = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+const fmtW = (val) => fmt(val).replace(/\u00A0/g, ' ');
 
 const addDays = (dateStr, days) => {
     if (!dateStr) return null;
@@ -218,7 +219,6 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
         try {
             const pId = payModal.item.pedidoId;
 
-            // 1. Get original order to see current status and parcelas
             const { data: pedido, error: fetchErr } = await supabase
                 .from('pedidos')
                 .select('*')
@@ -241,7 +241,6 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
                 data_pagamento: new Date().toISOString().split('T')[0]
             };
 
-            // Sync with conditions to avoid stale dashboard values
             if (pedido.condicoes_pagamento) {
                 updates.condicoes_pagamento = {
                     ...pedido.condicoes_pagamento,
@@ -249,7 +248,6 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
                 };
             }
 
-            // If all installments paid, mark whole order as paid
             if (incrementedPagas >= totalParc) {
                 updates.status = 'pago';
             } else {
@@ -271,6 +269,32 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
         } finally {
             setPaymentSaving(false);
         }
+    };
+
+    const handleWhatsApp = (p) => {
+        const cleanTel = (p.telefone || '').replace(/\D/g, '');
+        if (!cleanTel) {
+            alert('Este cliente não possui telefone cadastrado.');
+            return;
+        }
+
+        const dateFmt = p.vencimento.split('-').reverse().join('/');
+        let msg = `Olá, *${p.cliente}*! Lembrava que você tem uma parcela em aberto:\n\n` +
+            `*Parcela ${p.parcela}/${p.totalParcelas}*\n` +
+            `Vencimento: ${dateFmt}\n` +
+            `Valor: ${fmtW(p.valor)}\n\n` +
+            `Qualquer dúvida, estamos à disposição!`;
+
+        if (p.status === 'vencido') {
+            msg = `Olá, *${p.cliente}*! Notamos que a sua *Parcela ${p.parcela}/${p.totalParcelas}* venceu em ${dateFmt}.\n\n` +
+                `Valor: ${fmtW(p.valor)}\n\n` +
+                `Poderia nos confirmar o pagamento? Obrigado!`;
+        } else if (p.status === 'pago') {
+            msg = `Olá, *${p.cliente}*! Confirmamos o recebimento da sua *Parcela ${p.parcela}/${p.totalParcelas}* no valor de ${fmtW(p.valor)}. Obrigado!`;
+        }
+
+        const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
     };
 
     const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
@@ -428,7 +452,7 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
                                                         <DollarSign size={14} />
                                                     </button>
                                                 )}
-                                                <button className="cal-action-btn" title="WhatsApp">
+                                                <button className="cal-action-btn" title="WhatsApp" onClick={() => handleWhatsApp(p)}>
                                                     <MessageCircle size={14} />
                                                 </button>
                                                 <button className="cal-action-btn" title="Detalhes">
