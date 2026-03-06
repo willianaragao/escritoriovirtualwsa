@@ -88,6 +88,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [showStatusDrop, setShowStatusDrop] = useState(false);
     const [showPayDrop, setShowPayDrop] = useState(false);
     const [showMonthDrop, setShowMonthDrop] = useState(false);
+    const [showParcelasList, setShowParcelasList] = useState(false);
     const statusRef = useRef(null);
     const payRef = useRef(null);
     const monthRef = useRef(null);
@@ -230,6 +231,25 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         window.open(url, '_blank');
     };
 
+    const handleSendParcelasWhatsApp = () => {
+        const tel = editPedido.clientes?.telefone || '';
+        const cleanTel = tel.replace(/\D/g, '');
+        if (!cleanTel) {
+            alert('Este cliente não possui telefone cadastrado.');
+            return;
+        }
+
+        let parcelasText = `Olá, *${editPedido.clientes?.nome}*! Segue o detalhamento das parcelas do seu pedido:\n\n`;
+        parcelasPreview.forEach(p => {
+            const dateFmt = p.data ? p.data.split('-').reverse().join('/') : '-';
+            parcelasText += `- *Parcela ${p.n}:* ${dateFmt} - ${fmt(p.val)}\n`;
+        });
+        parcelasText += `\n*Total:* ${fmt(editTotal)}`;
+
+        const url = `https://wa.me/55${cleanTel}?text=${encodeURIComponent(parcelasText)}`;
+        window.open(url, '_blank');
+    };
+
     /* ---- Helpers ---- */
     const formatDate = str => {
         if (!str) return '-';
@@ -282,6 +302,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         setEditLoading(true);
         setEditItens([]);
         setEAddValor('');
+        setShowParcelasList(false);
 
         // Pre-fill payment fields from stored condições
         const cond = pedido.condicoes_pagamento || {};
@@ -325,6 +346,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const closeEdit = () => {
         setEditPedido(null);
         setEditItens([]);
+        setShowParcelasList(false);
     };
 
     const updateEditItem = (id, field, value) => {
@@ -763,8 +785,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <span role="img" aria-label="money">💰</span> Condições de Pagamento
                                             </div>
-                                            <button className="pv-manage-btn" type="button">
-                                                <CreditCard size={14} /> Gerenciar Parcelas
+                                            <button className="pv-manage-btn" type="button" onClick={() => setShowParcelasList(!showParcelasList)}>
+                                                <CreditCard size={14} /> {showParcelasList ? 'Ocultar Detalhes' : 'Gerenciar Parcelas'}
                                             </button>
                                         </div>
                                         <small style={{ color: '#64748b', marginBottom: '1rem', display: 'block' }}>Valor Total: {fmt(editTotal)}</small>
@@ -791,9 +813,31 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                         </div>
 
                                         {/* Preview de parcelas */}
-                                        {parcelasPreview.length > 0 && (
+                                        {showParcelasList && parcelasPreview.length > 0 && (
                                             <div className="pv-parc-preview-modern">
                                                 <div className="pv-parc-summary">
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', paddingBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                        <strong style={{ fontSize: '0.85rem', color: '#f8fafc', letterSpacing: '0.5px' }}>DETALHAMENTO DE PARCELAS</strong>
+                                                        <button
+                                                            className="pv-action-btn pv-whatsapp-btn"
+                                                            style={{
+                                                                padding: '6px 14px',
+                                                                fontSize: '0.7rem',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '8px',
+                                                                background: '#10b981',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '8px',
+                                                                cursor: 'pointer',
+                                                                fontWeight: '600'
+                                                            }}
+                                                            onClick={handleSendParcelasWhatsApp}
+                                                        >
+                                                            <MessageCircle size={14} /> ENVIAR PARCELA
+                                                        </button>
+                                                    </div>
                                                     <div className="pv-ps-row"><span>Previsão de Parcelas:</span> <strong>Valor Total: {fmt(editTotal)}</strong></div>
                                                     {parcelasPreview.map(p => (
                                                         <div key={p.n} className="pv-ps-row thin">
