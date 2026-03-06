@@ -402,8 +402,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 finalStatus = 'parcialmente_pago';
             }
 
-            const precoParc = editTotal / Number(eParcelas);
-            let calculatedPagas = Math.round(newValRecebido / precoParc);
+            const precoParc = editTotal / (Number(eParcelas) || 1);
+            let calculatedPagas = Math.floor(newValRecebido / precoParc);
             if (finalStatus === 'pago') calculatedPagas = Number(eParcelas);
 
             const { error: pedErr } = await supabase
