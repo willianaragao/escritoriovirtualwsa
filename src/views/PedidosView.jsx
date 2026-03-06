@@ -157,10 +157,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                     const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
                     const pPagas = Number(p.parcelas_pagas) || 0;
 
-                    let valorPago = Math.max(
-                        Number(p.condicoes_pagamento?.valor_recebido || 0),
-                        (valTotal / nParc) * pPagas
-                    );
+                    let valorPago = Number(p.condicoes_pagamento?.valor_recebido || 0);
 
                     if (status === 'a_receber') {
                         const pendente = valTotal - valorPago;
@@ -266,10 +263,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
         const pPagas = Number(p.parcelas_pagas) || 0;
 
-        let valorPago = Math.max(
-            Number(p.condicoes_pagamento?.valor_recebido || 0),
-            (valTotal / nParc) * pPagas
-        );
+        let valorPago = Number(p.condicoes_pagamento?.valor_recebido || 0);
 
         if (status === 'a_receber') {
             const pendente = valTotal - valorPago;
@@ -316,13 +310,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         setEDataPagamento(pedido.data_pagamento ? pedido.data_pagamento.split('T')[0] : '');
         setEMesReferencia(pedido.mes_referencia || '');
 
-        // Calculate received value from manual field or installments
-        const total = pedido.valor_total || 0;
-        const nParc = pedido.numero_parcelas || cond.numeroParcelas || 1;
-        const pPagas = pedido.parcelas_pagas || 0;
-
         const manualVal = cond.valor_recebido;
-        setEValorRecebido(manualVal !== undefined ? Number(manualVal).toFixed(2) : ((total / nParc) * pPagas).toFixed(2));
+        setEValorRecebido(manualVal !== undefined ? Number(manualVal).toFixed(2) : '0.00');
 
         try {
             const { data, error } = await supabase
@@ -539,10 +528,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                     <td className="pv-td-valor">
                                         {status === 'a_receber' ? (
                                             (() => {
-                                                const pago = Math.max(
-                                                    Number(p.condicoes_pagamento?.valor_recebido || 0),
-                                                    ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0))
-                                                );
+                                                const pago = Number(p.condicoes_pagamento?.valor_recebido || 0);
                                                 const pendente = p.valor_total - pago;
                                                 return (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -557,10 +543,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                             })()
                                         ) : status === 'pago' && p.status !== 'pago' ? (
                                             (() => {
-                                                const pago = Math.max(
-                                                    Number(p.condicoes_pagamento?.valor_recebido || 0),
-                                                    ((p.valor_total / (p.numero_parcelas || 1)) * (p.parcelas_pagas || 0))
-                                                );
+                                                const pago = Number(p.condicoes_pagamento?.valor_recebido || 0);
                                                 return (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                         <span>{fmt(pago)}</span>
