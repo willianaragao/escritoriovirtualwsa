@@ -320,11 +320,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     valorPago = 0;
                     valorPendente = val;
                 } else {
-                    const valorPorParcela = val / (numParcelas || 1);
-                    const calcParcelas = valorPorParcela * parcelasPagas;
-                    const jsonRecebido = Number(p.condicoes_pagamento?.valor_recebido || 0);
-
-                    valorPago = Math.max(calcParcelas, jsonRecebido);
+                    valorPago = Number(p.condicoes_pagamento?.valor_recebido || 0);
                     valorPendente = val - valorPago;
                 }
 

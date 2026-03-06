@@ -124,7 +124,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                     const normalizedStatus = (p.status || '').toLowerCase().trim();
                     const isDebit = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus);
                     const isPending = normalizedStatus === 'pendente';
-                    const isPaid = normalizedStatus === 'pago' || Number(p.parcelas_pagas) > 0;
+                    const isPaid = normalizedStatus === 'pago' || Number(p.condicoes_pagamento?.valor_recebido || 0) > 0;
 
                     // Match view category
                     if (status === 'a_receber') {
