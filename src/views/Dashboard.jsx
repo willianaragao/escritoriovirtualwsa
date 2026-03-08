@@ -467,11 +467,11 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 return acc;
             }, 0);
 
-            // Calibração de Saldos (Static offsets based on real-world verification as of Mar 4, 2026)
-            // Esses offsets alinham a soma total histórica do banco de dados (79.587,31 banco / -41.375,49 caixa)
-            // com os valores reais informados pelo usuário (R$ 30,00 e R$ 1.000,00).
+            // Calibração de Saldos (Static offsets based on real-world verification)
+            // BANCO_OFFSET alinha com R$ 30,00
+            // CAIXA_OFFSET ajustado em 08/03 para remover R$ 1.270,00 (ajuste manual solicitado pelo usuário)
             const BANCO_OFFSET = 79557.31;
-            const CAIXA_OFFSET = 42375.49;
+            const CAIXA_OFFSET = 41105.49; // Original: 42375.49 - 1270.00
 
             const finalBanco = globalBanco - BANCO_OFFSET;
             const finalCaixa = globalCaixa + CAIXA_OFFSET;

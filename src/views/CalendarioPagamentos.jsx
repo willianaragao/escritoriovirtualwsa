@@ -76,10 +76,12 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
 
                 const pPagas = Number(p.parcelas_pagas) || 0;
                 const valTotal = Number(p.valor_total) || 0;
-                const precoParc = valTotal / numParc;
+                const customVals = cond.valoresParcelas || [];
+                const precoParcBase = valTotal / numParc;
                 const intervalo = Number(cond.intervaloDias) || 30;
 
                 for (let i = 1; i <= numParc; i++) {
+                    const precoParc = customVals[i - 1] !== undefined ? customVals[i - 1] : precoParcBase;
                     const vencimento = addDays(dataBase, (i - 1) * intervalo);
                     if (!vencimento) continue;
 
@@ -232,8 +234,14 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
             const incrementedPagas = Math.max(currentPagas + 1, payModal.item.parcela);
 
             const valTotal = Number(pedido.valor_total) || 0;
-            const valParc = valTotal / totalParc;
-            const totalRecebidoCalculado = valParc * incrementedPagas;
+            const cond = pedido.condicoes_pagamento || {};
+            const customVals = cond.valoresParcelas || [];
+            const valParcBase = valTotal / totalParc;
+
+            let totalRecebidoCalculado = 0;
+            for (let i = 0; i < incrementedPagas; i++) {
+                totalRecebidoCalculado += customVals[i] !== undefined ? customVals[i] : valParcBase;
+            }
 
             const updates = {
                 parcelas_pagas: incrementedPagas,

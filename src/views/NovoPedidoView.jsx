@@ -69,6 +69,8 @@ const NovoPedidoView = () => {
     const [numeroParcelas, setNumeroParcelas] = useState(1);
     const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState('');
     const [intervaloDias, setIntervaloDias] = useState(7);
+    const [manualParcelas, setManualParcelas] = useState([]);
+    const [editingParc, setEditingParc] = useState({ index: -1, value: '' });
 
     /* ---- Finalização ---- */
     const [status, setStatus] = useState('');
@@ -170,7 +172,37 @@ const NovoPedidoView = () => {
     );
 
     const cartTotal = cart.reduce((s, i) => s + i.qty * i.preco, 0);
-    const parcelaValue = numeroParcelas > 1 ? cartTotal / numeroParcelas : cartTotal;
+
+    useEffect(() => {
+        const count = Number(numeroParcelas) || 1;
+        const currentSum = manualParcelas.reduce((a, b) => a + b, 0);
+
+        if (manualParcelas.length !== count || Math.abs(currentSum - cartTotal) > 0.01) {
+            const each = cartTotal / count;
+            setManualParcelas(Array.from({ length: count }, () => each));
+        }
+    }, [numeroParcelas, cartTotal]);
+
+    const handleManualParcChange = (index, val) => {
+        setEditingParc({ index, value: val });
+        const cleanVal = val.replace(',', '.');
+        const newVal = parseFloat(cleanVal) || 0;
+        const newManuals = [...manualParcelas];
+        newManuals[index] = newVal;
+
+        const count = newManuals.length;
+        if (index < count - 1) {
+            let sumBefore = 0;
+            for (let i = 0; i <= index; i++) sumBefore += newManuals[i];
+            const remaining = cartTotal - sumBefore;
+            const remainingCount = count - (index + 1);
+            const each = remainingCount > 0 ? remaining / remainingCount : 0;
+            for (let i = index + 1; i < count; i++) {
+                newManuals[i] = each;
+            }
+        }
+        setManualParcelas(newManuals);
+    };
 
     const filteredProdutos = produtos.filter(p =>
         p.nome.toLowerCase().includes(prodSearch.toLowerCase())
@@ -178,11 +210,11 @@ const NovoPedidoView = () => {
 
     /* ---- Installments preview ---- */
     const parcelas = (() => {
-        if (numeroParcelas <= 1 || !dataPrimeiraParcela) return [];
-        return Array.from({ length: numeroParcelas }, (_, i) => ({
+        if (numeroParcelas <= 0 || !dataPrimeiraParcela) return [];
+        return manualParcelas.map((val, i) => ({
             n: i + 1,
             data: addDays(dataPrimeiraParcela, i * intervaloDias),
-            valor: parcelaValue,
+            valor: val,
         }));
     })();
 
@@ -224,6 +256,7 @@ const NovoPedidoView = () => {
                 numeroParcelas,
                 dataPrimeiraParcela: dataPrimeiraParcela || '',
                 intervaloDias: Number(intervaloDias),
+                valoresParcelas: manualParcelas,
             };
 
             const { data: ped, error: pedErr } = await supabase
@@ -503,12 +536,31 @@ const NovoPedidoView = () => {
                         {parcelas.length > 0 && (
                             <div className="np-parcelas-preview">
                                 <div className="np-parcelas-title">Previsão de Parcelas:</div>
-                                {parcelas.map(p => (
-                                    <div key={p.n} className="np-parcela-row">
+                                {parcelas.map((p, idx) => (
+                                    <div key={p.n} className="np-parcela-row" style={{ alignItems: 'center' }}>
                                         <span className="np-parcela-n">Parcela {p.n}:</span>
-                                        <span className="np-parcela-info">
-                                            {fmtDate(p.data)} — {fmt(p.valor)}
-                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{fmtDate(p.data)}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4px 12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                <span style={{ fontSize: '0.8rem', color: '#64748b', marginRight: '6px' }}>R$</span>
+                                                <input
+                                                    type="text"
+                                                    className="np-parc-edit-input"
+                                                    value={editingParc.index === idx ? editingParc.value : p.valor.toFixed(2).replace('.', ',')}
+                                                    onChange={(e) => handleManualParcChange(idx, e.target.value)}
+                                                    onBlur={() => setEditingParc({ index: -1, value: '' })}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: '#none',
+                                                        color: '#f8fafc',
+                                                        fontSize: '0.9rem',
+                                                        fontWeight: '600',
+                                                        width: '100px',
+                                                        outline: 'none'
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

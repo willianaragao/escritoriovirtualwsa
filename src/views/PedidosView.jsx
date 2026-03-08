@@ -87,6 +87,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [eMesReferencia, setEMesReferencia] = useState('');
     const [eValorRecebido, setEValorRecebido] = useState('');
     const [eAddValor, setEAddValor] = useState('');
+    const [manualParcelas, setManualParcelas] = useState([]);
+    const [editingParc, setEditingParc] = useState({ index: -1, value: '' });
     const [showStatusDrop, setShowStatusDrop] = useState(false);
     const [showPayDrop, setShowPayDrop] = useState(false);
     const [showMonthDrop, setShowMonthDrop] = useState(false);
@@ -315,6 +317,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
         const manualVal = cond.valor_recebido;
         setEValorRecebido(manualVal !== undefined ? Number(manualVal).toFixed(2) : '0.00');
+        setManualParcelas(cond.valoresParcelas || []);
 
         try {
             const { data, error } = await supabase
@@ -348,12 +351,46 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     };
 
     const editTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.price)), 0);
-    const parcelaVal = eParcelas > 1 ? editTotal / eParcelas : editTotal;
-    const parcelasPreview = eParcelas > 1 && eData
-        ? Array.from({ length: eParcelas }, (_, i) => ({
+
+    // Sincroniza manualParcelas com o split proporcional sempre que o total ou o número de parcelas mudar,
+    // a menos que o número de parcelas seja o mesmo e o total também seja o mesmo.
+    useEffect(() => {
+        if (!editPedido) return;
+        const count = Number(eParcelas) || 1;
+        const currentSum = manualParcelas.reduce((a, b) => a + b, 0);
+
+        if (manualParcelas.length !== count || Math.abs(currentSum - editTotal) > 0.01) {
+            const each = editTotal / count;
+            setManualParcelas(Array.from({ length: count }, () => each));
+        }
+    }, [eParcelas, editTotal, !!editPedido]);
+
+    const handleManualParcChange = (index, val) => {
+        setEditingParc({ index, value: val });
+        const cleanVal = val.replace(',', '.');
+        const newVal = parseFloat(cleanVal) || 0;
+        const newManuals = [...manualParcelas];
+        newManuals[index] = newVal;
+
+        const count = newManuals.length;
+        if (index < count - 1) {
+            let sumBefore = 0;
+            for (let i = 0; i <= index; i++) sumBefore += newManuals[i];
+            const remaining = editTotal - sumBefore;
+            const remainingCount = count - (index + 1);
+            const each = remainingCount > 0 ? remaining / remainingCount : 0;
+            for (let i = index + 1; i < count; i++) {
+                newManuals[i] = each;
+            }
+        }
+        setManualParcelas(newManuals);
+    };
+
+    const parcelasPreview = eParcelas > 0 && eData
+        ? manualParcelas.map((val, i) => ({
             n: i + 1,
             data: addDays(eData, i * Number(eIntervalo)),
-            val: parcelaVal,
+            val: val,
         }))
         : [];
 
@@ -383,6 +420,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 dataPrimeiraParcela: eData || '',
                 intervaloDias: Number(eIntervalo),
                 valor_recebido: newValRecebido,
+                valoresParcelas: manualParcelas,
             };
 
             // 3. Update pedido row
@@ -832,10 +870,32 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                         </button>
                                                     </div>
                                                     <div className="pv-ps-row"><span>Previsão de Parcelas:</span> <strong>Valor Total: {fmt(editTotal)}</strong></div>
-                                                    {parcelasPreview.map(p => (
-                                                        <div key={p.n} className="pv-ps-row thin">
+                                                    {parcelasPreview.map((p, idx) => (
+                                                        <div key={p.n} className="pv-ps-row thin" style={{ alignItems: 'center' }}>
                                                             <span>Parcela {p.n}:</span>
-                                                            <span>{p.data ? p.data.split('-').reverse().join('/') : '-'} - <strong>{fmt(p.val)}</strong></span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{p.data ? p.data.split('-').reverse().join('/') : '-'}</span>
+                                                                <div className="pv-edit-price-wrapper" style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '2px 8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#64748b', marginRight: '4px' }}>R$</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="pv-parc-edit-input"
+                                                                        value={editingParc.index === idx ? editingParc.value : p.val.toFixed(2).replace('.', ',')}
+                                                                        onChange={(e) => handleManualParcChange(idx, e.target.value)}
+                                                                        onBlur={() => setEditingParc({ index: -1, value: '' })}
+                                                                        style={{
+                                                                            background: 'none',
+                                                                            border: 'none',
+                                                                            color: '#f8fafc',
+                                                                            fontSize: '0.8rem',
+                                                                            fontWeight: '600',
+                                                                            width: '80px',
+                                                                            padding: '2px 0',
+                                                                            outline: 'none'
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     ))}
                                                     <div className="pv-ps-footer">
