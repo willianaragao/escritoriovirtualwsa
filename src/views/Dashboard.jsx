@@ -330,36 +330,70 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     const isBank = ['pix', 'boleto', 'cartao_credito', 'cartao_debito', 'cartao'].some(m => forma === m || forma.includes(m));
                     const isCash = ['dinheiro', 'cheque'].some(m => forma === m || forma.includes(m));
 
-                    // IF there is a mes_referencia, we should only count it in THAT month or after?
-                    // The user said "puxe as ultimas atuaizaçoes", and they want it in Jan ONLY.
-                    // If we want the balance to be cumulative, we add it if (current month >= mes_referencia).
+                    const numPars = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
 
-                    if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
-                        if (isCash) {
-                            globalCaixa += valorPago;
-                        } else {
-                            globalBanco += valorPago;
+                    if (numPars > 1) {
+                        const valorParcela = valorPago / numPars;
+                        for (let i = 0; i < numPars; i++) {
+                            let mTarget = pMonth + i;
+                            let yTarget = pYear;
+                            while (mTarget > 11) { mTarget -= 12; yTarget++; }
+
+                            if (yTarget < selectedYear || (yTarget === selectedYear && mTarget <= selectedMonth)) {
+                                if (isCash) globalCaixa += valorParcela;
+                                else globalBanco += valorParcela;
+                            }
+                        }
+                    } else {
+                        if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
+                            if (isCash) globalCaixa += valorPago;
+                            else globalBanco += valorPago;
                         }
                     }
                 }
 
+                const clientName = p.clientes?.nome || 'Cliente não identificado';
+
                 // Month-specific stats (Respecting the selected period only)
-                if (pMonth !== selectedMonth || pYear !== selectedYear) return;
+                // We also distribute the "entradas" here
+                const numParsEntrada = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
+                if (numParsEntrada > 1 && valorPago > 0) {
+                    const valorParcela = valorPago / numParsEntrada;
+                    for (let i = 0; i < numParsEntrada; i++) {
+                        let mTarget = pMonth + i;
+                        let yTarget = pYear;
+                        while (mTarget > 11) { mTarget -= 12; yTarget++; }
+                        if (mTarget === selectedMonth && yTarget === selectedYear) {
+                            clientTotals[clientName] = (clientTotals[clientName] || 0) + valorParcela;
+                            entradas += valorParcela;
+                        }
+                    }
+                } else if (pMonth === selectedMonth && pYear === selectedYear) {
+                    if (valorPago > 0) {
+                        clientTotals[clientName] = (clientTotals[clientName] || 0) + valorPago;
+                        entradas += valorPago;
+                    }
+                }
+
+                if (pMonth !== selectedMonth || pYear !== selectedYear) {
+                    // For pending values, we still need to check if they are relevant to the current month
+                    // even if the original pedido date is outside the selected month/year.
+                    // This is because a pedido from a previous month might still have pending payments for the current month.
+                    // However, the current logic for pendentes and a_receber is based on the pedido's original month.
+                    // If we want to show pending for the *current* month, we'd need to iterate through parcels.
+                    // For now, keeping the original behavior for pendentes/a_receber which is tied to the pedido's month.
+                    // If the pedido's month is not the selected month, we skip further processing for it.
+                    if (pMonth !== selectedMonth || pYear !== selectedYear) return;
+                }
+
 
                 const normalizedStatus = (p.status || '').toLowerCase().trim();
 
-                // Financial aggregation
+                // Financial aggregation for pending values
                 if (normalizedStatus === 'pendente') {
                     pendentes += valorPendente;
                 } else if (A_RECEBER_STATUSES.includes(normalizedStatus)) {
                     a_receber += valorPendente;
-                }
-
-                const clientName = p.clientes?.nome || 'Cliente não identificado';
-
-                if (valorPago > 0) {
-                    clientTotals[clientName] = (clientTotals[clientName] || 0) + valorPago;
-                    entradas += valorPago;
                 }
             });
 
@@ -487,6 +521,10 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 // Zeroing ONLY the "Saldo Atual" for Feb 2026 as per user request
                 BANCO_OFFSET = globalBanco;
                 CAIXA_OFFSET = -globalCaixa;
+            } else if (periodKey === '2026-2') { // Março 2026
+                // Retire 800 do saldo de banco em Março conforme solicitado
+                BANCO_OFFSET = 79561.29 + 800;
+                CAIXA_OFFSET = 42340.49;
             } else if (periodKey === '2026-0') { // Janeiro 2026
                 // Adjusting Jan offsets to match previous logic or specific targets if needed
             }
