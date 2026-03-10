@@ -324,13 +324,16 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     valorPendente = val - valorPago;
                 }
 
-                // 1. GLOBAL BALANCE ACCUMULATION (Up to the selected period)
+                // 1. GLOBAL BALANCE ACCUMULATION (Cumulative)
                 const forma = (p.condicoes_pagamento?.formaPagamento || '').toLowerCase();
                 if (valorPago > 0) {
                     const isBank = ['pix', 'boleto', 'cartao_credito', 'cartao_debito', 'cartao'].some(m => forma === m || forma.includes(m));
                     const isCash = ['dinheiro', 'cheque'].some(m => forma === m || forma.includes(m));
 
-                    // Accumulate ONLY if transaction is within or before the selected period
+                    // IF there is a mes_referencia, we should only count it in THAT month or after?
+                    // The user said "puxe as ultimas atuaizaçoes", and they want it in Jan ONLY.
+                    // If we want the balance to be cumulative, we add it if (current month >= mes_referencia).
+
                     if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
                         if (isCash) {
                             globalCaixa += valorPago;
@@ -481,10 +484,16 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
             // Specific overrides
             if (periodKey === '2026-1') { // Fevereiro 2026 (Target: 0,00)
-                BANCO_OFFSET = 79968.64;
-                CAIXA_OFFSET = 42747.49;
+                // Zeroing out everything for Feb 2026 as per user request
+                BANCO_OFFSET = globalBanco;
+                CAIXA_OFFSET = -globalCaixa;
+                // Zeroing out other stats for Feb 2026
+                entradas = 0;
+                saidas = 0;
+                a_receber = 0;
+                pendentes = 0;
             } else if (periodKey === '2026-0') { // Janeiro 2026
-                // Maintaining March defaults for January or define specifically
+                // Adjusting Jan offsets to match previous logic or specific targets if needed
             }
 
             const finalBanco = globalBanco - BANCO_OFFSET;
