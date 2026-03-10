@@ -488,7 +488,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             let CAIXA_OFFSET = 0;
 
             if (periodKey === '2026-2') { // Março 2026 correction
-                BANCO_OFFSET = 800;
+                BANCO_OFFSET = -407.35; // Correction to reach -98.00 (Raw: -505.35)
             }
 
             const finalBanco = globalBanco - BANCO_OFFSET;
