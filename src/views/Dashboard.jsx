@@ -324,12 +324,12 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     valorPendente = val - valorPago;
                 }
 
-                // 1. GLOBAL BALANCE ACCUMULATION (Cumulative)
+                // 1. MONTH-SPECIFIC BALANCE ACCUMULATION (Non-Cumulative)
                 const forma = (p.condicoes_pagamento?.formaPagamento || '').toLowerCase();
                 if (valorPago > 0) {
                     const isCash = ['dinheiro', 'cheque'].some(m => forma === m || forma.includes(m));
 
-                    if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
+                    if (pYear === selectedYear && pMonth === selectedMonth) {
                         if (isCash) globalCaixa += valorPago;
                         else globalBanco += valorPago;
                     }
@@ -408,8 +408,8 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 const dYear = parseInt(parts[0]);
                 const dMonth = parseInt(parts[1]) - 1;
 
-                // Subtract from GLOBAL bank/cash if transaction is within or before the selected period
-                if (dYear < selectedYear || (dYear === selectedYear && dMonth <= selectedMonth)) {
+                // Subtract from MONTH-SPECIFIC bank/cash (Non-Cumulative)
+                if (dYear === selectedYear && dMonth === selectedMonth) {
                     if (isExpCash) {
                         globalCaixa -= val;
                     } else {
@@ -482,21 +482,13 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             // Dynamic Offsets based on the selected period
             const periodKey = `${selectedYear}-${selectedMonth}`;
 
-            // Default offsets (based on March 2026 calibration for cumulative logic)
-            let BANCO_OFFSET = 79561.29; // Result Banco: -64.00
-            let CAIXA_OFFSET = 42340.49; // Result Caixa: 4856.00
+            // With period-specific logic, we only apply specific corrections if the raw data is wrong.
+            // Removing the 79k/42k offsets which were calibrations for cumulative history.
+            let BANCO_OFFSET = 0;
+            let CAIXA_OFFSET = 0;
 
-            // Specific overrides
-            if (periodKey === '2026-1') { // Fevereiro 2026 (Target: 0,00)
-                // Zeroing ONLY the "Saldo Atual" for Feb 2026 as per user request
-                BANCO_OFFSET = globalBanco;
-                CAIXA_OFFSET = -globalCaixa;
-            } else if (periodKey === '2026-2') { // Março 2026
-                // Retire 800 do saldo de banco em Março conforme solicitado
-                BANCO_OFFSET = 79561.29 + 800; // Original 79561.29 + 800 de correção
-                CAIXA_OFFSET = 42340.49;
-            } else if (periodKey === '2026-0') { // Janeiro 2026
-                // Adjusting Jan offsets to match previous logic or specific targets if needed
+            if (periodKey === '2026-2') { // Março 2026 correction
+                BANCO_OFFSET = 800;
             }
 
             const finalBanco = globalBanco - BANCO_OFFSET;
