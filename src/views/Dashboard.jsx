@@ -484,14 +484,9 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
             // Specific overrides
             if (periodKey === '2026-1') { // Fevereiro 2026 (Target: 0,00)
-                // Zeroing out everything for Feb 2026 as per user request
+                // Zeroing ONLY the "Saldo Atual" for Feb 2026 as per user request
                 BANCO_OFFSET = globalBanco;
                 CAIXA_OFFSET = -globalCaixa;
-                // Zeroing out other stats for Feb 2026
-                entradas = 0;
-                saidas = 0;
-                a_receber = 0;
-                pendentes = 0;
             } else if (periodKey === '2026-0') { // Janeiro 2026
                 // Adjusting Jan offsets to match previous logic or specific targets if needed
             }
