@@ -327,48 +327,18 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 // 1. GLOBAL BALANCE ACCUMULATION (Cumulative)
                 const forma = (p.condicoes_pagamento?.formaPagamento || '').toLowerCase();
                 if (valorPago > 0) {
-                    const isBank = ['pix', 'boleto', 'cartao_credito', 'cartao_debito', 'cartao'].some(m => forma === m || forma.includes(m));
                     const isCash = ['dinheiro', 'cheque'].some(m => forma === m || forma.includes(m));
 
-                    const numPars = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
-
-                    if (numPars > 1) {
-                        const valorParcela = valorPago / numPars;
-                        for (let i = 0; i < numPars; i++) {
-                            let mTarget = pMonth + i;
-                            let yTarget = pYear;
-                            while (mTarget > 11) { mTarget -= 12; yTarget++; }
-
-                            if (yTarget < selectedYear || (yTarget === selectedYear && mTarget <= selectedMonth)) {
-                                if (isCash) globalCaixa += valorParcela;
-                                else globalBanco += valorParcela;
-                            }
-                        }
-                    } else {
-                        if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
-                            if (isCash) globalCaixa += valorPago;
-                            else globalBanco += valorPago;
-                        }
+                    if (pYear < selectedYear || (pYear === selectedYear && pMonth <= selectedMonth)) {
+                        if (isCash) globalCaixa += valorPago;
+                        else globalBanco += valorPago;
                     }
                 }
 
                 const clientName = p.clientes?.nome || 'Cliente não identificado';
 
-                // Month-specific stats (Respecting the selected period only)
-                // We also distribute the "entradas" here
-                const numParsEntrada = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
-                if (numParsEntrada > 1 && valorPago > 0) {
-                    const valorParcela = valorPago / numParsEntrada;
-                    for (let i = 0; i < numParsEntrada; i++) {
-                        let mTarget = pMonth + i;
-                        let yTarget = pYear;
-                        while (mTarget > 11) { mTarget -= 12; yTarget++; }
-                        if (mTarget === selectedMonth && yTarget === selectedYear) {
-                            clientTotals[clientName] = (clientTotals[clientName] || 0) + valorParcela;
-                            entradas += valorParcela;
-                        }
-                    }
-                } else if (pMonth === selectedMonth && pYear === selectedYear) {
+                // Month-specific stats (Respecting only the selected period)
+                if (pMonth === selectedMonth && pYear === selectedYear) {
                     if (valorPago > 0) {
                         clientTotals[clientName] = (clientTotals[clientName] || 0) + valorPago;
                         entradas += valorPago;
@@ -523,7 +493,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 CAIXA_OFFSET = -globalCaixa;
             } else if (periodKey === '2026-2') { // Março 2026
                 // Retire 800 do saldo de banco em Março conforme solicitado
-                BANCO_OFFSET = 79561.29 + 800;
+                BANCO_OFFSET = 79561.29 + 800; // Original 79561.29 + 800 de correção
                 CAIXA_OFFSET = 42340.49;
             } else if (periodKey === '2026-0') { // Janeiro 2026
                 // Adjusting Jan offsets to match previous logic or specific targets if needed
