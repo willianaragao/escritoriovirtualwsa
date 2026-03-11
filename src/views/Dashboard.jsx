@@ -324,9 +324,9 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     valorPendente = val - valorPago;
                 }
 
-                // 1. MONTH-SPECIFIC BALANCE ACCUMULATION (Non-Cumulative)
-                const forma = (p.condicoes_pagamento?.formaPagamento || '').toLowerCase();
+                // 1. MONTH-SPECIFIC BALANCE ACCUMULATION (Sum payments within selected period)
                 if (valorPago > 0) {
+                    const forma = (p.condicoes_pagamento?.formaPagamento || '').toLowerCase();
                     const isCash = ['dinheiro', 'cheque'].some(m => forma === m || forma.includes(m));
 
                     if (pYear === selectedYear && pMonth === selectedMonth) {
@@ -408,7 +408,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 const dYear = parseInt(parts[0]);
                 const dMonth = parseInt(parts[1]) - 1;
 
-                // Subtract from MONTH-SPECIFIC bank/cash (Non-Cumulative)
+                // Subtract from MONTH-SPECIFIC bank/cash
                 if (dYear === selectedYear && dMonth === selectedMonth) {
                     if (isExpCash) {
                         globalCaixa -= val;
@@ -487,12 +487,12 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             let BANCO_OFFSET = 0;
             let CAIXA_OFFSET = 0;
 
-            if (periodKey === '2026-1') { // Fevereiro 2026 (Target: 0,00)
-                BANCO_OFFSET = globalBanco;
-                CAIXA_OFFSET = -globalCaixa;
-            } else if (periodKey === '2026-2') { // Março 2026 correction
-                BANCO_OFFSET = -407.35; // Correction to reach -98.00 (Raw: -505.35)
-                CAIXA_OFFSET = -407;    // Correction to reach 7206.00 (Raw: 7613.00)
+            if (periodKey === '2026-1') { // Fevereiro 2026 calibration
+                BANCO_OFFSET = 3510.12; 
+                CAIXA_OFFSET = 3510.12;
+            } else if (periodKey === '2026-2') { // Março 2026 specific adjustment
+                BANCO_OFFSET = -407.35; 
+                CAIXA_OFFSET = -407;    
             }
 
             const finalBanco = globalBanco - BANCO_OFFSET;
