@@ -557,7 +557,10 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                 badge = { label: 'Pago', cls: 'pv-badge-pago' };
                             }
                             return (
-                                <tr key={p.id}>
+                                <tr key={p.id} onClick={(e) => {
+                                    // Ignore if clicking on buttons with stopPropagation
+                                    openEdit(p);
+                                }} className={`pv-table-row mobile-card-${status}`} style={{ cursor: 'pointer' }}>
                                     <td className="pv-td-cliente">{p.clientes?.nome || 'Cliente não identificado'}</td>
                                     <td className="pv-td-muted">{formatDate(p.data_pedido)}</td>
                                     <td className="pv-td-muted">{p.itens_count || 0} produto(s)</td>
@@ -607,15 +610,15 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                     <td className="pv-td-actions">
                                         <div className="pv-actions">
                                             <button className="pv-action-btn pv-whatsapp-btn" title="WhatsApp"
-                                                onClick={() => handleWhatsApp(p)}>
+                                                onClick={(e) => { e.stopPropagation(); handleWhatsApp(p); }}>
                                                 <MessageCircle size={15} />
                                             </button>
                                             <button className="pv-action-btn pv-edit-btn" title="Editar"
-                                                onClick={() => openEdit(p)}>
+                                                onClick={(e) => { e.stopPropagation(); openEdit(p); }}>
                                                 <Edit3 size={15} />
                                             </button>
                                             <button className="pv-action-btn pv-delete-btn" title="Excluir"
-                                                onClick={() => handleDelete(p)}>
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(p); }}>
                                                 <Trash2 size={15} />
                                             </button>
                                         </div>
@@ -638,7 +641,11 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                 <h2 className="pv-modal-title">Detalhes do Pedido</h2>
                                 <p className="pv-modal-sub">{editPedido.clientes?.nome || 'Cliente não identificado'}</p>
                             </div>
-                            <button className="pv-modal-close" onClick={closeEdit}><X size={18} /></button>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button className="pv-modal-close" onClick={() => handleWhatsApp(editPedido)} title="WhatsApp" style={{ color: '#10b981' }}><MessageCircle size={18} /></button>
+                                <button className="pv-modal-close" onClick={() => { handleDelete(editPedido); closeEdit(); }} title="Excluir" style={{ color: '#ef4444' }}><Trash2 size={18} /></button>
+                                <button className="pv-modal-close" onClick={closeEdit} title="Fechar"><X size={18} /></button>
+                            </div>
                         </div>
 
                         {/* Body */}

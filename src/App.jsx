@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './App.css'
 import Sidebar from './components/Sidebar'
+import MobileBottomMenu from './components/MobileBottomMenu'
 import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './views/Dashboard'
 import DividasFixas from './views/DividasFixas'
@@ -114,6 +115,7 @@ function App() {
   return (
     <div className="app-container">
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
+      <MobileBottomMenu activeView={activeView} setActiveView={setActiveView} />
       <main className="main-content">
         <div className="top-bar">
           <button className="icon-btn"><Menu size={20} /></button>

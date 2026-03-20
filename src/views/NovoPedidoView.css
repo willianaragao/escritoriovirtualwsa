@@ -313,6 +313,7 @@
     min-height: 2.4em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -908,17 +909,114 @@
 }
 
 /* ---- RESPONSIVE ---- */
-@media (max-width: 700px) {
+@media (max-width: 768px) {
+    /* Força no mínimo 16px para inputs evitar auto zoom no iOS */
+    .np-container input,
+    .np-container input[type="text"],
+    .np-container input[type="number"],
+    .np-container input[type="date"],
+    .np-container select,
+    .np-container textarea,
+    .np-search-input,
+    .np-qty-inp,
+    .np-price-inp {
+        font-size: 16px !important;
+    }
 
-    .np-catalog-list,
-    .np-payment-grid {
+    .np-catalog-grid,
+    .np-payment-grid,
+    .np-status-options {
         grid-template-columns: 1fr;
     }
 
-    .np-header,
+    .np-header {
+        padding: 1.5rem 1rem 1rem;
+    }
+
     .np-section,
     .np-toast {
-        margin-left: 1rem;
-        margin-right: 1rem;
+        margin: 0.8rem 0.5rem 1.25rem 0.5rem;
+        padding: 1.2rem 1rem;
+        border-radius: 12px;
+    }
+    
+    .np-header-left h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Ajuste para tabela de carrinho no mobile rolável horizontalmente */
+    .np-order-table-wrap {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        overflow-x: auto;
+    }
+    
+    .np-order-table {
+        min-width: 480px; 
+    }
+
+    .np-order-table th, .np-order-table td {
+        padding: 0.7rem 0.5rem;
+    }
+
+    .np-total-val {
+        font-size: 1.35rem;
+    }
+    
+    .np-card {
+        padding: 1.25rem;
+    }
+    
+    .np-card-name {
+        font-size: 1.05rem;
+    }
+
+    .np-add-btn {
+        padding: 0.8rem;
+        font-size: 0.95rem;
+    }
+    
+    .np-qty-row .np-qbtn {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .np-qty-inp {
+        padding: 0.5rem;
+        height: 38px;
+        box-sizing: border-box;
+    }
+
+    .np-client-btn {
+        padding: 0.9rem 1rem;
+        font-size: 16px;
+    }
+    
+    .np-pay-trigger {
+        padding: 0.9rem 1rem;
+        font-size: 16px;
+    }
+
+    .np-save-btn {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .np-parcela-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+    }
+    
+    .np-parcela-row > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .np-parc-edit-input {
+        font-size: 16px !important;
+        text-align: right;
+        width: 120px !important;
     }
 }

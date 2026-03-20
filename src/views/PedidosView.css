@@ -1033,3 +1033,119 @@
 .pv-parc-info {
     color: #94a3b8;
 }
+
+/* ==============================================
+   MOBILE RESPONSIVENESS
+   ============================================== */
+@media (max-width: 768px) {
+    /* Header & Filters */
+    .pv-header {
+        padding: 1.5rem 1rem 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .pv-totals-row {
+        margin: 0 1rem 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
+    }
+    
+    .pv-search-input {
+        width: 100%;
+    }
+    
+    .pv-search-input:focus {
+        width: 100%;
+    }
+    
+    .pv-table-wrapper {
+        margin: 0 1rem;
+        background: transparent;
+        border: none;
+        overflow: visible;
+    }
+
+    /* Transform Table into Cards */
+    .pv-table thead {
+        display: none;
+    }
+    
+    .pv-table, .pv-table tbody {
+        display: block;
+        width: 100%;
+    }
+    
+    .pv-table tr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(30, 41, 59, 1);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        margin-bottom: 0.75rem;
+        padding: 1rem 0.8rem;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .pv-table tr:hover {
+        background: rgba(45, 60, 85, 1);
+        transform: scale(1.02);
+    }
+
+    .pv-table td {
+        display: none;
+        padding: 0;
+        border: none;
+    }
+
+    /* Keep only Cliente and Valor visible */
+    .pv-table td.pv-td-cliente, 
+    .pv-table td.pv-td-valor {
+        display: block !important;
+    }
+
+    .pv-table td.pv-td-cliente {
+        font-size: 0.85rem;
+        font-weight: 700;
+        flex: 1;
+        white-space: normal;
+        word-break: break-word;
+        overflow: visible;
+        margin-right: 0.5rem;
+    }
+
+    .pv-table td.pv-td-valor {
+        font-size: 1rem;
+        font-weight: 800;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    /* Mobile Card Dynamic Borders */
+    .pv-table tr.mobile-card-pendente {
+        border: 1px solid #f59e0b; /* Laranja */
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+    }
+    .pv-table tr.mobile-card-pago {
+        border: 1px solid #10b981; /* Verde */
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+    }
+    .pv-table tr.mobile-card-a_receber {
+        border: 1px solid #3b82f6; /* Azul */
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Modals */
+    .pv-modal {
+        max-height: 90vh;
+        margin-top: 2rem;
+    }
+    
+    .pv-edit-grid3, .pv-edit-grid2 {
+        grid-template-columns: 1fr;
+    }
+}

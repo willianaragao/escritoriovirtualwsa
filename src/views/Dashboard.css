@@ -161,7 +161,7 @@
 
 @media (max-width: 1024px) {
     .db-cat-cards {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -872,4 +872,84 @@
     font-size: 0.85rem;
     color: #f87171;
     font-weight: 800;
+}
+
+/* ── Mobile Layout Fixes ── */
+@media (max-width: 768px) {
+    .db-donut-wrap {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1rem 0;
+    }
+
+    .db-donut-wrap svg {
+        max-width: 100%;
+        height: auto;
+        overflow: visible;
+    }
+
+    .db-donut-legend {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .db-legend-row {
+        flex: 1 1 calc(50% - 0.6rem);
+        min-width: 120px;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .bottom-card-title {
+        font-size: 1.1rem;
+        text-align: center;
+        padding-right: 0;
+    }
+
+    .carousel-nav-arrows {
+        position: relative;
+        top: 0;
+        right: 0;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .bottom-card-header {
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: center;
+    }
+    
+    .db-cat-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+
+    .db-cat-card {
+        padding: 0.75rem;
+    }
+
+    .db-cat-name {
+        font-size: 0.65rem;
+        letter-spacing: 0;
+    }
+
+    .db-cat-val {
+        font-size: 1rem;
+    }
+
+    .db-cat-body {
+        margin-bottom: 0.5rem;
+    }
+
+    .db-client-card {
+        padding: 0.8rem;
+        gap: 0.6rem;
+    }
+
+    .db-client-name {
+        font-size: 0.85rem;
+    }
 }

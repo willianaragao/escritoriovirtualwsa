@@ -1,0 +1,169 @@
+/* MobileBottomMenu.css */
+
+.mobile-bottom-menu {
+    display: none; /* Escondido por padrão, mas a media query vai ativar no mobile */
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-menu {
+        display: block;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2000;
+        user-select: none;
+    }
+
+    .mobile-bottom-bar {
+        background-color: #0f172a; /* Cor do sidebar/fundo dark */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 5px));
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
+    }
+    
+    .mobile-bottom-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.65rem;
+        cursor: pointer;
+        flex: 1;
+        transition: all 0.2s;
+        font-family: inherit;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .mobile-bottom-btn.active-cat, .mobile-bottom-btn:hover {
+        color: #f59e0b; /* Golden Orange da marca */
+    }
+    
+    .mobile-btn-icon {
+        transition: transform 0.2s;
+    }
+
+    .mobile-bottom-btn.active-cat .mobile-btn-icon {
+        transform: translateY(-2px);
+    }
+
+    .mobile-btn-label {
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    /* Submenu overlay para cobrir a tela abaixo do menu transparente */
+    .mobile-submenu-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: -1; /* Abaixo do bottom bar, mas acima do app */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        animation: fadeInOverlay 0.2s ease-out;
+        backdrop-filter: blur(2px);
+    }
+
+    .mobile-submenu-content {
+        background-color: #1e293b;
+        width: 100%;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        padding: 20px;
+        padding-bottom: 90px; /* Espaço para não ficar atrás do bottom menu bar */
+        animation: slideUpSubmenu 0.3s ease-out;
+        box-shadow: 0 -10px 25px rgba(0,0,0,0.5);
+    }
+
+    .mobile-submenu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 15px;
+    }
+    
+    .mobile-submenu-header h3 {
+        color: #fff;
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .close-submenu-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #e2e8f0;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    
+    .close-submenu-btn:active {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .mobile-submenu-items {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .mobile-submenu-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
+        padding: 15px 20px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+    }
+
+    .mobile-submenu-item.active {
+        background: rgba(245, 158, 11, 0.1) !important;
+        border-color: rgba(245, 158, 11, 0.3) !important;
+        color: #f59e0b !important;
+    }
+
+    .mobile-submenu-item:active {
+        background: rgba(255, 255, 255, 0.05);
+    }
+}
+
+@keyframes slideUpSubmenu {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
