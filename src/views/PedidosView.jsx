@@ -914,15 +914,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                         )}
                                     </div>
 
-                                    {/* ── Observações ── */}
-                                    <div className="pv-edit-section">
-                                        <div className="pv-edit-field">
-                                            <label>Observações</label>
-                                            <textarea className="pv-edit-textarea" rows={3}
-                                                value={eObs} placeholder="Observações opcionais..."
-                                                onChange={e => setEObs(e.target.value)} />
-                                        </div>
-                                    </div>
+
 
                                 </div>
                             )}
