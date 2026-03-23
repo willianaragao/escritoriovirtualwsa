@@ -453,11 +453,7 @@
     padding-bottom: calc(75px + env(safe-area-inset-bottom, 5px)); 
   }
   
-  .top-bar .icon-btn:first-child {
-      /* Esconde o botao de hamburguer menu pois usamos o bottom bar */
-      display: none;
-  }
-  
+    
   /* Melhora grid e cards no mobile - Aumentados para grade 2x2 com cards finais ocupando a largura total */
   .stats-grid {
       grid-template-columns: repeat(2, 1fr);

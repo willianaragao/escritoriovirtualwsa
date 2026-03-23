@@ -23,7 +23,7 @@ const addDays = (dateStr, days) => {
     return d.toISOString().split('T')[0];
 };
 
-const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
+const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
     // Removed local selectedMonth/Year
@@ -50,7 +50,7 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
 
     useEffect(() => {
         fetchParcelas();
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, businessUnit]);
 
     const fetchParcelas = async () => {
         setLoading(true);
@@ -59,6 +59,7 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
             const { data: allPedidos, error } = await supabase
                 .from('pedidos')
                 .select('*, clientes(nome, telefone)')
+                .eq('business_unit', businessUnit)
                 .order('data_pedido', { ascending: false });
 
             if (error) throw error;

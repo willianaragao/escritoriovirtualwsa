@@ -14,7 +14,7 @@ const MONTHS = [
 
 const fmt = val => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-const EstoqueView = () => {
+const EstoqueView = ({ businessUnit }) => {
     const now = new Date();
     const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
     const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -55,6 +55,7 @@ const EstoqueView = () => {
             const { data: pData } = await supabase
                 .from('pedidos')
                 .select('id, data_pedido, valor_total, status, clientes(nome)')
+                .eq('business_unit', businessUnit)
                 .order('data_pedido', { ascending: false });
 
             const periodOrders = (pData || []).filter(p => {

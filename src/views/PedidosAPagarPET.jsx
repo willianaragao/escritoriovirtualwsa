@@ -6,17 +6,18 @@ import {
     Trash2,
     Plus,
     X,
-    Check
+    Check,
+    DollarSign
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import './DividasFixas.css';
+import './PedidosAPagarPET.css';
 
 const MONTHS = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ];
 
-const EMPTY_FORM = {
+const EMPTY_FORM = { valor_pago: 0,
     descricao: '',
     vencimento: '',
     valor: '',
@@ -25,10 +26,11 @@ const EMPTY_FORM = {
     observacoes: ''
 };
 
-const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
+const PedidosAPagarPET = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const now = new Date();
     // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
+    const [viewStatus, setViewStatus] = useState('pendentes'); // 'pendentes' or 'pagos'
 
     const [dividas, setDividas] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -49,18 +51,13 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     }, [selectedMonth, selectedYear, businessUnit]);
 
     const fetchDividas = async () => {
-        if (businessUnit === 'PET') {
-            setDividas([]);
-            setLoading(false);
-            return;
-        }
         setLoading(true);
         try {
             const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
 
             // Tenta buscar dividas com mes_referencia ou sem ele (fallback)
             const { data, error } = await supabase
-                .from('dividas_fixas_wsa')
+                .from('pedidos_a_pagar_pet')
                 .select('*')
                 .or(`mes_referencia.eq.${mesRef},mes_referencia.is.null`)
                 .order('vencimento', { ascending: true });
@@ -90,8 +87,9 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
     const getStatusInfo = (d) => {
-        if (d.paga) return { label: 'Pago', cls: 'badge-pago' };
-        if (d.ativa !== false) return { label: 'Ativa', cls: 'badge-ativa' };
+        if (d.paga) return { label: 'Pago Total', cls: 'badge-pago' };
+        if (d.valor_pago > 0) return { label: 'Pago Parcial', cls: 'df-badge-parcial', style: {background: '#f59e0b', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '11px'} };
+        if (d.ativa !== false) return { label: 'Pendente', cls: 'badge-ativa' };
         return { label: 'Inativa', cls: 'badge-inativa' };
     };
 
@@ -121,7 +119,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
     const handleDelete = async (id, desc) => {
         if (!confirm(`Excluir "${desc}"?`)) return;
-        const { error } = await supabase.from('dividas_fixas_wsa').delete().eq('id', id);
+        const { error } = await supabase.from('pedidos_a_pagar_pet').delete().eq('id', id);
         if (error) { alert('Erro ao excluir.'); return; }
         fetchDividas();
     };
@@ -133,7 +131,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             if (d.mes_referencia === mesRef) {
                 // It's already a monthly specific record, just switch its status
                 const { error } = await supabase
-                    .from('dividas_fixas_wsa')
+                    .from('pedidos_a_pagar_pet')
                     .update({ paga: !d.paga })
                     .eq('id', d.id);
                 if (error) throw error;
@@ -147,7 +145,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                     paga: !d.paga
                 };
                 const { error } = await supabase
-                    .from('dividas_fixas_wsa')
+                    .from('pedidos_a_pagar_pet')
                     .insert([payload]);
                 if (error) throw error;
             }
@@ -155,6 +153,65 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         } catch (err) {
             console.error('Error toggling payment:', err);
             alert('Erro ao alterar status de pagamento.');
+        }
+    };
+
+    const handleBaixarParcelado = async (d) => {
+        const total = d.valor || d.valor_mensal || 0;
+        const jaPago = d.valor_pago || 0;
+        const restante = total - jaPago;
+
+        if (restante <= 0) {
+            alert('Este pedido já está totalmente pago.');
+            return;
+        }
+
+        const input = prompt(`Saldo devedor: R$ ${restante.toFixed(2)}\n\nDigite o valor que deseja pagar agora:`);
+        if (!input) return;
+
+        const valLimpo = input.replace(',', '.');
+        const valorAdicional = parseFloat(valLimpo);
+
+        if (isNaN(valorAdicional) || valorAdicional <= 0) {
+            alert('Valor inválido!');
+            return;
+        }
+
+        if (valorAdicional > restante) {
+            alert('O valor informado é maior que o saldo devedor restante.');
+            return;
+        }
+
+        const novoValorPago = jaPago + valorAdicional;
+        const quitaAgora = novoValorPago >= total;
+        const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+        try {
+            if (d.mes_referencia === mesRef) {
+                // Registro local do mês
+                const { error } = await supabase
+                    .from('pedidos_a_pagar_pet')
+                    .update({ paga: quitaAgora, valor_pago: novoValorPago })
+                    .eq('id', d.id);
+                if (error) throw error;
+            } else {
+                // Precisamos clonar pra esse mês e aí registrar o valor_pago
+                const { id, created_at, updated_at, ...rest } = d;
+                const { error } = await supabase
+                    .from('pedidos_a_pagar_pet')
+                    .insert([{
+                        ...rest,
+                        mes_referencia: mesRef,
+                        paga: quitaAgora,
+                        valor_pago: novoValorPago
+                    }]);
+                if (error) throw error;
+            }
+            fetchDividas();
+            alert(`Pagamento de R$ ${valorAdicional.toFixed(2)} registrado com sucesso!`);
+        } catch (err) {
+            console.error('Erro ao baixar parcela:', err);
+            alert('Erro ao registrar apagamento parcial.');
         }
     };
 
@@ -180,9 +237,9 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
 
             let err;
             if (editingId) {
-                ({ error: err } = await supabase.from('dividas_fixas_wsa').update(payload).eq('id', editingId));
+                ({ error: err } = await supabase.from('pedidos_a_pagar_pet').update(payload).eq('id', editingId));
             } else {
-                ({ error: err } = await supabase.from('dividas_fixas_wsa').insert([payload]));
+                ({ error: err } = await supabase.from('pedidos_a_pagar_pet').insert([payload]));
             }
             if (err) throw err;
             setIsModalOpen(false);
@@ -201,8 +258,8 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             {/* ===== HEADER ===== */}
             <header className="df-header">
                 <div className="df-header-left">
-                    <h1>Dívidas Fixas</h1>
-                    <p>Compromissos mensais recorrentes</p>
+                    <h1>Pedidos a Pagar</h1>
+                    <p>Controle de pagamentos de pedidos PET</p>
                 </div>
                 <div className="df-header-right">
                     {/* Month selector */}
@@ -251,9 +308,23 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                     <span className="df-total-label">Saldo Devedor (Aberto)</span>
                     <span className="df-total-value">{formatCurrency(totalMensal)}</span>
                 </div>
-                <button className="df-btn-nova" onClick={openNew} disabled={businessUnit === 'PET'}>
+                <div className="df-tabs" style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: viewStatus === 'pendentes' ? '#3b82f6' : '#e5e7eb', color: viewStatus === 'pendentes' ? '#fff' : '#4b5563', cursor: 'pointer', fontWeight: 500 }}
+                        onClick={() => setViewStatus('pendentes')}
+                    >
+                        Pagar Pendentes
+                    </button>
+                    <button 
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', background: viewStatus === 'pagos' ? '#10b981' : '#e5e7eb', color: viewStatus === 'pagos' ? '#fff' : '#4b5563', cursor: 'pointer', fontWeight: 500 }}
+                        onClick={() => setViewStatus('pagos')}
+                    >
+                        Pagos (Quitados)
+                    </button>
+                </div>
+                <button className="df-btn-nova" onClick={openNew} >
                     <Plus size={16} />
-                    Nova Dívida Fixa
+                    Novo Pagar Manual
                 </button>
             </div>
 
@@ -265,7 +336,8 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                             <th>Descrição</th>
                             <th>Vencimento</th>
                             <th>Status</th>
-                            <th>Valor Mensal</th>
+                            <th>Valor Total</th>
+                            <th>Valor Pago</th>
                             <th>Pago</th>
                             <th className="df-th-right">Ações</th>
                         </tr>
@@ -273,13 +345,15 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="5" className="df-empty">Carregando...</td>
+                                <td colSpan="6" className="df-empty">Carregando...</td>
                             </tr>
-                        ) : dividas.length === 0 ? (
+                        ) : dividas.filter(d => viewStatus === 'pagos' ? !!d.paga : !d.paga).length === 0 ? (
                             <tr>
-                                <td colSpan="5" className="df-empty">Nenhuma dívida cadastrada.</td>
+                                <td colSpan="6" className="df-empty">
+                                    {viewStatus === 'pagos' ? 'Nenhum pedido pago.' : 'Nenhum pedido pendente.'}
+                                </td>
                             </tr>
-                        ) : dividas.map((d) => {
+                        ) : dividas.filter(d => viewStatus === 'pagos' ? !!d.paga : !d.paga).map((d) => {
                             const status = getStatusInfo(d);
                             return (
                                 <tr key={d.id}>
@@ -295,9 +369,15 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                                         </span>
                                     </td>
                                     <td className="df-td-valor">{formatCurrency(d.valor || d.valor_mensal)}</td>
+                                    <td className="df-td-valor-pago">
+                                        <div style={{ color: d.valor_pago > 0 ? '#10b981' : '#6b7280', fontSize: '13px' }}>
+                                            {formatCurrency(d.valor_pago)}
+                                        </div>
+                                    </td>
                                     <td className="df-td-pago-toggle">
                                         <button
                                             className={`df-btn-check ${d.paga ? 'checked' : ''}`}
+                                            title="Marcar como Pago Totalmente"
                                             onClick={() => handleTogglePago(d)}
                                         >
                                             <Check size={14} />
@@ -305,6 +385,16 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                                     </td>
                                     <td className="df-td-actions">
                                         <div className="df-actions">
+                                            {!d.paga && (
+                                                <button
+                                                    className="df-action-btn"
+                                                    style={{ color: '#f59e0b', background: '#fef3c7' }}
+                                                    title="Baixar Parte do Pagamento"
+                                                    onClick={() => handleBaixarParcelado(d)}
+                                                >
+                                                    <DollarSign size={15} />
+                                                </button>
+                                            )}
                                             <button
                                                 className="df-action-btn df-edit-btn"
                                                 title="Editar"
@@ -333,7 +423,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 <div className="df-modal-overlay" onClick={() => setIsModalOpen(false)}>
                     <div className="df-modal-box" onClick={e => e.stopPropagation()}>
                         <div className="df-modal-header">
-                            <h2>{editingId ? 'Editar Dívida Fixa' : 'Nova Dívida Fixa'}</h2>
+                            <h2>{editingId ? 'Editar Pedido a Pagar' : 'Novo Pedido a Pagar'}</h2>
                             <button className="df-modal-close" onClick={() => setIsModalOpen(false)}>
                                 <X size={18} />
                             </button>
@@ -446,4 +536,4 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     );
 };
 
-export default DividasFixas;
+export default PedidosAPagarPET;

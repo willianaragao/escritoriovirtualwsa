@@ -46,7 +46,7 @@ const fmtDate = (dateStr) => {
     return `${d}/${m}/${y}`;
 };
 
-const NovoPedidoView = () => {
+const NovoPedidoView = ({ businessUnit }) => {
     /* ---- Clientes ---- */
     const [clientes, setClientes] = useState([]);
     const [clienteSearch, setClienteSearch] = useState('');
@@ -204,9 +204,29 @@ const NovoPedidoView = () => {
         setManualParcelas(newManuals);
     };
 
-    const filteredProdutos = produtos.filter(p =>
-        p.nome.toLowerCase().includes(prodSearch.toLowerCase())
-    );
+    const PET_ORDER = [
+        '500ml Pet Redonda c/100',
+        '500ml Pet Quadrada c/100',
+        '300ml Pet Redonda c/100',
+        '200ml Pet Redonda c/100',
+        '1Litro Pet Redonda c/50'
+    ];
+
+    const filteredProdutos = produtos.filter(p => {
+        const matchSearch = p.nome.toLowerCase().includes(prodSearch.toLowerCase());
+        const isPet = p.nome.toUpperCase().includes('PET');
+        if (businessUnit === 'PET') return matchSearch && isPet;
+        return matchSearch && !isPet;
+    }).sort((a, b) => {
+        if (businessUnit === 'PET') {
+            let idxA = PET_ORDER.indexOf(a.nome);
+            let idxB = PET_ORDER.indexOf(b.nome);
+            if (idxA === -1) idxA = 999;
+            if (idxB === -1) idxB = 999;
+            return idxA - idxB;
+        }
+        return 0;
+    });
 
     /* ---- Installments preview ---- */
     const parcelas = (() => {
@@ -272,6 +292,7 @@ const NovoPedidoView = () => {
                     observacoes: observacoes || null,
                     numero_parcelas: numeroParcelas,
                     parcelas_pagas: status === 'pago' ? numeroParcelas : 0,
+                    business_unit: businessUnit,
                 }])
                 .select()
                 .single();
@@ -288,6 +309,28 @@ const NovoPedidoView = () => {
 
             const { error: iErr } = await supabase.from('pedidos_produtos').insert(itens);
             if (iErr) throw iErr;
+
+            // NEW: Automatically create a supplier payable for PET based on cost or full value
+            // User requested: "todo pedido que estiver em a receber deve ir para a pagar tambem!"
+            if (businessUnit === 'PET' && status === 'a_receber') {
+                const custoTotal = cart.reduce((s, i) => s + i.qty * (Number(i.produto.preco_custo) || 0), 0);
+                const valorAPagar = custoTotal > 0 ? custoTotal : cartTotal;
+
+                const mesRef = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+                const { error: cErr } = await supabase.from('pedidos_a_pagar_pet').insert([{
+                    user_id: userId,
+                    descricao: `Custo Ped #${ped.id} - ${selectedCliente.nome}`,
+                    vencimento: condicoes.dataPrimeiraParcela ? parseInt(condicoes.dataPrimeiraParcela.split('-')[2], 10) : new Date().getDate(),
+                    valor: valorAPagar,
+                    valor_pago: 0,
+                    ativa: true,
+                    paga: false,
+                    categoria: 'Fornecedor PET',
+                    tipo: 'mensal',
+                    mes_referencia: mesRef
+                }]);
+                if (cErr) console.error('Erro ao registrar Pedido a Pagar', cErr);
+            }
 
             const nomeCli = selectedCliente.nome;
             setCart([]); setSelectedCliente(null); setClienteSearch('');
@@ -391,7 +434,7 @@ const NovoPedidoView = () => {
                 {filteredProdutos.length === 0 ? (
                     <div className="np-empty">Nenhum produto encontrado.</div>
                 ) : (
-                    <div className="np-catalog-grid">
+                    <div className={`np-catalog-grid ${businessUnit === 'PET' ? 'pet-mode' : ''}`}>
                         {filteredProdutos.map(prod => {
                             const qty = quantities[prod.id] || 1;
                             const preco = customPrices[prod.id] ?? prod.preco_unitario;
@@ -404,18 +447,94 @@ const NovoPedidoView = () => {
                                         </button>
                                     )}
                                     <div className="np-card-name">{prod.nome}</div>
-                                    <div className="np-card-meta">
-                                        <span className="np-card-unit">{prod.tipo || 'un'}</span>
-                                        <div className="np-price-row">
-                                            <span className="np-price-lbl">R$</span>
-                                            <input
-                                                type="number"
-                                                className="np-price-inp"
-                                                value={preco}
-                                                min="0" step="0.01"
-                                                onChange={e => setCustomPrices(cp => ({ ...cp, [prod.id]: parseFloat(e.target.value) || 0 }))}
-                                            />
-                                        </div>
+                                    <div className="np-card-meta" style={businessUnit === 'PET' ? { flexDirection: 'column', alignItems: 'stretch', gap: '8px' } : {}}>
+                                        {businessUnit === 'PET' ? (
+                                            <>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span className="np-card-unit">{prod.tipo || 'un'}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    {/* CUSTO COLUMN */}
+                                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {/* Unit Custo */}
+                                                        <div>
+                                                            <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700, textAlign: 'center' }}>Custo</div>
+                                                            <div className="np-price-row" style={{ background: 'rgba(255,255,255,0.03)', padding: '0 4px', borderRadius: '6px', width: '100%' }}>
+                                                                <span className="np-price-lbl" style={{ color: '#475569', fontSize: '0.75rem' }}>R$</span>
+                                                                <input
+                                                                    type="text"
+                                                                    className="np-price-inp"
+                                                                    value={Number(prod.custo_producao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                    disabled
+                                                                    style={{ color: '#94a3b8', background: 'transparent', width: '100%', padding: '0.4rem 0.2rem', border: '1px solid transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        {/* Total Custo */}
+                                                        <div>
+                                                            <div style={{ fontSize: '0.63rem', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700, textAlign: 'center', opacity: 0.8 }}>Custo Total</div>
+                                                            <div className="np-price-row" style={{ background: 'rgba(255,255,255,0.02)', padding: '0 4px', borderRadius: '6px', width: '100%' }}>
+                                                                <span className="np-price-lbl" style={{ color: '#475569', fontSize: '0.70rem' }}>R$</span>
+                                                                <input
+                                                                    type="text"
+                                                                    className="np-price-inp"
+                                                                    value={Number((prod.custo_producao || 0) * qty).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                    disabled
+                                                                    style={{ color: '#64748b', background: 'transparent', width: '100%', padding: '0.35rem 0.2rem', border: '1px solid transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* VENDA COLUMN */}
+                                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                        {/* Unit Venda */}
+                                                        <div>
+                                                            <div style={{ fontSize: '0.68rem', color: '#f59e0b', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700, textAlign: 'center' }}>Venda</div>
+                                                            <div className="np-price-row" style={{ width: '100%' }}>
+                                                                <span className="np-price-lbl" style={{ color: '#f59e0b', fontSize: '0.75rem' }}>R$</span>
+                                                                <input
+                                                                    type="number"
+                                                                    className="np-price-inp"
+                                                                    value={preco}
+                                                                    min="0" step="0.01"
+                                                                    onChange={e => setCustomPrices(cp => ({ ...cp, [prod.id]: parseFloat(e.target.value) || 0 }))}
+                                                                    style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.85rem', textAlign: 'center' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        {/* Total Venda */}
+                                                        <div>
+                                                            <div style={{ fontSize: '0.63rem', color: '#f59e0b', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700, textAlign: 'center', opacity: 0.8 }}>Venda Total</div>
+                                                            <div className="np-price-row" style={{ background: 'rgba(245,158,11,0.04)', padding: '0 4px', borderRadius: '6px', width: '100%' }}>
+                                                                <span className="np-price-lbl" style={{ color: '#d97706', fontSize: '0.70rem' }}>R$</span>
+                                                                <input
+                                                                    type="text"
+                                                                    className="np-price-inp"
+                                                                    value={Number(preco * qty).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                    disabled
+                                                                    style={{ color: '#f59e0b', background: 'transparent', width: '100%', padding: '0.35rem 0.2rem', border: '1px solid transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="np-card-unit">{prod.tipo || 'un'}</span>
+                                                <div className="np-price-row">
+                                                    <span className="np-price-lbl">R$</span>
+                                                    <input
+                                                        type="number"
+                                                        className="np-price-inp"
+                                                        value={preco}
+                                                        min="0" step="0.01"
+                                                        onChange={e => setCustomPrices(cp => ({ ...cp, [prod.id]: parseFloat(e.target.value) || 0 }))}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                     <div className="np-qty-lbl">Quantidade</div>
                                     <div className="np-qty-row">
@@ -491,9 +610,23 @@ const NovoPedidoView = () => {
                                 </tbody>
                             </table>
                         </div>
-                        <div className="np-total-row">
-                            <span>Total do Pedido</span>
-                            <span className="np-total-val">{fmt(cartTotal)}</span>
+                        <div className="np-total-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>Total do Pedido</span>
+                                <span style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' }}>{fmt(cartTotal)}</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.8rem', color: '#ef4444', textTransform: 'uppercase', fontWeight: 600 }}>Custo Total</span>
+                                <span style={{ color: '#f87171', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                    {fmt(cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao || i.produto.preco_custo) || 0), 0))}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <span style={{ fontSize: '0.8rem', color: '#10b981', textTransform: 'uppercase', fontWeight: 600 }}>Lucro Real</span>
+                                <span className="np-total-val" style={{ color: '#10b981', fontSize: '1.4rem' }}>
+                                    {fmt(cartTotal - cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao || i.produto.preco_custo) || 0), 0))}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

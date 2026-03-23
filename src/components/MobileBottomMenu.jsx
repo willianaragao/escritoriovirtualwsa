@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import './MobileBottomMenu.css';
 
-const MobileBottomMenu = ({ activeView, setActiveView }) => {
+const MobileBottomMenu = ({ activeView, setActiveView, businessUnit }) => {
     const [openCategory, setOpenCategory] = useState(null);
 
     const categories = [
@@ -54,7 +54,7 @@ const MobileBottomMenu = ({ activeView, setActiveView }) => {
             icon: DollarSign,
             items: [
                 { id: 'despesas', label: 'Despesas', icon: Banknote },
-                { id: 'dividas', label: 'Dívidas fixas', icon: TrendingDown },
+                { id: 'dividas', label: businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas fixas', icon: TrendingDown },
                 { id: 'calendario', label: 'Calendários', icon: Calendar }
             ]
         },

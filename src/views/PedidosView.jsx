@@ -40,7 +40,7 @@ const TOTAL_COLOR = {
     pendente: '#f59e0b',
     pago: '#10b981',
     a_receber: '#3b82f6',
-    parcialmente_pago: '#a78bfa',
+    parcialmente_pago: '#ec4899',
     aguardando_pagamento: '#3b82f6',
 };
 
@@ -59,7 +59,7 @@ const addDays = (dateStr, days) => {
 };
 
 /* ============================================================ */
-const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
+const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const now = new Date();
     // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -115,6 +115,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 const { data, error } = await supabase
                     .from('pedidos')
                     .select('*, clientes(nome, telefone)')
+                    .eq('business_unit', businessUnit)
                     .order('data_pedido', { ascending: false });
 
                 if (error) throw error;
@@ -181,7 +182,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             }
         };
         fetchPedidos();
-    }, [status, selectedMonth, selectedYear]);
+    }, [status, selectedMonth, selectedYear, businessUnit]);
 
     /* ---- WhatsApp ---- */
     const handleWhatsApp = async (pedido) => {
@@ -286,6 +287,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         if (!window.confirm(`Excluir o pedido de "${pedido.clientes?.nome || 'este cliente'}"? Ação irreversível.`)) return;
         try {
             await supabase.from('pedidos_produtos').delete().eq('pedido_id', pedido.id);
+            if (businessUnit === 'PET') {
+                await supabase.from('pedidos_a_pagar_pet').delete().like('descricao', `%Ped #${pedido.id} -%`);
+            }
             const { error } = await supabase.from('pedidos').delete().eq('id', pedido.id);
             if (error) throw error;
             setPedidos(prev => prev.filter(p => p.id !== pedido.id));
@@ -451,6 +455,44 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 })
                 .eq('id', editPedido.id);
             if (pedErr) throw pedErr;
+
+            // NEW: Sync with Pedidos a Pagar se businessUnit === 'PET'
+            if (businessUnit === 'PET') {
+                const { data: prods } = await supabase.from('produtos').select('id, preco_custo, custo_producao').in('id', editItens.map(i => i.produto_id));
+                const prodMap = {};
+                prods?.forEach(p => prodMap[p.id] = Number(p.custo_producao || p.preco_custo) || 0);
+
+                const newCustoTotal = editItens.reduce((s, i) => s + (Number(i.qty) * (prodMap[i.produto_id] || 0)), 0);
+                const valorAPagar = newCustoTotal > 0 ? newCustoTotal : editTotal;
+
+                const { data: existingPayable } = await supabase
+                    .from('pedidos_a_pagar_pet')
+                    .select('id')
+                    .like('descricao', `%Ped #${editPedido.id} -%`)
+                    .maybeSingle();
+
+                if (existingPayable) {
+                    await supabase
+                        .from('pedidos_a_pagar_pet')
+                        .update({ valor: valorAPagar })
+                        .eq('id', existingPayable.id);
+                } else if (finalStatus === 'a_receber') {
+                    // Create if it didn't exist but is now a_receber
+                    const mesRef = editPedido.mes_referencia || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+                    await supabase.from('pedidos_a_pagar_pet').insert([{
+                        user_id: editPedido.user_id,
+                        descricao: `Custo Ped #${editPedido.id} - ${editPedido.clientes?.nome || 'Cliente Editado'}`,
+                        vencimento: parseInt(eData?.split('-')?.[2] || new Date().getDate(), 10),
+                        valor: valorAPagar,
+                        valor_pago: 0,
+                        ativa: true,
+                        paga: false,
+                        categoria: 'Fornecedor PET',
+                        tipo: 'mensal',
+                        mes_referencia: mesRef
+                    }]);
+                }
+            }
 
             // 4. Reflect changes locally
             setPedidos(prev => prev.map(p =>

@@ -80,7 +80,7 @@ const getDateRange = (period, selectedMonth, selectedYear) => {
 
 const PERIODS = ['Hoje', 'Ontem', 'Semana', 'Mês', 'Ano'];
 
-const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
+const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const [despesas, setDespesas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -115,7 +115,7 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         fetchDespesas();
         fetchCategories();
         supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
-    }, [activePeriod, customFrom, customTo, selectedCategory, selectedMonth, selectedYear]);
+    }, [activePeriod, customFrom, customTo, selectedCategory, selectedMonth, selectedYear, businessUnit]);
 
     const fetchCategories = async () => {
         try {
@@ -149,11 +149,15 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     const fetchDespesas = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('despesas')
-                .select('*')
-                .order('data', { ascending: false });
+            let query = supabase.from('despesas').select('*').order('data', { ascending: false });
+            
+            if (businessUnit === 'PET') {
+                query = query.eq('business_unit', 'PET');
+            } else {
+                query = query.or('business_unit.eq.PEAD,business_unit.is.null');
+            }
 
+            const { data, error } = await query;
             if (error) throw error;
 
             // 1. Normalize categories right at the source
@@ -277,7 +281,8 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 valor: parseFloat(form.valor),
                 meio_pagamento: form.meio_pagamento,
                 data: form.data,
-                observacoes: form.observacoes || null
+                observacoes: form.observacoes || null,
+                business_unit: businessUnit || 'PEAD'
             };
 
             let error;

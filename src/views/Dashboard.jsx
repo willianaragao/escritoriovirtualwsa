@@ -220,7 +220,7 @@ const StatCard = ({ label, value, icon: Icon, variant, detail, onDetailClick, on
 /* ============================================================
    DASHBOARD
 ============================================================ */
-const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
+const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const [topClients, setTopClients] = useState([]);
     const [stats, setStats] = useState({
         entradas: 0,
@@ -268,14 +268,14 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
     useEffect(() => {
         fetchDashboardData();
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, businessUnit]);
 
     const fetchDashboardData = async () => {
         try {
-            // 1. Pedidos (Entradas, Banco, Caixa, A Receber, Pendentes)
             const { data: allPedidos, error: pedErr } = await supabase
                 .from('pedidos')
-                .select('valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, clientes(nome)');
+                .select('valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, clientes(nome)')
+                .eq('business_unit', businessUnit);
 
             if (pedErr) throw pedErr;
 
@@ -387,11 +387,18 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             setTopClients(ranking.slice(0, 7).map((item, idx) => ({ ...item, rank: idx + 1 })));
 
             // 2. Despesas (Saídas & Categorias)
-            const { data: allDespesas, error: despErr } = await supabase
-                .from('despesas')
-                .select('valor, data, categoria, meio_pagamento');
+            let allDespesas = [];
+            let queryDesp = supabase.from('despesas').select('valor, data, categoria, meio_pagamento');
+            
+            if (businessUnit === 'PET') {
+                queryDesp = queryDesp.eq('business_unit', 'PET');
+            } else {
+                queryDesp = queryDesp.or('business_unit.eq.PEAD,business_unit.is.null');
+            }
 
-            if (despErr) throw despErr;
+            const { data: dData, error: dErr } = await queryDesp;
+            if (dErr) throw dErr;
+            allDespesas = dData || [];
 
             let saidas = 0;
             const categoryMap = {};
@@ -450,14 +457,21 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
             setChartSlices(newSlices);
 
-            // 3. Dívidas Fixas (Respeitando o filtro de mês)
-            // Se houver mes_referencia na tabela, filtramos. 
-            // Caso contrário, mostramos as ativas não pagas como pendentes do período.
-            const { data: divFix, error: divErr } = await supabase
-                .from('dividas_fixas_wsa')
-                .select('*');
-
-            if (divErr) throw divErr;
+            // 3. Dívidas Fixas or Pedidos a Pagar (Respeitando o filtro de mês)
+            let divFix = [];
+            if (businessUnit === 'PET') {
+                const { data, error: divErr } = await supabase
+                    .from('pedidos_a_pagar_pet')
+                    .select('*');
+                if (divErr) throw divErr;
+                divFix = data || [];
+            } else {
+                const { data, error: divErr } = await supabase
+                    .from('dividas_fixas_wsa')
+                    .select('*');
+                if (divErr) throw divErr;
+                divFix = data || [];
+            }
 
             const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
             const mapByDesc = {};
@@ -474,7 +488,9 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             const totalDivFixas = Object.values(mapByDesc).reduce((acc, d) => {
                 // Somente ativas e não pagas (para o saldo devedor do dashboard)
                 if (d.ativa !== false && !d.paga) {
-                    return acc + (Number(d.valor || d.valor_mensal) || 0);
+                    const totalD = Number(d.valor || d.valor_mensal) || 0;
+                    const pagoD = Number(d.valor_pago) || 0;
+                    return acc + (totalD - pagoD);
                 }
                 return acc;
             }, 0);
@@ -487,12 +503,14 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             let BANCO_OFFSET = 0;
             let CAIXA_OFFSET = 0;
 
-            if (periodKey === '2026-1') { // Fevereiro 2026 calibration
-                BANCO_OFFSET = 3510.12; 
-                CAIXA_OFFSET = 3510.12;
-            } else if (periodKey === '2026-2') { // Março 2026 specific adjustment
-                BANCO_OFFSET = -407.35; 
-                CAIXA_OFFSET = -407;    
+            if (businessUnit !== 'PET') {
+                if (periodKey === '2026-1') { // Fevereiro 2026 calibration
+                    BANCO_OFFSET = 3510.12; 
+                    CAIXA_OFFSET = 3510.12;
+                } else if (periodKey === '2026-2') { // Março 2026 specific adjustment
+                    BANCO_OFFSET = -407.35; 
+                    CAIXA_OFFSET = -407;    
+                }
             }
 
             const finalBanco = globalBanco - BANCO_OFFSET;
@@ -551,7 +569,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                             </div>
                         )}
                     </div>
-                    <button className="btn-primary">+ Nova Transação</button>
+                    <button className="btn-primary" onClick={() => onNavigate('despesas')}>+ Nova Transação</button>
                 </div>
             </header>
 
@@ -602,7 +620,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
                     {/* ── Stats Row 2 ── */}
                     <div className="stats-grid">
-                        <StatCard label="Dívidas Fixas" value={stats.dividas_fixas} icon={AlertCircle} variant="dividas" onClick={() => onNavigate('dividas')} />
+                        <StatCard label={businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas Fixas'} value={stats.dividas_fixas} icon={AlertCircle} variant="dividas" onClick={() => onNavigate('dividas')} />
                         <StatCard label="A Receber" value={stats.a_receber} icon={Clock} variant="previsao" onClick={() => onNavigate('a-receber')} />
                         <StatCard label="Pendentes" value={stats.pendentes} icon={CreditCard} variant="apagar" onClick={() => onNavigate('pendentes')} />
                     </div>
@@ -724,7 +742,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                 <div className="db-flow-card red">
                                     <div className="db-flow-icon"><AlertCircle size={16} /></div>
                                     <div className="db-flow-info">
-                                        <span>Saldo Devedor MP + Dívidas Fixas</span>
+                                        <span>Saldo Devedor MP + {businessUnit === 'PET' ? 'Pedidos' : 'Dívidas Fixas'}</span>
                                         <strong>{fmt(stats.dividas_fixas + saldoDevedor)}</strong>
                                         <div className="db-flow-footer">
                                             <small>Faltam para quitar</small>
@@ -739,7 +757,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                         {showSaldoDetail && (
                                             <div className="db-saldo-detail-box">
                                                 <div className="db-detail-item">
-                                                    <span>Dívidas Fixas:</span>
+                                                    <span>{businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas Fixas'}:</span>
                                                     <span>{fmt(stats.dividas_fixas)}</span>
                                                 </div>
                                                 <div className="db-detail-item">

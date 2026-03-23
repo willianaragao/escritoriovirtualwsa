@@ -15,7 +15,7 @@ import {
     Database
 } from 'lucide-react';
 
-const Sidebar = ({ activeView, setActiveView }) => {
+const Sidebar = ({ activeView, setActiveView, businessUnit }) => {
     const navItems = [
         {
             group: "Menu Principal", items: [
@@ -39,7 +39,7 @@ const Sidebar = ({ activeView, setActiveView }) => {
         {
             group: "Financeiro", items: [
                 { id: 'despesas', label: 'Despesas', icon: Banknote },
-                { id: 'dividas', label: 'Dívidas fixas', icon: TrendingDown },
+                { id: 'dividas', label: businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas fixas', icon: TrendingDown },
                 { id: 'calendario', label: 'Calendário de Pagamentos', icon: Calendar }
             ]
         },

@@ -308,9 +308,9 @@
 }
 
 .pv-badge-parcial {
-    background: #2e1065;
-    color: #c4b5fd;
-    border: 1px solid #7c3aed;
+    background: #500724;
+    color: #fbcfe8;
+    border: 1px solid #be185d;
 }
 
 .pv-badge-aguardando {
@@ -934,11 +934,11 @@
 }
 
 .dot-parcialmente_pago {
-    background: #86efac;
+    background: #f472b6;
 }
 
 .pv-status-item.active .dot-parcialmente_pago {
-    background: #052e16;
+    background: #831843;
 }
 
 .dot-a_receber {
