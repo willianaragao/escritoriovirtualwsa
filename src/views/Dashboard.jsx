@@ -436,15 +436,22 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 }
             });
 
+            const { data: dbCategories } = await supabase.from('categorias').select('*');
+            const dbCatMap = {};
+            (dbCategories || []).forEach(c => {
+                 if (c.cor) dbCatMap[c.nome] = c.cor;
+            });
+
             // Process Chart Slices
             const newSlices = Object.entries(categoryMap).map(([label, valor], idx) => {
                 const pct = saidas > 0 ? Math.round((valor / saidas) * 100) : 0;
-                const color = CAT_COLORS[label] || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
+                const color = dbCatMap[label] || CAT_COLORS[label] || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
 
                 // Helper to convert hex to rgba for glow
-                const r = parseInt(color.slice(1, 3), 16);
-                const g = parseInt(color.slice(3, 5), 16);
-                const b = parseInt(color.slice(5, 7), 16);
+                const hex = color.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16) || 0;
+                const g = parseInt(hex.substring(2, 4), 16) || 0;
+                const b = parseInt(hex.substring(4, 6), 16) || 0;
 
                 return {
                     label,
