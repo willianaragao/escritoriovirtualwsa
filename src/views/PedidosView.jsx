@@ -326,13 +326,14 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         try {
             const { data, error } = await supabase
                 .from('pedidos_produtos')
-                .select('*, produtos(nome)')
+                .select('*, produtos(nome, custo_producao)')
                 .eq('pedido_id', pedido.id);
             if (error) throw error;
             setEditItens((data || []).map(it => ({
                 ...it,
                 qty: it.quantidade,
                 price: it.preco_unitario,
+                cost: it.produtos?.custo_producao || it.produtos?.preco_custo || 0,
             })));
         } catch (err) {
             alert('Erro ao carregar itens: ' + err.message);
@@ -355,6 +356,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     };
 
     const editTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.price)), 0);
+    const editCustoTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.cost || 0)), 0);
+    const editLucroTotal = editTotal - editCustoTotal;
 
     // Sincroniza manualParcelas com o split proporcional sempre que o total ou o número de parcelas mudar,
     // a menos que o número de parcelas seja o mesmo e o total também seja o mesmo.
@@ -458,9 +461,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
             // NEW: Sync with Pedidos a Pagar se businessUnit === 'PET'
             if (businessUnit === 'PET') {
-                const { data: prods } = await supabase.from('produtos').select('id, preco_custo, custo_producao').in('id', editItens.map(i => i.produto_id));
+                const { data: prods } = await supabase.from('produtos').select('id, custo_producao').in('id', editItens.map(i => i.produto_id));
                 const prodMap = {};
-                prods?.forEach(p => prodMap[p.id] = Number(p.custo_producao || p.preco_custo) || 0);
+                prods?.forEach(p => prodMap[p.id] = Number(p.custo_producao) || 0);
 
                 const newCustoTotal = editItens.reduce((s, i) => s + (Number(i.qty) * (prodMap[i.produto_id] || 0)), 0);
                 const valorAPagar = newCustoTotal > 0 ? newCustoTotal : editTotal;
@@ -713,7 +716,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                     <tr>
                                                         <th>Produto</th>
                                                         <th>Qtd</th>
-                                                        <th>Preço Unit.</th>
+                                                        <th>Venda Unit.</th>
+                                                        <th>Custo Unit.</th>
+                                                        <th>Lucro</th>
                                                         <th>Subtotal</th>
                                                     </tr>
                                                 </thead>
@@ -731,6 +736,12 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                                     value={it.price}
                                                                     onChange={e => updateEditItem(it.id, 'price', e.target.value)} />
                                                             </td>
+                                                            <td className="pv-eit-sub" style={{ color: '#94a3b8' }}>
+                                                                {fmt(it.cost)}
+                                                            </td>
+                                                            <td className="pv-eit-sub" style={{ color: '#10b981' }}>
+                                                                {fmt((Number(it.price) - Number(it.cost)) * Number(it.qty))}
+                                                            </td>
                                                             <td className="pv-eit-sub">
                                                                 {fmt(Number(it.qty) * Number(it.price))}
                                                             </td>
@@ -739,9 +750,19 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                 </tbody>
                                             </table>
                                         )}
-                                        <div className="pv-edit-subtotal">
-                                            <span>Total dos itens</span>
-                                            <strong>{fmt(editTotal)}</strong>
+                                        <div className="pv-edit-subtotal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.6)', padding: '0.8rem 1.2rem' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Custo Produção</span>
+                                                <strong style={{ color: '#cbd5e1', fontSize: '0.95rem' }}>{fmt(editCustoTotal)}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Lucro Projetado</span>
+                                                <strong style={{ color: '#10b981', fontSize: '0.95rem' }}>{fmt(editLucroTotal)}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Valor do Pedido</span>
+                                                <strong style={{ color: '#f59e0b', fontSize: '1.1rem' }}>{fmt(editTotal)}</strong>
+                                            </div>
                                         </div>
                                     </div>
 

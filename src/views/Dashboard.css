@@ -484,14 +484,21 @@
     width: 100%;
 }
 
+.db-flow-cards.pet-layout {
+    grid-template-columns: repeat(4, 1fr);
+}
+
 @media (max-width: 1400px) {
     .db-flow-cards {
         grid-template-columns: repeat(3, 1fr);
     }
+    .db-flow-cards.pet-layout {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 900px) {
-    .db-flow-cards {
+    .db-flow-cards, .db-flow-cards.pet-layout {
         grid-template-columns: repeat(2, 1fr);
     }
 }

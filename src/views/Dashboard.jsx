@@ -274,12 +274,18 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
         try {
             const { data: allPedidos, error: pedErr } = await supabase
                 .from('pedidos')
-                .select('valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, clientes(nome)')
+                .select(`
+                    valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, 
+                    clientes(nome),
+                    pedidos_produtos(quantidade, produtos(custo_producao))
+                `)
                 .eq('business_unit', businessUnit);
 
             if (pedErr) throw pedErr;
 
             let entradas = 0;
+            let totalCustoMes = 0;
+            let totalVendaMes = 0;
             let globalBanco = 0;
             let globalCaixa = 0;
             let pendentes = 0;
@@ -339,6 +345,10 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
                 // Month-specific stats (Respecting only the selected period)
                 if (pMonth === selectedMonth && pYear === selectedYear) {
+                    totalVendaMes += val;
+                    (p.pedidos_produtos || []).forEach(it => {
+                        totalCustoMes += (Number(it.quantidade) || 0) * (Number(it.produtos?.custo_producao) || 0);
+                    });
                     if (valorPago > 0) {
                         clientTotals[clientName] = (clientTotals[clientName] || 0) + valorPago;
                         entradas += valorPago;
@@ -527,12 +537,14 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             setStats({
                 entradas,
                 saidas,
-                saldo: finalSaldo, // "Saldo Atual" remains the historical total sum
+                saldo: finalSaldo,
                 banco: finalBanco,
                 caixa: finalCaixa,
                 dividas_fixas: totalDivFixas,
                 a_receber,
-                pendentes
+                pendentes,
+                totalCustoMes,
+                totalVendaMes
             });
 
         } catch (err) {
@@ -707,94 +719,136 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     ) : (
                         /* VIEW MATERIA PRIMA / FLUXO */
                         <div className="db-materia-view">
-                            <div className="db-flow-cards">
-                                <div className="db-flow-card orange">
-                                    <div className="db-flow-icon"><Target size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Total Gasto (Mês)</span>
-                                        <div className="db-flow-editable" onClick={() => setIsEditingTarget(true)}>
-                                            {isEditingTarget ? (
-                                                <input
-                                                    type="number"
-                                                    autoFocus
-                                                    step="0.01"
-                                                    value={materiaPrimaTarget}
-                                                    onChange={e => updateTarget(e.target.value)}
-                                                    onBlur={() => setIsEditingTarget(false)}
-                                                    onKeyDown={e => e.key === 'Enter' && setIsEditingTarget(false)}
-                                                />
-                                            ) : (
-                                                <strong>{fmt(materiaPrimaTarget)}</strong>
+                            {businessUnit === 'PET' ? (
+                                <div className="db-flow-cards pet-layout">
+                                    <div className="db-flow-card indigo">
+                                        <div className="db-flow-icon"><TrendingUp size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Valor Total de Vendas</span>
+                                            <strong>{fmt(stats.totalVendaMes)}</strong>
+                                            <small>Faturamento bruto do mês</small>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card orange">
+                                        <div className="db-flow-icon"><TrendingDown size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Custo Total Produção</span>
+                                            <strong>{fmt(stats.totalCustoMes)}</strong>
+                                            <small>Soma dos custos dos itens</small>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card color-profit">
+                                        <div className="db-flow-icon"><Sparkles size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Lucro Projetado</span>
+                                            <strong style={{ color: (stats.totalVendaMes - stats.totalCustoMes) >= 0 ? 'var(--color-entradas)' : 'var(--color-saidas)' }}>
+                                                {fmt(stats.totalVendaMes - stats.totalCustoMes)}
+                                            </strong>
+                                            <small>{(stats.totalVendaMes - stats.totalCustoMes) >= 0 ? 'Resultado positivo' : 'Resultado negativo'}</small>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card blue">
+                                        <div className="db-flow-icon"><Wallet size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Saldo Atual (Geral)</span>
+                                            <strong>{fmt(stats.saldo)}</strong>
+                                            <small>Banco + Caixa</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="db-flow-cards">
+                                    <div className="db-flow-card orange">
+                                        <div className="db-flow-icon"><Target size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Total Gasto (Mês)</span>
+                                            <div className="db-flow-editable" onClick={() => setIsEditingTarget(true)}>
+                                                {isEditingTarget ? (
+                                                    <input
+                                                        type="number"
+                                                        autoFocus
+                                                        step="0.01"
+                                                        value={materiaPrimaTarget}
+                                                        onChange={e => updateTarget(e.target.value)}
+                                                        onBlur={() => setIsEditingTarget(false)}
+                                                        onKeyDown={e => e.key === 'Enter' && setIsEditingTarget(false)}
+                                                    />
+                                                ) : (
+                                                    <strong>{fmt(materiaPrimaTarget)}</strong>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card purple">
+                                        <div className="db-flow-icon"><Package size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Pago em Matéria Prima</span>
+                                            <strong>{fmt(pagoMP)}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card indigo">
+                                        <div className="db-flow-icon"><Hourglass size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Previsão Recebimentos</span>
+                                            <strong>{fmt(previsaoTotal)}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div className="db-flow-card red">
+                                        <div className="db-flow-icon"><AlertCircle size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Saldo Devedor MP + {businessUnit === 'PET' ? 'Pedidos' : 'Dívidas Fixas'}</span>
+                                            <strong>{fmt(stats.dividas_fixas + saldoDevedor)}</strong>
+                                            <div className="db-flow-footer">
+                                                <small>Faltam para quitar</small>
+                                                <span
+                                                    className="db-detail-toggle"
+                                                    onClick={() => setShowSaldoDetail(!showSaldoDetail)}
+                                                >
+                                                    {showSaldoDetail ? 'Ocultar detalhe' : 'Ver detalhe'}
+                                                </span>
+                                            </div>
+
+                                            {showSaldoDetail && (
+                                                <div className="db-saldo-detail-box">
+                                                    <div className="db-detail-item">
+                                                        <span>{businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas Fixas'}:</span>
+                                                        <span>{fmt(stats.dividas_fixas)}</span>
+                                                    </div>
+                                                    <div className="db-detail-item">
+                                                        <span>Saldo MP:</span>
+                                                        <span>{fmt(saldoDevedor)}</span>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="db-flow-card purple">
-                                    <div className="db-flow-icon"><Package size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Pago em Matéria Prima</span>
-                                        <strong>{fmt(pagoMP)}</strong>
-                                    </div>
-                                </div>
-
-                                <div className="db-flow-card indigo">
-                                    <div className="db-flow-icon"><Hourglass size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Previsão Recebimentos</span>
-                                        <strong>{fmt(previsaoTotal)}</strong>
-                                    </div>
-                                </div>
-
-                                <div className="db-flow-card red">
-                                    <div className="db-flow-icon"><AlertCircle size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Saldo Devedor MP + {businessUnit === 'PET' ? 'Pedidos' : 'Dívidas Fixas'}</span>
-                                        <strong>{fmt(stats.dividas_fixas + saldoDevedor)}</strong>
-                                        <div className="db-flow-footer">
-                                            <small>Faltam para quitar</small>
-                                            <span
-                                                className="db-detail-toggle"
-                                                onClick={() => setShowSaldoDetail(!showSaldoDetail)}
-                                            >
-                                                {showSaldoDetail ? 'Ocultar detalhe' : 'Ver detalhe'}
-                                            </span>
+                                    <div className="db-flow-card blue">
+                                        <div className="db-flow-icon"><Wallet size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Saldo Atual</span>
+                                            <strong>{fmt(stats.saldo)}</strong>
                                         </div>
+                                    </div>
 
-                                        {showSaldoDetail && (
-                                            <div className="db-saldo-detail-box">
-                                                <div className="db-detail-item">
-                                                    <span>{businessUnit === 'PET' ? 'Pedidos a Pagar' : 'Dívidas Fixas'}:</span>
-                                                    <span>{fmt(stats.dividas_fixas)}</span>
-                                                </div>
-                                                <div className="db-detail-item">
-                                                    <span>Saldo MP:</span>
-                                                    <span>{fmt(saldoDevedor)}</span>
-                                                </div>
-                                            </div>
-                                        )}
+                                    <div className="db-flow-card color-profit">
+                                        <div className="db-flow-icon"><Sparkles size={16} /></div>
+                                        <div className="db-flow-info">
+                                            <span>Lucro do Período</span>
+                                            <strong style={{ color: profit >= 0 ? 'var(--color-entradas)' : 'var(--color-saidas)' }}>
+                                                {fmt(profit)}
+                                            </strong>
+                                            <small>{profit >= 0 ? 'Resultado positivo' : 'Resultado negativo'}</small>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div className="db-flow-card blue">
-                                    <div className="db-flow-icon"><Wallet size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Saldo Atual</span>
-                                        <strong>{fmt(stats.saldo)}</strong>
-                                    </div>
-                                </div>
-
-                                <div className="db-flow-card color-profit">
-                                    <div className="db-flow-icon"><Sparkles size={16} /></div>
-                                    <div className="db-flow-info">
-                                        <span>Lucro do Período</span>
-                                        <strong style={{ color: profit >= 0 ? 'var(--color-entradas)' : 'var(--color-saidas)' }}>
-                                            {fmt(profit)}
-                                        </strong>
-                                        <small>{profit >= 0 ? 'Resultado positivo' : 'Resultado negativo'}</small>
-                                    </div>
-                                </div>
-                            </div>
+                            )}
 
                             <div className="db-flow-bars-section">
                                 <h4>Fluxo de Caixa</h4>
@@ -822,15 +876,17 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     </div>
 
                                     {/* Barra Saldo Devedor */}
-                                    <div className="db-flow-bar-row">
-                                        <div className="db-fb-header">
-                                            <span>Saldo Devedor Matéria Prima</span>
-                                            <span>{fmt(saldoDevedor)}</span>
+                                    {businessUnit !== 'PET' && (
+                                        <div className="db-flow-bar-row">
+                                            <div className="db-fb-header">
+                                                <span>Saldo Devedor Matéria Prima</span>
+                                                <span>{fmt(saldoDevedor)}</span>
+                                            </div>
+                                            <div className="db-fb-track">
+                                                <div className="db-fb-fill red" style={{ width: `${Math.min(100, (saldoDevedor / materiaPrimaTarget) * 100)}%` }} />
+                                            </div>
                                         </div>
-                                        <div className="db-fb-track">
-                                            <div className="db-fb-fill red" style={{ width: `${Math.min(100, (saldoDevedor / materiaPrimaTarget) * 100)}%` }} />
-                                        </div>
-                                    </div>
+                                    )}
 
                                     {/* Barra Previsão */}
                                     <div className="db-flow-bar-row">

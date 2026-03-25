@@ -313,7 +313,7 @@ const NovoPedidoView = ({ businessUnit }) => {
             // NEW: Automatically create a supplier payable for PET based on cost or full value
             // User requested: "todo pedido que estiver em a receber deve ir para a pagar tambem!"
             if (businessUnit === 'PET' && status === 'a_receber') {
-                const custoTotal = cart.reduce((s, i) => s + i.qty * (Number(i.produto.preco_custo) || 0), 0);
+                const custoTotal = cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao) || 0), 0);
                 const valorAPagar = custoTotal > 0 ? custoTotal : cartTotal;
 
                 const mesRef = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
@@ -576,7 +576,9 @@ const NovoPedidoView = ({ businessUnit }) => {
                                     <tr>
                                         <th>Produto</th>
                                         <th>Quantidade</th>
-                                        <th>Preço Unit.</th>
+                                        <th>Venda Unit.</th>
+                                        <th>Custo Unit.</th>
+                                        <th>Lucro</th>
                                         <th>Subtotal</th>
                                         <th></th>
                                     </tr>
@@ -599,6 +601,12 @@ const NovoPedidoView = ({ businessUnit }) => {
                                                 </div>
                                             </td>
                                             <td className="np-ot-muted">{fmt(item.preco)}</td>
+                                            <td className="np-ot-muted" style={{ color: '#94a3b8' }}>
+                                                {fmt(item.produto.custo_producao || item.produto.preco_custo || 0)}
+                                            </td>
+                                            <td className="np-ot-sub" style={{ color: '#10b981' }}>
+                                                {fmt((item.preco - (Number(item.produto.custo_producao) || Number(item.produto.preco_custo) || 0)) * item.qty)}
+                                            </td>
                                             <td className="np-ot-sub">{fmt(item.qty * item.preco)}</td>
                                             <td>
                                                 <button className="np-ot-del" onClick={() => removeFromCart(item.produto.id)}>
@@ -618,7 +626,7 @@ const NovoPedidoView = ({ businessUnit }) => {
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <span style={{ fontSize: '0.8rem', color: '#ef4444', textTransform: 'uppercase', fontWeight: 600 }}>Custo Total</span>
                                 <span style={{ color: '#f87171', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                                    {fmt(cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao || i.produto.preco_custo) || 0), 0))}
+                                    {fmt(cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao) || 0), 0))}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
