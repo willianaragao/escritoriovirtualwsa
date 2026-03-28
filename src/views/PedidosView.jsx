@@ -437,38 +437,40 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const editCustoTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.cost || 0)), 0);
     const editLucroTotal = editTotal - editCustoTotal;
 
-    // Sincroniza manualParcelas com o split proporcional sempre que o total ou o número de parcelas mudar,
-    // a menos que o número de parcelas seja o mesmo e o total também seja o mesmo.
+    // Sincroniza manualParcelas com o split proporcional apenas quando o número de parcelas 
+    // ou o valor total do pedido muda (ex: alteração de itens).
+    useEffect(() => {
+        if (!editPedido) return;
+        const count = Number(eParcelas) || 1;
+        
+        // Se mudou o número de parcelas ou o total, reinicializamos
+        if (manualParcelas.length !== count) {
+            const each = editTotal / count;
+            setManualParcelas(Array.from({ length: count }, () => each));
+        }
+    }, [eParcelas]);
+
+    // Caso o total do pedido mude (itens alterados), opcionalmente resetamos as parcelas
     useEffect(() => {
         if (!editPedido) return;
         const count = Number(eParcelas) || 1;
         const currentSum = manualParcelas.reduce((a, b) => a + b, 0);
-
-        if (manualParcelas.length !== count || Math.abs(currentSum - editTotal) > 0.01) {
-            const each = editTotal / count;
-            setManualParcelas(Array.from({ length: count }, () => each));
+        if (Math.abs(currentSum - editTotal) > 0.05) {
+             const each = editTotal / count;
+             setManualParcelas(Array.from({ length: count }, () => each));
         }
-    }, [eParcelas, editTotal, !!editPedido]);
+    }, [editTotal]);
 
     const handleManualParcChange = (index, val) => {
         setEditingParc({ index, value: val });
         const cleanVal = val.replace(',', '.');
         const newVal = parseFloat(cleanVal) || 0;
-        const newManuals = [...manualParcelas];
-        newManuals[index] = newVal;
-
-        const count = newManuals.length;
-        if (index < count - 1) {
-            let sumBefore = 0;
-            for (let i = 0; i <= index; i++) sumBefore += newManuals[i];
-            const remaining = editTotal - sumBefore;
-            const remainingCount = count - (index + 1);
-            const each = remainingCount > 0 ? remaining / remainingCount : 0;
-            for (let i = index + 1; i < count; i++) {
-                newManuals[i] = each;
-            }
-        }
-        setManualParcelas(newManuals);
+        
+        setManualParcelas(prev => {
+            const copy = [...prev];
+            copy[index] = newVal;
+            return copy;
+        });
     };
 
     const parcelasPreview = eParcelas > 0 && eData
@@ -517,8 +519,17 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 finalStatus = 'parcialmente_pago';
             }
 
-            const precoParc = editTotal / (Number(eParcelas) || 1);
-            let calculatedPagas = Math.floor(newValRecebido / precoParc);
+            // Calculate how many parcels are paid based on their specific values
+            let calculatedPagas = 0;
+            let tempRec = newValRecebido;
+            for (let i = 0; i < manualParcelas.length; i++) {
+                if (tempRec >= manualParcelas[i] - 0.01) {
+                    calculatedPagas++;
+                    tempRec -= manualParcelas[i];
+                } else {
+                    break;
+                }
+            }
             if (finalStatus === 'pago') calculatedPagas = Number(eParcelas);
 
             const { error: pedErr } = await supabase
@@ -1047,16 +1058,15 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                         </div>
                                                     ))}
                                                     <div className="pv-ps-footer">
-                                                        <span>Total das Parcelas:</span>
-                                                        <strong>{fmt(editTotal)}</strong>
-                                                    </div>
+                                                         <span>Total das Parcelas:</span>
+                                                         <strong style={{ color: Math.abs(manualParcelas.reduce((a,b)=>a+b,0) - editTotal) > 0.05 ? '#ef4444' : '#f59e0b' }}>
+                                                            {fmt(manualParcelas.reduce((a,b)=>a+b,0))}
+                                                         </strong>
+                                                     </div>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-
-
-
                                 </div>
                             )}
                         </div>
