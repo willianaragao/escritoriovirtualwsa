@@ -12,7 +12,8 @@ import {
     Phone,
     Mail,
     User,
-    FileText
+    FileText,
+    MessageCircle
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ClientesView.css';
@@ -199,6 +200,65 @@ const ClientesView = ({ user }) => {
         } finally {
             setSaving(false);
         }
+    };
+
+    const handleSendPricesWhatsApp = (type) => { // type: 'pead', 'pet', 'both'
+        if (!selectedCliente) return;
+
+        const tel = selectedCliente.telefone || '';
+        const cleanTel = tel.replace(/\D/g, '');
+        if (!cleanTel) {
+            alert('Este cliente não possui telefone cadastrado.');
+            return;
+        }
+
+        let msg = `*TABELA DE PREÇOS ATUALIZADA - ${selectedCliente.nome.toUpperCase()}*\n\n`;
+
+        if (type === 'pead' || type === 'both') {
+            const peadProds = produtos.filter(p => !p.nome.toUpperCase().includes('PET'));
+            if (peadProds.length > 0) {
+                msg += `*📦 UNIDADE PEAD:*\n`;
+                msg += `----------------------------------\n`;
+                peadProds.forEach(p => {
+                    const priceRaw = customPrices[p.id];
+                    const price = (priceRaw !== undefined && priceRaw !== '') 
+                        ? parseFloat(priceRaw.toString().replace(',', '.')) 
+                        : p.preco_unitario;
+                    msg += `🔹 ${p.nome}: *${formatCurrency(price)}*\n`;
+                });
+                msg += `\n`;
+            }
+        }
+
+        if (type === 'pet' || type === 'both') {
+            const petProds = produtos.filter(p => p.nome.toUpperCase().includes('PET')).sort((a,b) => {
+                const PET_ORDER = ['500ml Pet Redonda c/100', '500ml Pet Quadrada c/100', '300ml Pet Redonda c/100', '200ml Pet Redonda c/100', '1Litro Pet Redonda c/50'];
+                let idxA = PET_ORDER.indexOf(a.nome);
+                let idxB = PET_ORDER.indexOf(b.nome);
+                if (idxA === -1) idxA = 999;
+                if (idxB === -1) idxB = 999;
+                return idxA - idxB;
+            });
+            if (petProds.length > 0) {
+                msg += `*📦 UNIDADE PET:*\n`;
+                msg += `----------------------------------\n`;
+                petProds.forEach(p => {
+                    const priceRaw = customPrices[p.id];
+                    const price = (priceRaw !== undefined && priceRaw !== '') 
+                        ? parseFloat(priceRaw.toString().replace(',', '.')) 
+                        : p.preco_unitario;
+                    msg += `🔹 ${p.nome}: *${formatCurrency(price)}*\n`;
+                });
+                msg += `\n`;
+            }
+        }
+
+        msg += `----------------------------------\n`;
+        msg += `_Preços válidos para o período atual._\n`;
+        msg += `_Qualquer dúvida, estamos à disposição!_`;
+
+        const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
     };
 
     const formatCurrency = (val) => {
@@ -489,12 +549,26 @@ const ClientesView = ({ user }) => {
                             </div>
                         </div>
 
-                        <div className="modal-footer">
-                            <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                            <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
-                                <Save size={18} />
-                                {saving ? 'Salvando...' : 'Salvar Preços'}
-                            </button>
+                        <div className="modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+                            <div className="whatsapp-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.5rem' }}>Enviar Tabela:</span>
+                                <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')} title="Enviar apenas PEAD">
+                                    <MessageCircle size={16} /> PEAD
+                                </button>
+                                <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')} title="Enviar apenas PET">
+                                    <MessageCircle size={16} /> PET
+                                </button>
+                                <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')} title="Enviar Completa">
+                                    <MessageCircle size={16} /> AMBAS
+                                </button>
+                            </div>
+                            <div className="main-modal-actions" style={{ display: 'flex', gap: '1rem' }}>
+                                <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                                <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
+                                    <Save size={18} />
+                                    {saving ? 'Salvando...' : 'Salvar Preços'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

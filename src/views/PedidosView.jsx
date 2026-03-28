@@ -93,6 +93,13 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [showPayDrop, setShowPayDrop] = useState(false);
     const [showMonthDrop, setShowMonthDrop] = useState(false);
     const [showParcelasList, setShowParcelasList] = useState(false);
+
+    /* ---- WhatsApp Modal state ---- */
+    const [isWAModalOpen, setIsWAModalOpen] = useState(false);
+    const [waClientOrders, setWaClientOrders] = useState({ pead: [], pet: [] });
+    const [waCurrentClient, setWaCurrentClient] = useState(null);
+    const [waLoading, setWaLoading] = useState(false);
+
     const statusRef = useRef(null);
     const payRef = useRef(null);
     const monthRef = useRef(null);
@@ -193,45 +200,116 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             return;
         }
 
-        // Fetch items for the specific order
-        const { data: itens, error } = await supabase
-            .from('pedidos_produtos')
-            .select('quantidade, preco_unitario, subtotal, produtos(nome)')
-            .eq('pedido_id', pedido.id);
+        setWaLoading(true);
+        setWaCurrentClient(pedido.clientes);
 
-        if (error) {
-            console.error('Error fetching items for WhatsApp:', error);
-            alert('Erro ao carregar detalhes do pedido para o WhatsApp.');
-            return;
+        try {
+            // Fetch ALL orders for this client for cross-unit relation check
+            const { data: allOrders, error } = await supabase
+                .from('pedidos')
+                .select(`
+                    *,
+                    clientes(nome, telefone),
+                    pedidos_produtos(
+                        quantidade, preco_unitario, subtotal,
+                        produtos(nome, preco_unitario)
+                    )
+                `)
+                .eq('cliente_id', pedido.cliente_id)
+                .order('data_pedido', { ascending: false });
+
+            if (error) throw error;
+
+            // Filter by current month/year context (using selectedMonth/Year from props)
+            const contextOrders = (allOrders || []).filter(p => {
+                const d = new Date(p.data_pedido + 'T12:00:00');
+                let pMonth = d.getMonth();
+                let pYear = d.getFullYear();
+                if (p.mes_referencia) {
+                    const monthsNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                    const refIdx = monthsNames.indexOf(p.mes_referencia.toLowerCase());
+                    if (refIdx !== -1) pMonth = refIdx;
+                }
+                return pMonth === selectedMonth && pYear === selectedYear;
+            });
+
+            const peadOrders = contextOrders.filter(o => o.business_unit === 'PEAD');
+            const petOrders = contextOrders.filter(o => o.business_unit === 'PET');
+
+            // If we have orders in both units, show modal to choose.
+            // Otherise keep same behavior but with better formatting.
+            if (peadOrders.length > 0 && petOrders.length > 0) {
+                setWaClientOrders({ pead: peadOrders, pet: petOrders });
+                setIsWAModalOpen(true);
+            } else {
+                // Determine which direction to send automatically
+                const activeOrders = peadOrders.length > 0 ? peadOrders : petOrders;
+                if (activeOrders.length > 0) {
+                    sendWhatsAppMessage(activeOrders, cleanTel, pedido.clientes?.nome);
+                } else {
+                    // Fallback to the clicked order if filters missed it
+                    sendWhatsAppMessage([pedido], cleanTel, pedido.clientes?.nome);
+                }
+            }
+        } catch (err) {
+            console.error('Error handling WhatsApp relation:', err);
+            alert('Erro ao carregar dados dos pedidos para o WhatsApp.');
+        } finally {
+            setWaLoading(false);
         }
+    };
 
-        const statusLabel = STATUS_BADGE[pedido.status]?.label || 'Pendente';
-        const statusEmoji = pedido.status === 'pago' ? '✅'
-            : pedido.status === 'pendente' ? '⏳'
-                : pedido.status === 'parcialmente_pago' ? '🌗'
-                    : '⏳';
+    const sendWhatsAppMessage = (selectedOrders, tel, clientName) => {
+        if (!selectedOrders || selectedOrders.length === 0) return;
 
-        const dataFmt = formatDate(pedido.data_pedido);
-        const forma = typeof pedido.condicoes_pagamento === 'object'
-            ? pedido.condicoes_pagamento?.formaPagamento || 'N/A'
-            : pedido.condicoes_pagamento || 'N/A';
+        let msg = `*RELAÇÃO DE PEDIDOS - ${clientName?.toUpperCase()}*\n`;
+        msg += `*Competência:* ${MONTHS[selectedMonth]}/${selectedYear}\n\n`;
 
-        let produtosText = '';
-        (itens || []).forEach(it => {
-            const pName = it.produtos?.nome || 'Produto';
-            produtosText += `* ${it.quantidade}x ${pName} - ${fmtW(it.preco_unitario)} = ${fmtW(it.subtotal)}\n`;
+        let totalGeral = 0;
+        const itemsByUnit = { PEAD: [], PET: [] };
+
+        selectedOrders.forEach(order => {
+            const unit = order.business_unit === 'PET' ? 'PET' : 'PEAD';
+            if (order.pedidos_produtos) {
+                order.pedidos_produtos.forEach(it => {
+                    itemsByUnit[unit].push(it);
+                    totalGeral += Number(it.subtotal || 0);
+                });
+            }
         });
 
-        const msg = `PEDIDO - ${pedido.clientes?.nome}\n\n` +
-            `Data: ${dataFmt}\n` +
-            `Status: ${statusLabel} ${statusEmoji}\n\n` +
-            `Produtos:\n${produtosText}\n` +
-            `Forma de Pagamento: ${forma}\n` +
-            `Valor Total: ${fmtW(pedido.valor_total)}`;
+        ['PEAD', 'PET'].forEach(unit => {
+            if (itemsByUnit[unit].length > 0) {
+                msg += `*📦 UNIDADE ${unit}:*\n`;
+                msg += `----------------------------------\n`;
+                
+                // Consolidate identical products
+                const consolidated = {};
+                itemsByUnit[unit].forEach(it => {
+                    const name = it.produtos?.nome || 'Produto';
+                    if (!consolidated[name]) {
+                        consolidated[name] = { qty: 0, price: it.preco_unitario, sub: 0 };
+                    }
+                    consolidated[name].qty += Number(it.quantidade);
+                    consolidated[name].sub += Number(it.subtotal);
+                });
 
-        // Use encodeURIComponent to ensure all characters (including emojis) are valid in the URL
-        const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(msg)}`;
+                Object.entries(consolidated).forEach(([name, data]) => {
+                    msg += `🔹 ${data.qty}x ${name}\n`;
+                    msg += `     ${fmtW(data.price)} un. = *${fmtW(data.sub)}*\n`;
+                });
+                msg += `\n`;
+            }
+        });
+
+        msg += `----------------------------------\n`;
+        msg += `*💰 VALOR TOTAL GERAL: ${fmtW(totalGeral)}*\n\n`;
+        msg += `_Favor conferir os itens acima._\n`;
+        msg += `_Dúvidas, estamos à disposição!_`;
+
+        const url = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
+        setIsWAModalOpen(false);
     };
 
     const handleSendParcelasWhatsApp = () => {
@@ -1005,6 +1083,55 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 </div>
             )}
 
+            {/* ===== WHATSAPP SELECTION MODAL ===== */}
+            {isWAModalOpen && (
+                <div className="pv-modal-overlay" onClick={() => setIsWAModalOpen(false)}>
+                    <div className="pv-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+                        <div className="pv-modal-header">
+                            <div>
+                                <h2 className="pv-modal-title">Enviar para WhatsApp</h2>
+                                <p className="pv-modal-sub">Escolha quais pedidos deseja enviar</p>
+                            </div>
+                            <button className="pv-modal-close" onClick={() => setIsWAModalOpen(false)}><X size={18} /></button>
+                        </div>
+                        <div className="pv-modal-body" style={{ padding: '1.5rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <button
+                                    className="pv-whatsapp-select-btn pead"
+                                    onClick={() => sendWhatsAppMessage(waClientOrders.pead, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                >
+                                    <Package size={18} />
+                                    <span>ENVIAR SOMENTE PEAD</span>
+                                </button>
+                                <button
+                                    className="pv-whatsapp-select-btn pet"
+                                    onClick={() => sendWhatsAppMessage(waClientOrders.pet, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                >
+                                    <Package size={18} />
+                                    <span>ENVIAR SOMENTE PET</span>
+                                </button>
+                                <button
+                                    className="pv-whatsapp-select-btn both"
+                                    onClick={() => sendWhatsAppMessage([...waClientOrders.pead, ...waClientOrders.pet], waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                >
+                                    <MessageCircle size={18} />
+                                    <span>ENVIAR AMBOS (RELATÓRIO COMPLETO)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ===== LOADING OVERLAY FOR WHATSAPP FETCH ===== */}
+            {waLoading && (
+                <div className="pv-modal-overlay" style={{ zIndex: 9999 }}>
+                    <div className="pv-modal-load">
+                        <Loader size={32} className="pv-spin" style={{ color: '#10b981' }} />
+                        <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '600' }}>Gerando relação de pedidos...</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
