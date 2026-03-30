@@ -1259,4 +1259,102 @@
 
 .pv-whatsapp-select-btn svg {
     flex-shrink: 0;
-}
+}
+/* ---- PENDING SUMMARY (BOTTLES) ---- */
+.pv-pending-summary {
+    margin: 0 2.5rem 1.75rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.pv-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.25rem;
+}
+
+.pv-summary-title svg {
+    color: #f59e0b;
+}
+
+.pv-summary-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+
+.pv-summary-card {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 160px;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: default;
+}
+
+.pv-summary-card:hover {
+    transform: translateY(-3px);
+    border-color: #f59e0b;
+}
+
+.pv-summary-size {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pv-summary-count {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+}
+
+.pv-summary-count small {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.pv-summary-empty {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    color: #475569;
+    font-style: italic;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .pv-pending-summary {
+        margin: 0 1rem 1rem;
+        padding: 1.25rem;
+    }
+    .pv-summary-grid {
+        gap: 0.75rem;
+    }
+    .pv-summary-card {
+        min-width: calc(50% - 0.75rem);
+        flex-grow: 1;
+    }
+    .pv-summary-count {
+        font-size: 1.25rem;
+    }
+}

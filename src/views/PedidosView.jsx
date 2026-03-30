@@ -58,6 +58,31 @@ const addDays = (dateStr, days) => {
     return d.toISOString().split('T')[0];
 };
 
+const getBottleSize = (name) => {
+    if (!name) return 'Outros';
+    const sizeMatch = name.match(/(\d+(?:ml|Litro|L|l))/i);
+    if (!sizeMatch) return 'Outros';
+    
+    let size = sizeMatch[1].toLowerCase();
+    
+    if (size.includes('ml')) {
+        return size.replace('ml', ' ml').trim();
+    }
+    if (size.includes('litro') || size.includes('l')) {
+        // Remove numeric part and check if anything else is left
+        const num = size.match(/\d+/)[0];
+        return `${num} Litro`;
+    }
+    
+    return size;
+};
+
+const getUnitsPerPack = (name) => {
+    if (!name) return 1;
+    const packMatch = name.match(/c\/(\d+)/i);
+    return packMatch ? parseInt(packMatch[1], 10) : 1;
+};
+
 /* ============================================================ */
 const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const now = new Date();
@@ -121,7 +146,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             try {
                 const { data, error } = await supabase
                     .from('pedidos')
-                    .select('*, clientes(nome, telefone)')
+                    .select('*, clientes(nome, telefone), pedidos_produtos(*, produtos(nome))')
                     .eq('business_unit', businessUnit)
                     .order('data_pedido', { ascending: false });
 
@@ -141,6 +166,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                     // Match view category
                     if (status === 'a_receber') {
                         if (!isDebit) return false;
+                        if (!['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus)) return false;
                     } else if (status === 'pendente') {
                         if (!isPending) return false;
                     } else if (status === 'pago') {
@@ -664,6 +690,43 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
             </div>
+
+            {/* ===== PENDING SUMMARY ===== */}
+            {status === 'pendente' && (
+                <div className="pv-pending-summary">
+                    <div className="pv-summary-title">
+                        <Package size={16} />
+                        <span>Necessidade de Produção (Fardos)</span>
+                    </div>
+                    <div className="pv-summary-grid">
+                        {(() => {
+                            const totals = {};
+                            filteredList.forEach(p => {
+                                (p.pedidos_produtos || []).forEach(item => {
+                                    const size = getBottleSize(item.produtos?.nome);
+                                    const qty = Number(item.quantidade || 0);
+                                    totals[size] = (totals[size] || 0) + qty;
+                                });
+                            });
+
+                            const sortedSizes = Object.entries(totals).sort((a, b) => {
+                                if (a[0] === 'Outros') return 1;
+                                if (b[0] === 'Outros') return -1;
+                                return a[0].localeCompare(b[0]);
+                            });
+
+                            if (sortedSizes.length === 0) return <div className="pv-summary-empty">Sem itens nos pedidos pendentes.</div>;
+
+                            return sortedSizes.map(([size, count]) => (
+                                <div key={size} className="pv-summary-card">
+                                    <span className="pv-summary-size">{size}</span>
+                                    <span className="pv-summary-count">{count.toLocaleString()} <small>fardos</small></span>
+                                </div>
+                            ));
+                        })()}
+                    </div>
+                </div>
+            )}
 
             {/* ===== TABLE ===== */}
             <div className="pv-table-wrapper">
