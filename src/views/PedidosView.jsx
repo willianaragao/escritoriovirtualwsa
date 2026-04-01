@@ -99,6 +99,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [editItens, setEditItens] = useState([]);
     const [editLoading, setEditLoading] = useState(false);
     const [editSaving, setEditSaving] = useState(false);
+    const [allProducts, setAllProducts] = useState([]);
+    const [showProdDrop, setShowProdDrop] = useState(false);
+    const [prodSearch, setProdSearch] = useState('');
 
     // Payment fields
     const [eParcelas, setEParcelas] = useState(1);
@@ -216,6 +219,20 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         };
         fetchPedidos();
     }, [status, selectedMonth, selectedYear, businessUnit]);
+
+    /* ---- Fetch products for edit ---- */
+    useEffect(() => {
+        const fetchProds = async () => {
+            const { data } = await supabase.from('produtos').select('*').order('nome');
+            const filtered = (data || []).filter(p => {
+                const isPet = p.nome.toUpperCase().includes('PET');
+                if (businessUnit === 'PET') return isPet;
+                return !isPet;
+            });
+            setAllProducts(filtered);
+        };
+        fetchProds();
+    }, [businessUnit]);
 
     /* ---- WhatsApp ---- */
     const handleWhatsApp = async (pedido) => {
@@ -460,6 +477,40 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         ));
     };
 
+    const addProductToPedido = (prod) => {
+        const exists = editItens.find(it => it.produto_id === prod.id);
+        if (exists) {
+            alert('Este produto já está no pedido.');
+            return;
+        }
+        setEditItens(prev => [...prev, {
+            id: `new-${Date.now()}`,
+            pedido_id: editPedido.id,
+            produto_id: prod.id,
+            qty: 1,
+            price: prod.preco_unitario,
+            cost: prod.custo_producao || 0,
+            produtos: { nome: prod.nome, custo_producao: prod.custo_producao },
+            isNew: true
+        }]);
+        setProdSearch('');
+        setShowProdDrop(false);
+    };
+
+    const removeItemFromEdit = async (it) => {
+        if (it.isNew) {
+            setEditItens(prev => prev.filter(i => i.id !== it.id));
+        } else {
+            if (!window.confirm('Excluir este item permanentemente do pedido?')) return;
+            const { error } = await supabase.from('pedidos_produtos').delete().eq('id', it.id);
+            if (error) {
+                alert('Erro ao excluir item: ' + error.message);
+            } else {
+                setEditItens(prev => prev.filter(i => i.id !== it.id));
+            }
+        }
+    };
+
     const editTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.price)), 0);
     const editCustoTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.cost || 0)), 0);
     const editLucroTotal = editTotal - editCustoTotal;
@@ -513,15 +564,28 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         if (!editPedido) return;
         setEditSaving(true);
         try {
-            // 1. Update each item in pedidos_produtos
+            // 1. Update/Insert each item in pedidos_produtos
             for (const it of editItens) {
                 const qty = Number(it.qty) || 1;
                 const price = Number(it.price) || 0;
-                const { error } = await supabase
-                    .from('pedidos_produtos')
-                    .update({ quantidade: qty, preco_unitario: price, subtotal: qty * price })
-                    .eq('id', it.id);
-                if (error) throw error;
+                const rowData = { 
+                    pedido_id: editPedido.id,
+                    produto_id: it.produto_id,
+                    quantidade: qty, 
+                    preco_unitario: price, 
+                    subtotal: qty * price 
+                };
+
+                if (it.isNew) {
+                    const { error } = await supabase.from('pedidos_produtos').insert([rowData]);
+                    if (error) throw error;
+                } else {
+                    const { error } = await supabase
+                        .from('pedidos_produtos')
+                        .update({ quantidade: qty, preco_unitario: price, subtotal: qty * price })
+                        .eq('id', it.id);
+                    if (error) throw error;
+                }
             }
 
             const addVal = parseFloat(eAddValor) || 0;
@@ -873,6 +937,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                         <th>Custo Unit.</th>
                                                         <th>Lucro</th>
                                                         <th>Subtotal</th>
+                                                        <th></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -898,12 +963,53 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                             <td className="pv-eit-sub">
                                                                 {fmt(Number(it.qty) * Number(it.price))}
                                                             </td>
+                                                            <td className="pv-td-actions">
+                                                                <button className="pv-action-btn pv-delete-btn" onClick={() => removeItemFromEdit(it)}>
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
                                             </table>
                                         )}
-                                        <div className="pv-edit-subtotal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.6)', padding: '0.8rem 1.2rem' }}>
+
+                                        {/* ADD NEW PRODUCT UI */}
+                                        <div style={{ marginTop: '1rem', borderTop: '1px dashed #334155', paddingTop: '1rem' }}>
+                                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', position: 'relative' }}>
+                                                <div style={{ flex: 1, position: 'relative' }}>
+                                                    <input 
+                                                        type="text" 
+                                                        className="pv-search-input" 
+                                                        placeholder="Pesquisar produto para adicionar..."
+                                                        style={{ width: '100%', paddingLeft: '1rem' }}
+                                                        value={prodSearch}
+                                                        onChange={e => { setProdSearch(e.target.value); setShowProdDrop(true); }}
+                                                        onFocus={() => setShowProdDrop(true)}
+                                                    />
+                                                    {showProdDrop && (
+                                                        <div className="pv-status-list" style={{ top: 'calc(100% + 5px)', left: 0, width: '100%', maxHeight: '200px', overflowY: 'auto', zIndex: 10 }}>
+                                                            {allProducts
+                                                                .filter(p => p.nome.toLowerCase().includes(prodSearch.toLowerCase()))
+                                                                .map(prod => (
+                                                                    <button key={prod.id} type="button" className="pv-status-item"
+                                                                        onClick={() => addProductToPedido(prod)}>
+                                                                        {prod.nome} ({fmt(prod.preco_unitario)})
+                                                                    </button>
+                                                                ))
+                                                            }
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button className="pv-manage-btn" type="button" 
+                                                    style={{ background: '#10b981', color: '#fff', border: 'none', padding: '0.6rem 1.2rem' }}
+                                                    onClick={() => setShowProdDrop(!showProdDrop)}>
+                                                    <Plus size={16} /> ADICIONAR PRODUTO
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="pv-edit-subtotal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.6)', padding: '0.8rem 1.2rem', marginTop: '1rem' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                                 <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Custo Produção</span>
                                                 <strong style={{ color: '#cbd5e1', fontSize: '0.95rem' }}>{fmt(editCustoTotal)}</strong>
