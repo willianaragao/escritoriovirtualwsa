@@ -61,6 +61,7 @@ const NovoPedidoView = ({ businessUnit }) => {
     const [prodSearch, setProdSearch] = useState(''); // Added product search state
     const [quantities, setQuantities] = useState({});
     const [customPrices, setCustomPrices] = useState({});
+    const [customCosts, setCustomCosts] = useState({});
 
     /* ---- Carrinho ---- */
     const [cart, setCart] = useState([]);
@@ -108,10 +109,15 @@ const NovoPedidoView = ({ businessUnit }) => {
         const { data } = await supabase.from('produtos').select('*').order('nome');
         const prods = data || [];
         setProdutos(prods);
-        const q = {}, cp = {};
-        prods.forEach(p => { q[p.id] = 1; cp[p.id] = p.preco_unitario; });
+        const q = {}, cp = {}, cc = {};
+        prods.forEach(p => { 
+            q[p.id] = 1; 
+            cp[p.id] = p.preco_unitario; 
+            cc[p.id] = p.custo_producao || 0; 
+        });
         setQuantities(q);
         setCustomPrices(cp);
+        setCustomCosts(cc);
     };
 
     /* ---- Load Custom Prices ---- */
@@ -261,6 +267,23 @@ const NovoPedidoView = ({ businessUnit }) => {
     const decQty = id => setQuantities(q => ({ ...q, [id]: Math.max(1, (q[id] || 1) - 1) }));
     const setQty = (id, v) => { const n = parseInt(v, 10); if (!isNaN(n)) setQuantities(q => ({ ...q, [id]: Math.max(1, n) })); };
     const onWheel = (e, id) => { e.preventDefault(); e.deltaY < 0 ? incQty(id) : decQty(id); };
+
+    const handleUpdateGlobalCost = async (prodId, val) => {
+        const n = parseFloat(val) || 0;
+        setCustomCosts(prev => ({ ...prev, [prodId]: n }));
+        
+        // Update database
+        const { error } = await supabase.from('produtos').update({ custo_producao: n }).eq('id', prodId);
+        if (error) console.error('Erro ao atualizar custo global:', error);
+
+        // Update local cart if product is in it
+        setCart(prev => prev.map(item => {
+            if (item.produto.id === prodId) {
+                return { ...item, produto: { ...item.produto, custo_producao: n } };
+            }
+            return item;
+        }));
+    };
 
     /* ---- Save ---- */
     const handleSalvar = async () => {
@@ -459,14 +482,15 @@ const NovoPedidoView = ({ businessUnit }) => {
                                                         {/* Unit Custo */}
                                                         <div>
                                                             <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700, textAlign: 'center' }}>Custo</div>
-                                                            <div className="np-price-row" style={{ background: 'rgba(255,255,255,0.03)', padding: '0 4px', borderRadius: '6px', width: '100%' }}>
-                                                                <span className="np-price-lbl" style={{ color: '#475569', fontSize: '0.75rem' }}>R$</span>
+                                                            <div className="np-price-row" style={{ width: '100%' }}>
+                                                                <span className="np-price-lbl" style={{ color: '#64748b', fontSize: '0.75rem' }}>R$</span>
                                                                 <input
-                                                                    type="text"
+                                                                    type="number"
                                                                     className="np-price-inp"
-                                                                    value={Number(prod.custo_producao || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                                    disabled
-                                                                    style={{ color: '#94a3b8', background: 'transparent', width: '100%', padding: '0.4rem 0.2rem', border: '1px solid transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                                                    value={customCosts[prod.id] ?? prod.custo_producao}
+                                                                    min="0" step="0.01"
+                                                                    onChange={e => handleUpdateGlobalCost(prod.id, e.target.value)}
+                                                                    style={{ width: '100%', padding: '0.4rem 0.5rem', fontSize: '0.85rem', textAlign: 'center' }}
                                                                 />
                                                             </div>
                                                         </div>
@@ -478,7 +502,7 @@ const NovoPedidoView = ({ businessUnit }) => {
                                                                 <input
                                                                     type="text"
                                                                     className="np-price-inp"
-                                                                    value={Number((prod.custo_producao || 0) * qty).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                    value={Number((customCosts[prod.id] ?? prod.custo_producao ?? 0) * qty).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                                     disabled
                                                                     style={{ color: '#64748b', background: 'transparent', width: '100%', padding: '0.35rem 0.2rem', border: '1px solid transparent', textAlign: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}
                                                                 />
@@ -626,13 +650,13 @@ const NovoPedidoView = ({ businessUnit }) => {
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <span style={{ fontSize: '0.8rem', color: '#ef4444', textTransform: 'uppercase', fontWeight: 600 }}>Custo Total</span>
                                 <span style={{ color: '#f87171', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                                    {fmt(cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao) || 0), 0))}
+                                    {fmt(cart.reduce((s, i) => s + i.qty * (Number(customCosts[i.produto.id] ?? i.produto.custo_producao) || 0), 0))}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                                 <span style={{ fontSize: '0.8rem', color: '#10b981', textTransform: 'uppercase', fontWeight: 600 }}>Lucro Real</span>
                                 <span className="np-total-val" style={{ color: '#10b981', fontSize: '1.4rem' }}>
-                                    {fmt(cartTotal - cart.reduce((s, i) => s + i.qty * (Number(i.produto.custo_producao || i.produto.preco_custo) || 0), 0))}
+                                    {fmt(cartTotal - cart.reduce((s, i) => s + i.qty * (Number(customCosts[i.produto.id] ?? i.produto.custo_producao ?? i.produto.preco_custo) || 0), 0))}
                                 </span>
                             </div>
                         </div>
