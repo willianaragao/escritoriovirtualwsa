@@ -1237,6 +1237,11 @@
     transform: translateY(-2px);
 }
 
+.pv-whatsapp-select-btn.clicked:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
 .pv-whatsapp-select-btn.pead:hover {
     border-color: #f59e0b;
     color: #f59e0b;

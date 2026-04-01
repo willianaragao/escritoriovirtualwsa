@@ -230,7 +230,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         setWaCurrentClient(pedido.clientes);
 
         try {
-            // Fetch ALL orders for this client for cross-unit relation check
+            // Fetch ALL orders for this client for the month
             const { data: allOrders, error } = await supabase
                 .from('pedidos')
                 .select(`
@@ -246,7 +246,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
             if (error) throw error;
 
-            // Filter by current month/year context (using selectedMonth/Year from props)
+            // Filter contextOrders (same month/year being viewed)
             const contextOrders = (allOrders || []).filter(p => {
                 const d = new Date(p.data_pedido + 'T12:00:00');
                 let pMonth = d.getMonth();
@@ -259,23 +259,24 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 return pMonth === selectedMonth && pYear === selectedYear;
             });
 
+            // The specific order clicked (ensuring we have the fetched version with all products)
+            const fetchedClickedOrder = contextOrders.find(o => o.id === pedido.id) || pedido;
+
             const peadOrders = contextOrders.filter(o => o.business_unit === 'PEAD');
             const petOrders = contextOrders.filter(o => o.business_unit === 'PET');
 
-            // If we have orders in both units, show modal to choose.
-            // Otherise keep same behavior but with better formatting.
-            if (peadOrders.length > 0 && petOrders.length > 0) {
-                setWaClientOrders({ pead: peadOrders, pet: petOrders });
+            // If there's more than one order total this month, show choice modal.
+            // This ensures we don't consolidate automatically and confuse the user.
+            if (contextOrders.length > 1) {
+                setWaClientOrders({
+                    clicked: [fetchedClickedOrder],
+                    pead: peadOrders,
+                    pet: petOrders
+                });
                 setIsWAModalOpen(true);
             } else {
-                // Determine which direction to send automatically
-                const activeOrders = peadOrders.length > 0 ? peadOrders : petOrders;
-                if (activeOrders.length > 0) {
-                    sendWhatsAppMessage(activeOrders, cleanTel, pedido.clientes?.nome);
-                } else {
-                    // Fallback to the clicked order if filters missed it
-                    sendWhatsAppMessage([pedido], cleanTel, pedido.clientes?.nome);
-                }
+                // Only one order exists for this client in this context, just send it.
+                sendWhatsAppMessage([fetchedClickedOrder], cleanTel, pedido.clientes?.nome);
             }
         } catch (err) {
             console.error('Error handling WhatsApp relation:', err);
@@ -1170,26 +1171,42 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                         <div className="pv-modal-body" style={{ padding: '1.5rem' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <button
-                                    className="pv-whatsapp-select-btn pead"
-                                    onClick={() => sendWhatsAppMessage(waClientOrders.pead, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                    className="pv-whatsapp-select-btn clicked"
+                                    onClick={() => sendWhatsAppMessage(waClientOrders.clicked, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
                                 >
-                                    <Package size={18} />
-                                    <span>ENVIAR SOMENTE PEAD</span>
+                                    <Check size={18} />
+                                    <span>ENVIAR APENAS ESTE PEDIDO</span>
                                 </button>
-                                <button
-                                    className="pv-whatsapp-select-btn pet"
-                                    onClick={() => sendWhatsAppMessage(waClientOrders.pet, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
-                                >
-                                    <Package size={18} />
-                                    <span>ENVIAR SOMENTE PET</span>
-                                </button>
-                                <button
-                                    className="pv-whatsapp-select-btn both"
-                                    onClick={() => sendWhatsAppMessage([...waClientOrders.pead, ...waClientOrders.pet], waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
-                                >
-                                    <MessageCircle size={18} />
-                                    <span>ENVIAR AMBOS (RELATÓRIO COMPLETO)</span>
-                                </button>
+
+                                {waClientOrders.pead.length > 0 && (
+                                    <button
+                                        className="pv-whatsapp-select-btn pead"
+                                        onClick={() => sendWhatsAppMessage(waClientOrders.pead, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                    >
+                                        <Package size={18} />
+                                        <span>RELAÇÃO MENSAL - PEAD ({waClientOrders.pead.length})</span>
+                                    </button>
+                                )}
+
+                                {waClientOrders.pet.length > 0 && (
+                                    <button
+                                        className="pv-whatsapp-select-btn pet"
+                                        onClick={() => sendWhatsAppMessage(waClientOrders.pet, waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                    >
+                                        <Package size={18} />
+                                        <span>RELAÇÃO MENSAL - PET ({waClientOrders.pet.length})</span>
+                                    </button>
+                                )}
+
+                                {waClientOrders.pead.length > 0 && waClientOrders.pet.length > 0 && (
+                                    <button
+                                        className="pv-whatsapp-select-btn both"
+                                        onClick={() => sendWhatsAppMessage([...waClientOrders.pead, ...waClientOrders.pet], waCurrentClient?.telefone?.replace(/\D/g, ''), waCurrentClient?.nome)}
+                                    >
+                                        <MessageCircle size={18} />
+                                        <span>ENVIAR AMBOS (RELATÓRIO COMPLETO)</span>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
