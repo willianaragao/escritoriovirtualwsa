@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
     Search, Calendar, ChevronDown,
     MessageCircle, Edit3, Trash2,
-    X, Check, Loader, CreditCard, Package,
+    X, Check, Loader, CreditCard, Package, Plus
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './PedidosView.css';
