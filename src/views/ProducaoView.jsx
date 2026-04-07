@@ -113,15 +113,17 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             // 2. Fetch Despesas do Mês (Tabela despesas) para cálculo das variáveis
             const { data: despData } = await supabase.from('despesas').select('valor, data, descricao, categoria');
 
-            const currentMonthDespesas = (despData || []).filter(d => {
+            const filteredDespesas = (despData || []).filter(d => {
                 const dDate = new Date(d.data + 'T12:00:00');
-                return dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear;
+                const isSamePeriod = dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear;
+                const isCadeg = (d.descricao || '').toLowerCase().includes('cadeg');
+                return isSamePeriod && !isCadeg; // IGNORAR CADEG TOTALMENTE NESTA VISÃO
             });
 
-            const totalDespesasGeral = currentMonthDespesas.reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
+            const totalDespesasGeral = filteredDespesas.reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
 
-            // 3. Pagamentos de Fixas Efetuados (Encontrados na tabela despesas: User math 6.260)
-            const totalFixasPagas = currentMonthDespesas.reduce((acc, d) => {
+            // 123. Pagamentos de Fixas Efetuados
+            const totalFixasPagas = filteredDespesas.reduce((acc, d) => {
                 const cat = (d.categoria || '').toLowerCase();
                 const desc = (d.descricao || '').toLowerCase();
                 if (cat.includes('fixa') || desc.includes('dia 15') || desc.includes('dia 30')) {
@@ -130,18 +132,24 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 return acc;
             }, 0);
 
-            // 4. Pagamentos de Matéria Prima Efetuados (Encontrados na tabela despesas: User math 21.801,60)
-            const totalMateriaPrimaPagas = currentMonthDespesas.reduce((acc, d) => {
+            // 133. Pagamentos de Matéria Prima Efetuados
+            const totalMateriaPrimaPagas = filteredDespesas.reduce((acc, d) => {
                 const cat = (d.categoria || '').toLowerCase();
-                const desc = (d.descricao || '').toLowerCase();
-                if (cat.includes('matéria') || cat.includes('materia') || desc.includes('paguei major')) {
+                if (cat.includes('matéria') || cat.includes('materia')) {
                     return acc + (Number(d.valor) || 0);
                 }
                 return acc;
             }, 0);
 
-            // 5. Despesas Mensais (Variáveis): O que sobra (35.759,06 - 6.260,00 - 21.801,60)
-            const totalDespesasMensais = totalDespesasGeral - totalFixasPagas - totalMateriaPrimaPagas;
+            // 143. Outras exclusões (Retirada de lucro não é despesa operacional)
+            const totalRetiradas = filteredDespesas.reduce((acc, d) => {
+                const cat = (d.categoria || '').toLowerCase();
+                if (cat.includes('retirada')) return acc + (Number(d.valor) || 0);
+                return acc;
+            }, 0);
+
+            // 153. Despesas Mensais (Variáveis): Geral - FixasPagas - MP - Retiradas
+            const totalDespesasMensais = totalDespesasGeral - totalFixasPagas - totalMateriaPrimaPagas - totalRetiradas;
             const totalDespesasFixas = totalFixedBudget;
 
             // Calculations

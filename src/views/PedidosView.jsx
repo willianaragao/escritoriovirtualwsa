@@ -750,9 +750,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                     <span className="pv-total-value" style={{ color: totalColor }}>{fmt(filteredTotal)}</span>
                 </div>
                 <div className="pv-search-wrapper">
-                    <Search size={15} className="pv-search-icon" />
                     <input type="text" className="pv-search-input" placeholder="Buscar cliente..."
                         value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    <Search size={15} className="pv-search-icon" />
                 </div>
             </div>
 
