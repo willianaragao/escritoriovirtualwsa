@@ -31,6 +31,7 @@ const ClientesView = ({ user }) => {
     const [savingClient, setSavingClient] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [waChoiceVisible, setWaChoiceVisible] = useState(false);
+    const [priceCategory, setPriceCategory] = useState('PEAD'); // 'PEAD' or 'PET'
 
     const [clientForm, setClientForm] = useState({
         nome: '',
@@ -70,6 +71,7 @@ const ClientesView = ({ user }) => {
     const openPriceModal = async (cliente) => {
         setSelectedCliente(cliente);
         setWaChoiceVisible(false);
+        setPriceCategory('PEAD');
         setIsModalOpen(true);
         // Fetch existing custom prices for this cliente
         try {
@@ -448,9 +450,26 @@ const ClientesView = ({ user }) => {
                         </div>
 
                         <div className="modal-body price-modal-body">
+                            {/* Tab Switcher */}
+                            <div className="price-tabs">
+                                <button 
+                                    className={`price-tab ${priceCategory === 'PEAD' ? 'active' : ''}`}
+                                    onClick={() => setPriceCategory('PEAD')}
+                                >
+                                    Garrafas PEAD
+                                </button>
+                                <button 
+                                    className={`price-tab ${priceCategory === 'PET' ? 'active' : ''}`}
+                                    onClick={() => setPriceCategory('PET')}
+                                >
+                                    Garrafas PET
+                                </button>
+                            </div>
+
                             {/* PEAD Section */}
-                            <div className="price-section-row pead-row">
-                                <div className="price-table-col">
+                            {priceCategory === 'PEAD' && (
+                                <div className="price-section-row pead-row">
+                                    <div className="price-table-col">
                                     <table className="modal-table">
                                         <thead>
                                             <tr>
@@ -490,15 +509,17 @@ const ClientesView = ({ user }) => {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className="price-image-col pead-img">
-                                    <span className="table-label pead">Tabela PEAD</span>
-                                    <img src="/images/tabela_pead.png" alt="Tabela PEAD" />
+                                    <div className="price-image-col pead-img">
+                                        <span className="table-label pead">Tabela PEAD</span>
+                                        <img src="/images/tabela_pead.png" alt="Tabela PEAD" />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* PET Section */}
-                            <div className="price-section-row pet-row">
-                                <div className="price-table-col">
+                            {priceCategory === 'PET' && (
+                                <div className="price-section-row pet-row">
+                                    <div className="price-table-col">
                                     <table className="modal-table">
                                         <thead>
                                             <tr>
@@ -545,11 +566,12 @@ const ClientesView = ({ user }) => {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div className="price-image-col pet-img">
-                                    <span className="table-label pet">Tabela PET</span>
-                                    <img src="/images/tabela_pet.png" alt="Tabela PET" />
+                                    <div className="price-image-col pet-img">
+                                        <span className="table-label pet">Tabela PET</span>
+                                        <img src="/images/tabela_pet.png" alt="Tabela PET" />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="modal-footer price-modal-footer">

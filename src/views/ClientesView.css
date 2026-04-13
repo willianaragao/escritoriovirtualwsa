@@ -693,16 +693,43 @@
     .modal-header {
         padding: 1rem 1.25rem;
     }
-    
-    .price-modal-body {
-        max-height: 35vh; /* Much shorter body to force footer into view */
-        padding: 0.75rem !important;
-    }
 }
 
 /* --- Price Modal Specifics --- */
 .price-custom-modal {
     max-width: 950px;
+}
+
+/* --- Price Tabs --- */
+.price-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 1rem;
+}
+
+.price-tab {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+}
+
+.price-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.price-tab.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #000;
 }
 
 .price-modal-body {
@@ -711,14 +738,15 @@
     padding-right: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
 }
 
-.price-section-row {
-    display: flex;
-    align-items: center;
-    gap: 2.5rem;
+@media (max-width: 768px) {
+    .price-modal-body {
+        max-height: 45vh; /* One table at a time fits better now */
+        padding: 1rem !important;
+    }
 }
+
 
 .price-table-col {
     flex: 1;
