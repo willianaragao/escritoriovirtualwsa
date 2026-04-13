@@ -74,12 +74,7 @@ const ClientesView = ({ user }) => {
         setPriceCategory('PEAD');
         setIsModalOpen(true);
         document.body.style.overflow = 'hidden';
-    };
 
-    const closePriceModal = () => {
-        setIsModalOpen(false);
-        document.body.style.overflow = 'auto';
-    };
         // Fetch existing custom prices for this cliente
         try {
             const { data, error } = await supabase
@@ -98,6 +93,11 @@ const ClientesView = ({ user }) => {
             console.error('Error fetching custom prices:', err);
             setCustomPrices({});
         }
+    };
+
+    const closePriceModal = () => {
+        setIsModalOpen(false);
+        document.body.style.overflow = 'auto';
     };
 
     const openClientModal = (cliente = null) => {
