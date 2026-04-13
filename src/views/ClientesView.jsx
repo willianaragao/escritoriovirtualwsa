@@ -433,7 +433,7 @@ const ClientesView = ({ user }) => {
             {/* Price Customization Modal */}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '950px' }}>
+                    <div className="modal-content price-custom-modal">
                         <div className="modal-header">
                             <div>
                                 <h2>Configurar Preços para {selectedCliente?.nome}</h2>
@@ -444,10 +444,10 @@ const ClientesView = ({ user }) => {
                             </button>
                         </div>
 
-                        <div className="modal-body" style={{ maxHeight: '85vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                        <div className="modal-body price-modal-body">
                             {/* PEAD Section */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem' }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="price-section-row pead-row">
+                                <div className="price-table-col">
                                     <table className="modal-table">
                                         <thead>
                                             <tr>
@@ -487,15 +487,15 @@ const ClientesView = ({ user }) => {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div style={{ width: '320px', flexShrink: 0, textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tabela PEAD</span>
-                                    <img src="/images/tabela_pead.png" alt="Tabela PEAD" style={{ width: '100%', height: '260px', objectFit: 'cover', objectPosition: 'center 85%', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', marginTop: '0.5rem' }} />
+                                <div className="price-image-col pead-img">
+                                    <span className="table-label pead">Tabela PEAD</span>
+                                    <img src="/images/tabela_pead.png" alt="Tabela PEAD" />
                                 </div>
                             </div>
 
                             {/* PET Section */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="price-section-row pet-row">
+                                <div className="price-table-col">
                                     <table className="modal-table">
                                         <thead>
                                             <tr>
@@ -542,16 +542,16 @@ const ClientesView = ({ user }) => {
                                         </tbody>
                                     </table>
                                 </div>
-                                <div style={{ width: '320px', flexShrink: 0, textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tabela PET</span>
-                                    <img src="/images/tabela_pet.png" alt="Tabela PET" style={{ width: '100%', height: '310px', objectFit: 'cover', objectPosition: 'center 85%', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)', marginTop: '0.5rem' }} />
+                                <div className="price-image-col pet-img">
+                                    <span className="table-label pet">Tabela PET</span>
+                                    <img src="/images/tabela_pet.png" alt="Tabela PET" />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
-                            <div className="whatsapp-actions" style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '0.5rem' }}>Enviar Tabela:</span>
+                        <div className="modal-footer price-modal-footer">
+                            <div className="whatsapp-actions">
+                                <span className="wa-label">Enviar Tabela:</span>
                                 <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')} title="Enviar apenas PEAD">
                                     <MessageCircle size={16} /> PEAD
                                 </button>
@@ -562,7 +562,7 @@ const ClientesView = ({ user }) => {
                                     <MessageCircle size={16} /> AMBAS
                                 </button>
                             </div>
-                            <div className="main-modal-actions" style={{ display: 'flex', gap: '1rem' }}>
+                            <div className="main-modal-actions">
                                 <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
                                 <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
                                     <Save size={18} />

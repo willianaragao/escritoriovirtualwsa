@@ -661,16 +661,172 @@
 }
 
 @media (max-width: 768px) {
-    .modal-footer {
+    .header {
+        padding: 0 1rem !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .search-section {
+        padding: 0 1rem !important;
+    }
+    
+    .clients-list-wrapper {
+        padding: 0 1rem !important;
+    }
+    
+    .lux-clients-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-overlay {
+        padding: 1rem;
+    }
+    
+    .price-custom-modal {
+        max-height: 95vh;
+    }
+}
+
+/* --- Price Modal Specifics --- */
+.price-custom-modal {
+    max-width: 950px;
+}
+
+.price-modal-body {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+.price-section-row {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+
+.price-table-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.price-image-col {
+    width: 320px;
+    flex-shrink: 0;
+    text-align: center;
+}
+
+.table-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.table-label.pead { color: #f59e0b; }
+.table-label.pet { color: #10b981; }
+
+.price-image-col img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    object-fit: cover;
+    object-position: center 85%;
+}
+
+.pead-img img { height: 260px; }
+.pet-img img { height: 310px; }
+
+.price-modal-footer {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.wa-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.5rem;
+}
+
+.main-modal-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* --- Mobile Fixes for Price Modal --- */
+@media (max-width: 950px) {
+    .price-section-row {
         flex-direction: column;
         align-items: stretch;
         gap: 1.5rem;
     }
-    .whatsapp-actions {
-        justify-content: center;
-        flex-wrap: wrap;
+    
+    .price-image-col {
+        width: 100%;
+        order: -1; /* Image after table or before? User likely wants to see product reference before/during price entry */
     }
+    
+    .price-image-col img {
+        height: 200px;
+    }
+}
+
+@media (max-width: 600px) {
+    .price-modal-body {
+        padding: 1.25rem 1rem;
+    }
+    
+    .modal-header {
+        padding: 1.5rem 1.25rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .price-modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1.25rem;
+    }
+    
+    .whatsapp-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .wa-label {
+        grid-column: span 2;
+        text-align: center;
+        margin-bottom: 0.25rem;
+    }
+    
+    .btn-wa-option.both {
+        grid-column: span 2;
+    }
+    
     .main-modal-actions {
+        flex-direction: column;
+    }
+    
+    .btn-save, .btn-cancel {
+        width: 100%;
         justify-content: center;
     }
 }
