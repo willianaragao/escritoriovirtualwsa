@@ -575,36 +575,35 @@ const ClientesView = ({ user }) => {
                         </div>
 
                         <div className="modal-footer price-modal-footer">
-                            <div className="whatsapp-actions-container">
-                                {!waChoiceVisible ? (
-                                    <button className="btn-wa-main" onClick={() => setWaChoiceVisible(true)}>
-                                        <MessageCircle size={18} />
-                                        <span>Enviar Tabela WhatsApp</span>
-                                    </button>
-                                ) : (
-                                    <div className="whatsapp-choice-overlay">
-                                        <div className="wa-choice-header">
-                                            <span className="wa-label">Qual tabela deseja enviar?</span>
-                                            <button className="btn-close-wa" onClick={() => setWaChoiceVisible(false)}>
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                        <div className="whatsapp-grid-actions">
-                                            <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
-                                                PEAD
-                                            </button>
-                                            <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')}>
-                                                PET
-                                            </button>
-                                            <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')}>
-                                                AMBAS AS TABELAS
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
                             <div className="main-modal-actions">
-                                <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                                <div className="whatsapp-actions-container">
+                                    {!waChoiceVisible ? (
+                                        <button className="btn-wa-main" onClick={() => setWaChoiceVisible(true)}>
+                                            <MessageCircle size={18} />
+                                            <span>Enviar Tabela</span>
+                                        </button>
+                                    ) : (
+                                        <div className="whatsapp-choice-overlay">
+                                            <div className="wa-choice-header">
+                                                <span className="wa-label">Qual tabela enviar?</span>
+                                                <button className="btn-close-wa" onClick={() => setWaChoiceVisible(false)}>
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                            <div className="whatsapp-grid-actions">
+                                                <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
+                                                    PEAD
+                                                </button>
+                                                <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')}>
+                                                    PET
+                                                </button>
+                                                <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')}>
+                                                    AMBAS
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
                                     <Save size={18} />
                                     {saving ? 'Salvando...' : 'Salvar Preços'}

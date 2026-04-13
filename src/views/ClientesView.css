@@ -783,161 +783,88 @@
 .pet-img img { height: 310px; }
 
 .price-modal-footer {
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-}
-
-.wa-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-right: 0.5rem;
+    justify-content: flex-end;
+    padding: 1.5rem 2.5rem;
 }
 
 .main-modal-actions {
     display: flex;
+    align-items: center;
     gap: 1rem;
+    width: 100%;
+    justify-content: flex-end;
 }
 
-/* --- Mobile Fixes for Price Modal --- */
+.whatsapp-actions-container {
+    flex: 0 1 auto;
+    min-width: 200px;
+}
+
+@media (max-width: 768px) {
+    .price-modal-footer {
+        padding: 1rem !important;
+    }
+    
+    .main-modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .whatsapp-actions-container {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+
+/* --- Responsive Fixes --- */
 @media (max-width: 950px) {
     .price-section-row {
         flex-direction: column;
         align-items: stretch;
         gap: 1.5rem;
     }
-    
-    .price-image-col {
-        display: none;
-    }
-    
-    .price-image-col img {
-        height: 200px;
-    }
-}
-
-@media (max-width: 600px) {
-    .price-modal-body {
-        padding: 1.25rem 1rem;
-    }
-    
-    .modal-header {
-        padding: 1.5rem 1.25rem;
-    }
-    
-    .modal-header h2 {
-        font-size: 1.25rem;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-    
-/* --- New WhatsApp Choice Flow --- */
-.whatsapp-actions-container {
-    flex: 1;
-    min-width: 250px;
-}
-
-.btn-wa-main {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    color: #10b981;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-}
-
-.btn-wa-main:hover {
-    background: #10b981;
-    color: #000;
-    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
-}
-
-.whatsapp-choice-overlay {
-    background: rgba(15, 23, 42, 0.95);
-    border: 1px solid rgba(16, 185, 129, 0.4);
-    border-radius: 12px;
-    padding: 1rem;
-    animation: fadeIn 0.2s ease;
-}
-
-.wa-choice-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.btn-close-wa {
-    background: transparent;
-    border: none;
-    color: #64748b;
-    cursor: pointer;
-    padding: 4px;
-}
-
-.whatsapp-grid-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-}
-
-.whatsapp-grid-actions .btn-wa-option {
-    background: #1e293b;
-    border: 1px solid rgba(255,255,255,0.1);
-    padding: 10px;
-    font-size: 0.8rem;
-}
-
-.whatsapp-grid-actions .btn-wa-option.both {
-    grid-column: span 2;
-    background: rgba(16, 185, 129, 0.2);
-    border-color: #10b981;
-    color: #10b981;
+    .price-image-col { display: none; }
 }
 
 @media (max-width: 768px) {
-    .btn-wa-main {
-        height: 50px;
-        font-size: 0.95rem;
-    }
-
-    .whatsapp-actions-container {
-        width: 100%;
-    }
-}
-
-@media (max-width: 600px) {
-    .price-modal-footer {
+    .header {
+        padding: 0 1rem !important;
         flex-direction: column;
-        align-items: stretch;
-        padding: 0.85rem 1.25rem;
-        gap: 0.75rem !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    .search-section, .clients-list-wrapper { padding: 0 1rem !important; }
+    .lux-clients-grid { grid-template-columns: 1fr; }
+    .modal-overlay { padding: 1rem; }
+    
+    .price-custom-modal { max-height: 96vh; display: flex; flex-direction: column; }
+    .price-tabs { gap: 0.5rem; }
+    .price-tab { padding: 0.5rem; font-size: 0.75rem; }
+    
+    .price-modal-body { max-height: 45vh; padding: 1rem !important; }
+
+    .price-modal-footer {
+        padding: 1rem !important;
     }
     
     .main-modal-actions {
-        flex-direction: column;
+        flex-direction: column-reverse; /* Save on top or bottom? Default save on bottom. Let's do common pattern: Save on top or right. */
+        align-items: stretch;
         gap: 0.75rem;
-        width: 100%;
     }
     
-    .btn-save, .btn-cancel {
+    .btn-wa-main, .btn-save, .btn-cancel {
         width: 100%;
         height: 48px;
         justify-content: center;
         font-size: 0.95rem;
     }
+}
+
+@media (max-width: 480px) {
+    .modal-header { padding: 1rem; }
+    .modal-header h2 { font-size: 1.1rem; }
+    .form-row { grid-template-columns: 1fr; gap: 0.75rem; }
 }
 
