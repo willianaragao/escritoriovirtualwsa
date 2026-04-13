@@ -372,14 +372,15 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(2, 6, 23, 0.8);
-    backdrop-filter: blur(8px);
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    padding: 2rem;
-    animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+    padding: 1rem;
+    overflow: hidden; /* Prevent overlay scroll */
+    touch-action: none; /* Block touch gestures on overlay bg */
 }
 
 @keyframes modalIn {
@@ -394,16 +395,15 @@
 }
 
 .modal-content {
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
+    background: var(--dark-secondary);
     width: 100%;
-    max-width: 650px;
-    border-radius: var(--border-radius-lg);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    touch-action: auto; /* Re-enable touch for content */
     animation: contentIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

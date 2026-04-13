@@ -73,6 +73,13 @@ const ClientesView = ({ user }) => {
         setWaChoiceVisible(false);
         setPriceCategory('PEAD');
         setIsModalOpen(true);
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closePriceModal = () => {
+        setIsModalOpen(false);
+        document.body.style.overflow = 'auto';
+    };
         // Fetch existing custom prices for this cliente
         try {
             const { data, error } = await supabase
@@ -444,7 +451,7 @@ const ClientesView = ({ user }) => {
                                 <h2>Configurar Preços para {selectedCliente?.nome}</h2>
                                 <p>Configure preços personalizados para este cliente. Deixe vazio para usar o preço padrão.</p>
                             </div>
-                            <button className="modal-close" onClick={() => setIsModalOpen(false)}>
+                            <button className="btn-close" onClick={closePriceModal}>
                                 <X size={24} />
                             </button>
                         </div>
@@ -604,7 +611,7 @@ const ClientesView = ({ user }) => {
                                         </div>
                                     )}
                                 </div>
-                                <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
+                                <button className="btn-save" onClick={() => { handleSavePrices(); document.body.style.overflow = 'auto'; }} disabled={saving}>
                                     <Save size={18} />
                                     {saving ? 'Salvando...' : 'Salvar Preços'}
                                 </button>
