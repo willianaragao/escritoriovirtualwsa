@@ -685,7 +685,14 @@
     }
     
     .price-custom-modal {
-        max-height: 95vh;
+        max-height: 98vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .price-modal-body {
+        max-height: 50vh; /* Shorter body on mobile to guarantee footer visibility */
+        padding: 1rem !important;
     }
 }
 
@@ -802,30 +809,47 @@
         flex-direction: column;
         align-items: stretch;
         padding: 1.25rem;
+        gap: 1.25rem !important;
     }
     
     .whatsapp-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
+        gap: 0.6rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
     }
     
     .wa-label {
         grid-column: span 2;
         text-align: center;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+    
+    .btn-wa-option {
+        padding: 12px 8px !important;
+        font-size: 0.72rem !important;
     }
     
     .btn-wa-option.both {
         grid-column: span 2;
+        height: 44px;
     }
     
     .main-modal-actions {
         flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
     }
     
     .btn-save, .btn-cancel {
         width: 100%;
+        height: 48px;
         justify-content: center;
+        font-size: 0.95rem;
     }
 }
