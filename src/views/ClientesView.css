@@ -740,14 +740,6 @@
     flex-direction: column;
 }
 
-@media (max-width: 768px) {
-    .price-modal-body {
-        max-height: 45vh; /* One table at a time fits better now */
-        padding: 1rem !important;
-    }
-}
-
-
 .price-table-col {
     flex: 1;
     min-width: 0;
@@ -839,7 +831,7 @@
     
     .modal-overlay { 
         padding: 0.75rem; 
-        padding-bottom: 90px; /* Safe space for the menu bar */
+        padding-bottom: 110px; /* Safe space for the menu bar + safety margin */
         align-items: flex-end; /* Ground the modal right above the bottom menu */
         z-index: 9999;
     }
