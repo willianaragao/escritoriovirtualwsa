@@ -809,6 +809,108 @@
 }
 
 
+/* --- WhatsApp Choice Flow --- */
+.whatsapp-actions-container {
+    flex: 1;
+}
+
+.btn-wa-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-wa-main:hover {
+    background: #10b981;
+    color: #000;
+}
+
+.whatsapp-choice-overlay {
+    background: #1e293b;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    animation: slideInUp 0.3s ease;
+    width: 100%;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.wa-choice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.wa-choice-header .wa-label {
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.btn-close-wa {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.whatsapp-grid-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.whatsapp-grid-actions .btn-wa-option {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    border-radius: 12px;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.whatsapp-grid-actions .btn-wa-option.pead {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.whatsapp-grid-actions .btn-wa-option.pet {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.whatsapp-grid-actions .btn-wa-option.both {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+    border-color: #10b981;
+    color: #fff;
+}
+
 /* --- Responsive Fixes --- */
 @media (max-width: 950px) {
     .price-section-row {
