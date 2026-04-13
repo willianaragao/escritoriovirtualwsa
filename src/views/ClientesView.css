@@ -772,8 +772,7 @@
     }
     
     .price-image-col {
-        width: 100%;
-        order: -1; /* Image after table or before? User likely wants to see product reference before/during price entry */
+        display: none;
     }
     
     .price-image-col img {
