@@ -30,6 +30,7 @@ const ClientesView = ({ user }) => {
     const [saving, setSaving] = useState(false);
     const [savingClient, setSavingClient] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [waChoiceVisible, setWaChoiceVisible] = useState(false);
 
     const [clientForm, setClientForm] = useState({
         nome: '',
@@ -68,6 +69,7 @@ const ClientesView = ({ user }) => {
 
     const openPriceModal = async (cliente) => {
         setSelectedCliente(cliente);
+        setWaChoiceVisible(false);
         setIsModalOpen(true);
         // Fetch existing custom prices for this cliente
         try {
@@ -259,6 +261,7 @@ const ClientesView = ({ user }) => {
 
         const url = `https://api.whatsapp.com/send?phone=55${cleanTel}&text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
+        setWaChoiceVisible(false);
     };
 
     const formatCurrency = (val) => {
@@ -550,17 +553,33 @@ const ClientesView = ({ user }) => {
                         </div>
 
                         <div className="modal-footer price-modal-footer">
-                            <div className="whatsapp-actions">
-                                <span className="wa-label">Enviar Tabela:</span>
-                                <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')} title="Enviar apenas PEAD">
-                                    <MessageCircle size={16} /> PEAD
-                                </button>
-                                <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')} title="Enviar apenas PET">
-                                    <MessageCircle size={16} /> PET
-                                </button>
-                                <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')} title="Enviar Completa">
-                                    <MessageCircle size={16} /> AMBAS
-                                </button>
+                            <div className="whatsapp-actions-container">
+                                {!waChoiceVisible ? (
+                                    <button className="btn-wa-main" onClick={() => setWaChoiceVisible(true)}>
+                                        <MessageCircle size={18} />
+                                        <span>Enviar Tabela WhatsApp</span>
+                                    </button>
+                                ) : (
+                                    <div className="whatsapp-choice-overlay">
+                                        <div className="wa-choice-header">
+                                            <span className="wa-label">Qual tabela deseja enviar?</span>
+                                            <button className="btn-close-wa" onClick={() => setWaChoiceVisible(false)}>
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                        <div className="whatsapp-grid-actions">
+                                            <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
+                                                PEAD
+                                            </button>
+                                            <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')}>
+                                                PET
+                                            </button>
+                                            <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')}>
+                                                AMBAS AS TABELAS
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             <div className="main-modal-actions">
                                 <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Cancelar</button>

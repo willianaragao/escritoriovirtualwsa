@@ -805,39 +805,94 @@
         gap: 0.75rem;
     }
     
+/* --- New WhatsApp Choice Flow --- */
+.whatsapp-actions-container {
+    flex: 1;
+    min-width: 250px;
+}
+
+.btn-wa-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-wa-main:hover {
+    background: #10b981;
+    color: #000;
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.whatsapp-choice-overlay {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 12px;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
+}
+
+.wa-choice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.btn-close-wa {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.whatsapp-grid-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.whatsapp-grid-actions .btn-wa-option {
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+    font-size: 0.8rem;
+}
+
+.whatsapp-grid-actions .btn-wa-option.both {
+    grid-column: span 2;
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+@media (max-width: 768px) {
+    .btn-wa-main {
+        height: 50px;
+        font-size: 0.95rem;
+    }
+
+    .whatsapp-actions-container {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
     .price-modal-footer {
         flex-direction: column;
         align-items: stretch;
         padding: 1.25rem;
-        gap: 1.25rem !important;
-    }
-    
-    .whatsapp-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.6rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    .wa-label {
-        grid-column: span 2;
-        text-align: center;
-        margin-bottom: 0.5rem;
-        font-size: 0.75rem;
-        opacity: 0.8;
-    }
-    
-    .btn-wa-option {
-        padding: 12px 8px !important;
-        font-size: 0.72rem !important;
-    }
-    
-    .btn-wa-option.both {
-        grid-column: span 2;
-        height: 44px;
+        gap: 1.5rem !important;
     }
     
     .main-modal-actions {
@@ -853,3 +908,4 @@
         font-size: 0.95rem;
     }
 }
+
