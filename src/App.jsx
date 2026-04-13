@@ -93,7 +93,7 @@ function App() {
         case 'clientes':
           return <ClientesView user={user} businessUnit={businessUnit} />;
         case 'despesas':
-          return <DespesasView {...commonProps} />;
+          return <DespesasView user={user} {...commonProps} />;
         case 'pendentes':
           return <PedidosView status="pendente" title="Pedidos Pendentes" icon={AlertCircle} {...commonProps} />;
         case 'pagos':

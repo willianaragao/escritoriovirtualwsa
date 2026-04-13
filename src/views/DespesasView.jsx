@@ -80,7 +80,7 @@ const getDateRange = (period, selectedMonth, selectedYear) => {
 
 const PERIODS = ['Hoje', 'Ontem', 'Semana', 'Mês', 'Ano'];
 
-const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
+const DespesasView = ({ user, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
     const [despesas, setDespesas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -99,7 +99,7 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState(null); // null = new, string = edit
     const [saving, setSaving] = useState(false);
-    const [userId, setUserId] = useState(null);
+    const [userId, setUserId] = useState(user?.id || null);
     const [form, setForm] = useState({
         descricao: '',
         categoria: '',
@@ -114,8 +114,8 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     useEffect(() => {
         fetchDespesas();
         fetchCategories();
-        supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
-    }, [activePeriod, customFrom, customTo, selectedCategory, selectedMonth, selectedYear, businessUnit]);
+        if (!userId && user) setUserId(user.id);
+    }, [activePeriod, customFrom, customTo, selectedCategory, selectedMonth, selectedYear, businessUnit, user]);
 
     const fetchCategories = async () => {
         try {
@@ -137,8 +137,8 @@ const DespesasView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 setShowMonthPicker(false);
             }
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        document.addEventListener('click', handler);
+        return () => document.removeEventListener('click', handler);
     }, []);
 
     const MONTH_NAMES = [
