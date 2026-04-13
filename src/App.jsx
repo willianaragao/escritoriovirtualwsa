@@ -83,7 +83,7 @@ function App() {
         case 'dashboard':
           return <Dashboard onNavigate={setActiveView} {...commonProps} />;
         case 'novo-pedido':
-          return <NovoPedidoView businessUnit={businessUnit} />;
+          return <NovoPedidoView businessUnit={businessUnit} user={user} />;
         case 'dividas':
           return businessUnit === 'PET' 
             ? <PedidosAPagarPET {...commonProps} />

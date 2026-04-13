@@ -46,7 +46,7 @@ const fmtDate = (dateStr) => {
     return `${d}/${m}/${y}`;
 };
 
-const NovoPedidoView = ({ businessUnit }) => {
+const NovoPedidoView = ({ businessUnit, user }) => {
     /* ---- Clientes ---- */
     const [clientes, setClientes] = useState([]);
     const [clienteSearch, setClienteSearch] = useState('');
@@ -80,14 +80,14 @@ const NovoPedidoView = ({ businessUnit }) => {
     const [observacoes, setObservacoes] = useState('');
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
-    const [userId, setUserId] = useState(null);
+    const [userId, setUserId] = useState(user?.id || null);
 
     /* ---- Load ---- */
     useEffect(() => {
         loadClientes();
         loadProdutos();
-        supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
-    }, []);
+        if (!userId && user) setUserId(user.id);
+    }, [user]);
 
     useEffect(() => {
         const handler = (e) => {
@@ -96,8 +96,8 @@ const NovoPedidoView = ({ businessUnit }) => {
             if (paymentRef.current && !paymentRef.current.contains(e.target))
                 setShowPaymentDrop(false);
         };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
+        document.addEventListener('click', handler);
+        return () => document.removeEventListener('click', handler);
     }, []);
 
     const loadClientes = async () => {

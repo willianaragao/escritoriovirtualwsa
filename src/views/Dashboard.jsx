@@ -355,17 +355,8 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                     }
                 }
 
-                if (pMonth !== selectedMonth || pYear !== selectedYear) {
-                    // For pending values, we still need to check if they are relevant to the current month
-                    // even if the original pedido date is outside the selected month/year.
-                    // This is because a pedido from a previous month might still have pending payments for the current month.
-                    // However, the current logic for pendentes and a_receber is based on the pedido's original month.
-                    // If we want to show pending for the *current* month, we'd need to iterate through parcels.
-                    // For now, keeping the original behavior for pendentes/a_receber which is tied to the pedido's month.
-                    // If the pedido's month is not the selected month, we skip further processing for it.
-                    if (pMonth !== selectedMonth || pYear !== selectedYear) return;
-                }
-
+                // Restore monthly isolation for secondary stats
+                if (pMonth !== selectedMonth || pYear !== selectedYear) return;
 
                 const normalizedStatus = (p.status || '').toLowerCase().trim();
 
@@ -416,7 +407,6 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             (allDespesas || []).forEach(d => {
                 const val = Number(d.valor) || 0;
                 const meio = (d.meio_pagamento || '').toLowerCase();
-                const isExpBank = ['pix', 'boleto', 'cartao', 'cartao_credito', 'cartao_debito'].some(m => meio === m || meio.includes(m));
                 const isExpCash = ['dinheiro', 'cheque'].some(m => meio === m || meio.includes(m));
 
                 if (!d.data) return;
@@ -515,8 +505,6 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             // Dynamic Offsets based on the selected period
             const periodKey = `${selectedYear}-${selectedMonth}`;
 
-            // With period-specific logic, we only apply specific corrections if the raw data is wrong.
-            // Removing the 79k/42k offsets which were calibrations for cumulative history.
             let BANCO_OFFSET = 0;
             let CAIXA_OFFSET = 0;
 

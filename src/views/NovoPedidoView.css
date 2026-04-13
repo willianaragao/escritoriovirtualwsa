@@ -928,6 +928,7 @@
     }
 
     .np-catalog-grid,
+    .np-catalog-grid.pet-mode,
     .np-payment-grid,
     .np-status-options {
         grid-template-columns: 1fr;
