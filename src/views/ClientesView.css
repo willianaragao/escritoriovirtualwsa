@@ -734,22 +734,22 @@
 }
 
 .price-modal-body {
-    max-height: 85vh;
-    overflow-y: auto;
-    padding: 2rem !important;
+    max-height: 90vh;
+    overflow-y: hidden !important; /* Forces single page view */
+    padding: 1rem 2.5rem !important;
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 0.75rem;
 }
 
 .price-section-container {
-    margin-bottom: 2.5rem;
+    margin-bottom: 0px;
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     display: flex;
@@ -767,66 +767,87 @@
     background: rgba(255, 255, 255, 0.05);
 }
 
+.modal-table th {
+    padding: 0.5rem 1rem !important; /* Compact header */
+}
+
+.modal-table td {
+    padding: 0.4rem 1rem !important; /* Compact rows */
+}
+
 .price-section-row {
     display: flex !important;
     flex-direction: row !important;
-    gap: 3rem !important;
+    gap: 2rem !important;
     align-items: flex-start !important;
     width: 100%;
     background: rgba(15, 23, 42, 0.3);
-    padding: 1.5rem !important;
-    border-radius: 16px;
+    padding: 0.75rem 1rem !important;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.price-table-col {
-    flex: 1;
-    min-width: 0;
-}
-
 .price-image-col {
-    width: 350px !important;
+    width: 320px !important;
     flex-shrink: 0;
     margin-top: 0 !important;
 }
 
-.table-label {
-    display: none;
-}
-
-.price-image-col img {
-    width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    object-fit: cover;
-    object-position: center 50%;
-}
-
-/* Precise heights to match row counts (Header + Data Rows) + 10px extra as requested */
 .pead-row .price-image-col img {
-    height: 278px !important; 
+    height: 220px !important; 
 }
 
 .pet-row .price-image-col img {
-    height: 325px !important; 
+    height: 260px !important; 
 }
 
 .price-modal-footer {
     justify-content: flex-end;
-    padding: 1.5rem 2.5rem;
+    padding: 1rem 2.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.main-modal-actions {
+.whatsapp-actions-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-right: auto;
+}
+
+.btn-wa-option {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    width: 100%;
-    justify-content: flex-end;
+    gap: 8px;
+    transition: all 0.2s;
 }
 
-.whatsapp-actions-container {
-    flex: 0 1 auto;
-    min-width: 200px;
+.btn-wa-option.pead {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.btn-wa-option.pet {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.btn-wa-option.both {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.btn-wa-option:hover {
+    transform: translateY(-2px);
+    background: white;
+    color: black;
 }
 
 @media (max-width: 768px) {

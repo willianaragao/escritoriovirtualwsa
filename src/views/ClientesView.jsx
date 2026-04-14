@@ -641,33 +641,16 @@ const ClientesView = ({ user }) => {
 
                         <div className="modal-footer price-modal-footer">
                             <div className="main-modal-actions">
-                                <div className="whatsapp-actions-container">
-                                    {!waChoiceVisible ? (
-                                        <button className="btn-wa-main" onClick={() => setWaChoiceVisible(true)}>
-                                            <MessageCircle size={18} />
-                                            <span>Enviar Tabela</span>
-                                        </button>
-                                    ) : (
-                                        <div className="whatsapp-choice-overlay">
-                                            <div className="wa-choice-header">
-                                                <span className="wa-label">Qual tabela enviar?</span>
-                                                <button className="btn-close-wa" onClick={() => setWaChoiceVisible(false)}>
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                            <div className="whatsapp-grid-actions">
-                                                <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
-                                                    PEAD
-                                                </button>
-                                                <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')}>
-                                                    PET
-                                                </button>
-                                                <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')}>
-                                                    AMBAS
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
+                                <div className="whatsapp-actions-row">
+                                    <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
+                                        <MessageCircle size={16} /> PEAD
+                                    </button>
+                                    <button className="btn-wa-option pet" onClick={() => handleSendPricesWhatsApp('pet')}>
+                                        <MessageCircle size={16} /> PET
+                                    </button>
+                                    <button className="btn-wa-option both" onClick={() => handleSendPricesWhatsApp('both')}>
+                                        <MessageCircle size={16} /> AMBAS
+                                    </button>
                                 </div>
                                 <button className="btn-save" onClick={() => { handleSavePrices(); document.body.style.overflow = 'auto'; }} disabled={saving}>
                                     <Save size={18} />
