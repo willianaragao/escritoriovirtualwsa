@@ -832,6 +832,9 @@
 .btn-save {
     grid-column: 2;
     justify-self: center;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center;
     padding: 1rem 3rem !important;
     font-size: 1.1rem !important;
     font-weight: 800 !important;
