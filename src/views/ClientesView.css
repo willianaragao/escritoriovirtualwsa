@@ -746,10 +746,10 @@
     display: flex !important;
     flex-direction: row !important;
     gap: 3rem !important;
-    align-items: stretch !important; /* Forces image column to match table height */
+    align-items: flex-start !important;
     width: 100%;
     background: rgba(15, 23, 42, 0.3);
-    padding: 2rem;
+    padding: 1.5rem !important;
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     margin-bottom: 2rem;
@@ -761,11 +761,9 @@
 }
 
 .price-image-col {
-    width: 420px !important;
+    width: 350px !important;
     flex-shrink: 0;
-    margin-top: 0 !important; /* Starts at the very top (along with header) */
-    display: flex;
-    flex-direction: column;
+    margin-top: 0 !important;
 }
 
 .table-label {
@@ -774,12 +772,19 @@
 
 .price-image-col img {
     width: 100%;
-    height: 100% !important; /* Dynamically fills the entire height of the price card */
-    min-height: 100%;
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     object-fit: cover;
     object-position: center 50%;
+}
+
+/* Precise heights to match row counts (Header + Data Rows) */
+.pead-row .price-image-col img {
+    height: 228px !important; /* Matches 4 rows + header */
+}
+
+.pet-row .price-image-col img {
+    height: 275px !important; /* Matches 5 rows + header */
 }
 
 .price-modal-footer {
