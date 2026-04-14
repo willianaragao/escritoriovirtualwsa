@@ -697,16 +697,17 @@
 
 /* --- Price Modal Specifics --- */
 .price-custom-modal {
-    max-width: 950px;
+    width: 95vw;
+    max-width: 1100px;
 }
 
-/* --- Price Tabs --- */
 .price-tabs {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 1rem;
+    width: 100%;
 }
 
 .price-tab {
@@ -733,17 +734,19 @@
 }
 
 .price-modal-body {
-    max-height: 80vh;
+    max-height: 85vh;
     overflow-y: auto;
-    padding-right: 1.5rem;
+    padding: 2.5rem !important;
     display: flex;
     flex-direction: column;
+    gap: 4rem;
 }
 
 .price-section-row {
     display: flex;
-    gap: 2rem;
+    gap: 4rem;
     align-items: flex-start;
+    width: 100%;
 }
 
 .price-table-col {
