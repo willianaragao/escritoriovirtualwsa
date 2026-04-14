@@ -829,8 +829,11 @@
 .btn-save {
     flex: 0 1 auto;
     padding: 0.85rem 2.5rem !important;
-    font-size: 0.95rem !important;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    min-width: 450px; /* Extended width as requested */
     margin: 0 auto;
+    justify-content: center;
 }
 
 .whatsapp-actions-row {
