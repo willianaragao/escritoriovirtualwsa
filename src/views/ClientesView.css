@@ -1070,26 +1070,46 @@
     .price-tab { padding: 0.4rem; font-size: 0.7rem; }
     
     .price-modal-body { 
-        max-height: 25vh; /* Very conservative body height to ensure footer visibility */
+        max-height: 55vh; /* Restored greater height */
+        overflow-y: auto !important; /* Restored scroll for mobile */
         padding: 0.5rem 0.75rem !important; 
     }
 
     .price-modal-footer {
         padding: 0.75rem !important;
-        background: rgba(15, 23, 42, 1); /* Opaque for clearer boundary */
+        background: rgba(15, 23, 42, 1); 
     }
     
     .main-modal-actions {
-        flex-direction: column; /* Save on top, WhatsApp below */
+        display: flex !important; /* Override desktop grid */
+        flex-direction: column; 
         align-items: stretch;
         gap: 0.5rem;
     }
     
     .btn-wa-main, .btn-save {
+        min-width: 0 !important; /* Override desktop 450px */
         width: 100%;
-        height: 42px;
+        height: 48px;
         justify-content: center;
-        font-size: 0.85rem;
+        font-size: 0.95rem !important;
+    }
+
+    .whatsapp-actions-row {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .btn-wa-option {
+        flex: 1;
+        justify-content: center;
+        padding: 0.6rem 0.2rem;
+        font-size: 0.75rem;
     }
 }
 
