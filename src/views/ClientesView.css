@@ -778,13 +778,13 @@
     object-position: center 50%;
 }
 
-/* Precise heights to match row counts (Header + Data Rows) */
+/* Precise heights to match row counts (Header + Data Rows) + 10px extra as requested */
 .pead-row .price-image-col img {
-    height: 228px !important; /* Matches 4 rows + header */
+    height: 238px !important; /* Matches 4 rows + header + safety margin */
 }
 
 .pet-row .price-image-col img {
-    height: 275px !important; /* Matches 5 rows + header */
+    height: 285px !important; /* Matches 5 rows + header + safety margin */
 }
 
 .price-modal-footer {
