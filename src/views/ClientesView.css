@@ -744,38 +744,41 @@
 
 .price-section-row {
     display: flex !important;
-    flex-direction: row !important;
-    gap: 4rem !important;
-    align-items: flex-start;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    align-items: center;
     width: 100%;
 }
 
-.price-table-col {
-    flex: 2 !important;
-    min-width: 0;
-}
-
 .price-image-col {
-    flex: 0 0 280px !important;
-    width: 280px !important;
+    width: 100% !important;
+    max-width: 650px;
     text-align: center;
-    margin-top: 3.5rem; /* Aligns image with the first data row by skipping the header */
+    margin-top: 0 !important;
 }
 
 .table-label {
-    display: none; /* Hide labels to save space and improve alignment */
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
 }
 
 .price-image-col img {
     width: 100%;
+    height: 120px !important; /* Wide banner crop */
     border-radius: 12px;
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
     object-fit: cover;
-    object-position: center 45%; /* "Crops" to show the middle part of the bottles */
+    object-position: center 40%;
 }
 
-.pead-img img { height: 210px; }
-.pet-img img { height: 210px; }
+.price-table-col {
+    width: 100%;
+    min-width: 0;
+}
 
 .price-modal-footer {
     justify-content: flex-end;
