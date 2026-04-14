@@ -774,12 +774,11 @@
 
 .price-image-col img {
     width: 100%;
-    height: 100% !important; /* Fills the entire height of the container */
-    min-height: 200px;
+    height: 160px !important; /* Fixed height as per the red markup measurement */
     border-radius: 12px;
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     object-fit: cover;
-    object-position: center 50%;
+    object-position: center 40%;
 }
 
 .price-modal-footer {
