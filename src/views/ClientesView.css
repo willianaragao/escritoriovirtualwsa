@@ -746,8 +746,13 @@
     display: flex !important;
     flex-direction: row !important;
     gap: 3rem !important;
-    align-items: flex-start;
+    align-items: stretch !important; /* Forces image column to match table height */
     width: 100%;
+    background: rgba(15, 23, 42, 0.3);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 2rem;
 }
 
 .price-table-col {
@@ -756,9 +761,11 @@
 }
 
 .price-image-col {
-    width: 400px !important;
+    width: 420px !important;
     flex-shrink: 0;
-    margin-top: 3.5rem !important; /* Aligns with the first row of prices */
+    margin-top: 0 !important; /* Starts at the very top (along with header) */
+    display: flex;
+    flex-direction: column;
 }
 
 .table-label {
@@ -767,9 +774,10 @@
 
 .price-image-col img {
     width: 100%;
-    height: 185px !important; /* EXACT height of the price input fields area */
+    height: 100% !important; /* Fills the entire height of the container */
+    min-height: 200px;
     border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     object-fit: cover;
     object-position: center 50%;
 }
