@@ -735,7 +735,7 @@
 
 .price-modal-body {
     max-height: calc(100vh - 160px);
-    overflow-y: hidden !important; 
+    overflow-y: auto !important;
     padding: 0.5rem 2rem !important;
     display: flex;
     flex-direction: column;
