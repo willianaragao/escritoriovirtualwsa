@@ -798,13 +798,15 @@
 }
 
 .modal-table td {
-    padding: 0.3rem 1rem !important; /* ULTRA COMPACT */
-    font-size: 0.85rem;
+    padding: 0.6rem 1rem !important; /* Balanced padding */
+    font-size: 1.05rem; /* Larger text as requested */
+    font-weight: 500;
 }
 
 .modal-table th {
-    padding: 0.4rem 1rem !important;
-    font-size: 0.7rem;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
 .price-modal-footer {
