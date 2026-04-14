@@ -641,6 +641,14 @@ const ClientesView = ({ user }) => {
 
                         <div className="modal-footer price-modal-footer">
                             <div className="main-modal-actions">
+                                {/* Left Spacer to help centering the save button */}
+                                <div className="footer-spacer-left"></div>
+
+                                <button className="btn-save" onClick={() => { handleSavePrices(); document.body.style.overflow = 'auto'; }} disabled={saving}>
+                                    <Save size={18} />
+                                    {saving ? 'Salvando...' : 'Salvar Preços'}
+                                </button>
+
                                 <div className="whatsapp-actions-row">
                                     <button className="btn-wa-option pead" onClick={() => handleSendPricesWhatsApp('pead')}>
                                         <MessageCircle size={16} /> PEAD
@@ -652,10 +660,6 @@ const ClientesView = ({ user }) => {
                                         <MessageCircle size={16} /> AMBAS
                                     </button>
                                 </div>
-                                <button className="btn-save" onClick={() => { handleSavePrices(); document.body.style.overflow = 'auto'; }} disabled={saving}>
-                                    <Save size={18} />
-                                    {saving ? 'Salvando...' : 'Salvar Preços'}
-                                </button>
                             </div>
                         </div>
                     </div>
