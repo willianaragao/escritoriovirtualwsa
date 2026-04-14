@@ -554,81 +554,85 @@ const ClientesView = ({ user }) => {
                             ) : (
                                 <>
                                     {/* Desktop Full View */}
-                                    <div className="price-section-row pead-row">
-                                        <div className="price-table-col">
-                                            <table className="modal-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Produto</th>
-                                                        <th>Preço Padrão</th>
-                                                        <th>Preço Personalizado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {produtos.filter(p => !p.nome.toUpperCase().includes('PET')).map(p => (
-                                                        <tr key={p.id}>
-                                                            <td className="product-name-cell">{p.nome}</td>
-                                                            <td>{formatCurrency(p.preco_unitario)}</td>
-                                                            <td>
-                                                                <input
-                                                                    type="text"
-                                                                    className="form-input"
-                                                                    placeholder="Preço Personalizado"
-                                                                    value={customPrices[p.id] || ''}
-                                                                    onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
-                                                                />
-                                                            </td>
+                                    <div className="price-section-container">
+                                        <h3 className="section-title pead">LINHA PEAD</h3>
+                                        <div className="price-section-row pead-row">
+                                            <div className="price-table-col">
+                                                <table className="modal-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Produto</th>
+                                                            <th>Preço Padrão</th>
+                                                            <th>Preço Personalizado</th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="price-image-col">
-                                            <span className="table-label pead">Tabela PEAD</span>
-                                            <img src="/images/tabela_pead.png" alt="Tabela PEAD" />
+                                                    </thead>
+                                                    <tbody>
+                                                        {produtos.filter(p => !p.nome.toUpperCase().includes('PET')).map(p => (
+                                                            <tr key={p.id}>
+                                                                <td className="product-name-cell">{p.nome}</td>
+                                                                <td>{formatCurrency(p.preco_unitario)}</td>
+                                                                <td>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-input"
+                                                                        placeholder="Preço Personalizado"
+                                                                        value={customPrices[p.id] || ''}
+                                                                        onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
+                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="price-image-col">
+                                                <img src="/images/tabela_pead.png" alt="Tabela PEAD" />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="price-section-row pet-row" style={{ marginTop: '2.5rem' }}>
-                                        <div className="price-table-col">
-                                            <table className="modal-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Produto</th>
-                                                        <th>Preço Padrão</th>
-                                                        <th>Preço Personalizado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {/* Same PET sorting as mobile */}
-                                                    {produtos.filter(p => p.nome.toUpperCase().includes('PET')).sort((a,b) => {
-                                                        const PET_ORDER = ['500ml Pet Redonda c/100', '500ml Pet Quadrada c/100', '300ml Pet Redonda c/100', '200ml Pet Redonda c/100', '1Litro Pet Redonda c/50'];
-                                                        let idxA = PET_ORDER.indexOf(a.nome);
-                                                        let idxB = PET_ORDER.indexOf(b.nome);
-                                                        if (idxA === -1) idxA = 999;
-                                                        if (idxB === -1) idxB = 999;
-                                                        return idxA - idxB;
-                                                    }).map(p => (
-                                                        <tr key={p.id}>
-                                                            <td className="product-name-cell">{p.nome}</td>
-                                                            <td>{formatCurrency(p.preco_unitario)}</td>
-                                                            <td>
-                                                                <input
-                                                                    type="text"
-                                                                    className="form-input"
-                                                                    placeholder="Preço Personalizado"
-                                                                    value={customPrices[p.id] || ''}
-                                                                    onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
-                                                                />
-                                                            </td>
+                                    <div className="price-section-container">
+                                        <h3 className="section-title pet">LINHA PET</h3>
+                                        <div className="price-section-row pet-row">
+                                            <div className="price-table-col">
+                                                <table className="modal-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Produto</th>
+                                                            <th>Preço Padrão</th>
+                                                            <th>Preço Personalizado</th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div className="price-image-col">
-                                            <span className="table-label pet">Tabela PET</span>
-                                            <img src="/images/tabela_pet.png" alt="Tabela PET" />
+                                                    </thead>
+                                                    <tbody>
+                                                        {/* Same PET sorting as mobile */}
+                                                        {produtos.filter(p => p.nome.toUpperCase().includes('PET')).sort((a,b) => {
+                                                            const PET_ORDER = ['500ml Pet Redonda c/100', '500ml Pet Quadrada c/100', '300ml Pet Redonda c/100', '200ml Pet Redonda c/100', '1Litro Pet Redonda c/50'];
+                                                            let idxA = PET_ORDER.indexOf(a.nome);
+                                                            let idxB = PET_ORDER.indexOf(b.nome);
+                                                            if (idxA === -1) idxA = 999;
+                                                            if (idxB === -1) idxB = 999;
+                                                            return idxA - idxB;
+                                                        }).map(p => (
+                                                            <tr key={p.id}>
+                                                                <td className="product-name-cell">{p.nome}</td>
+                                                                <td>{formatCurrency(p.preco_unitario)}</td>
+                                                                <td>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="form-input"
+                                                                        placeholder="Preço Personalizado"
+                                                                        value={customPrices[p.id] || ''}
+                                                                        onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
+                                                                    />
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="price-image-col">
+                                                <img src="/images/tabela_pet.png" alt="Tabela PET" />
+                                            </div>
                                         </div>
                                     </div>
                                 </>

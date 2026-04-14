@@ -742,6 +742,31 @@
     gap: 2rem;
 }
 
+.price-section-container {
+    margin-bottom: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title.pead { color: #f59e0b; }
+.section-title.pet { color: #10b981; }
+
+.section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
 .price-section-row {
     display: flex !important;
     flex-direction: row !important;
@@ -752,7 +777,6 @@
     padding: 1.5rem !important;
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    margin-bottom: 2rem;
 }
 
 .price-table-col {
