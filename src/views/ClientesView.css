@@ -740,6 +740,12 @@
     flex-direction: column;
 }
 
+.price-section-row {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
 .price-table-col {
     flex: 1;
     min-width: 0;
