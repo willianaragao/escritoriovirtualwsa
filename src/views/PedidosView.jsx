@@ -455,7 +455,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 ...it,
                 qty: it.quantidade,
                 price: it.preco_unitario,
-                cost: it.produtos?.custo_producao || it.produtos?.preco_custo || 0,
+                cost: cond.customCosts && cond.customCosts[it.produto_id] !== undefined
+                    ? cond.customCosts[it.produto_id]
+                    : (it.produtos?.custo_producao || it.produtos?.preco_custo || 0),
             })));
         } catch (err) {
             alert('Erro ao carregar itens: ' + err.message);
@@ -592,6 +594,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             const currentRec = parseFloat(eValorRecebido) || 0;
             const newValRecebido = currentRec + addVal;
 
+            const customCostsMap = {};
+            editItens.forEach(it => { customCostsMap[it.produto_id] = Number(it.cost); });
+
             const condicoes = {
                 formaPagamento: eForma,
                 numeroParcelas: Number(eParcelas),
@@ -599,6 +604,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 intervaloDias: Number(eIntervalo),
                 valor_recebido: newValRecebido,
                 valoresParcelas: manualParcelas,
+                customCosts: customCostsMap
             };
 
             // 3. Update pedido row
@@ -640,12 +646,9 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             if (pedErr) throw pedErr;
 
             // NEW: Sync with Pedidos a Pagar se businessUnit === 'PET'
+            // NEW: Sync with Pedidos a Pagar se businessUnit === 'PET'
             if (businessUnit === 'PET') {
-                const { data: prods } = await supabase.from('produtos').select('id, custo_producao').in('id', editItens.map(i => i.produto_id));
-                const prodMap = {};
-                prods?.forEach(p => prodMap[p.id] = Number(p.custo_producao) || 0);
-
-                const newCustoTotal = editItens.reduce((s, i) => s + (Number(i.qty) * (prodMap[i.produto_id] || 0)), 0);
+                const newCustoTotal = editItens.reduce((s, i) => s + (Number(i.qty) * (Number(i.cost) || 0)), 0);
                 const valorAPagar = newCustoTotal > 0 ? newCustoTotal : editTotal;
 
                 const { data: existingPayable } = await supabase
@@ -954,8 +957,10 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                                     value={it.price}
                                                                     onChange={e => updateEditItem(it.id, 'price', e.target.value)} />
                                                             </td>
-                                                            <td className="pv-eit-sub" style={{ color: '#94a3b8' }}>
-                                                                {fmt(it.cost)}
+                                                            <td>
+                                                                <input type="number" min="0" step="0.01" className="pv-eit-inp"
+                                                                    value={it.cost}
+                                                                    onChange={e => updateEditItem(it.id, 'cost', e.target.value)} />
                                                             </td>
                                                             <td className="pv-eit-sub" style={{ color: '#10b981' }}>
                                                                 {fmt((Number(it.price) - Number(it.cost)) * Number(it.qty))}
