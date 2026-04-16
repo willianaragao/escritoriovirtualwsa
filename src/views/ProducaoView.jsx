@@ -17,9 +17,10 @@ const MONTHS = [
 const fmt = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
 const DEFAULT_PRODUCTS = [
-    { tipo: '500ml', valor: 47.00 },
-    { tipo: '300ml', valor: 35.00 },
-    { tipo: '1.5L', valor: 85.00 }
+    { tipo: '500ml', valor: 58.00 },
+    { tipo: '450ml', valor: 52.00 },
+    { tipo: '300ml', valor: 47.00 },
+    { tipo: '1 litro', valor: 46.00 }
 ];
 
 const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {
@@ -49,7 +50,37 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     // Config states
     const [config, setConfig] = useState(() => {
         const saved = localStorage.getItem('wsa_producao_config_v3');
-        return saved ? JSON.parse(saved) : {
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            let updated = false;
+
+            // Ensure 450ml is present
+            if (parsed.produtos && !parsed.produtos.find(p => p.tipo === '450ml')) {
+                parsed.produtos.push({ tipo: '450ml', valor: 52.00 });
+                updated = true;
+            }
+
+            // Ensure 1 litro is present
+            if (parsed.produtos && !parsed.produtos.find(p => p.tipo === '1 litro')) {
+                parsed.produtos.push({ tipo: '1 litro', valor: 46.00 });
+                updated = true;
+            }
+
+            // Update prices for 500ml and 300ml to user's new defaults if still at old defaults
+            if (parsed.produtos) {
+                const prod500 = parsed.produtos.find(p => p.tipo === '500ml');
+                if (prod500 && prod500.valor === 47.00) { prod500.valor = 58.00; updated = true; }
+
+                const prod300 = parsed.produtos.find(p => p.tipo === '300ml');
+                if (prod300 && prod300.valor === 35.00) { prod300.valor = 47.00; updated = true; }
+            }
+
+            if (updated) {
+                localStorage.setItem('wsa_producao_config_v3', JSON.stringify(parsed));
+            }
+            return parsed;
+        }
+        return {
             kgPorSaco: 25,
             precoKgAlta: 13.40,
             precoKgBaixa: 13.90,
@@ -111,44 +142,43 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             }, 0);
 
             // 2. Fetch Despesas do Mês (Tabela despesas) para cálculo das variáveis
-            const { data: despData } = await supabase.from('despesas').select('valor, data, descricao, categoria');
+            const { data: despData } = await supabase
+                .from('despesas')
+                .select('valor, data, descricao, categoria, business_unit');
 
             const filteredDespesas = (despData || []).filter(d => {
                 const dDate = new Date(d.data + 'T12:00:00');
                 const isSamePeriod = dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear;
-                const isCadeg = (d.descricao || '').toLowerCase().includes('cadeg');
-                return isSamePeriod && !isCadeg; // IGNORAR CADEG TOTALMENTE NESTA VISÃO
+                // APENAS PEAD (PEAD ou null)
+                const isPEAD = !d.business_unit || d.business_unit === 'PEAD';
+                return isSamePeriod && isPEAD;
             });
 
             const totalDespesasGeral = filteredDespesas.reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
 
-            // 123. Pagamentos de Fixas Efetuados
+            // Identificar Pagamentos de Fixas, Matéria Prima e Retiradas (STRICT CATEGORY MATCH)
+            // Fixas: "Dívidas Fixas", "Fixa"
+            // MP: "Matéria Prima", "Materia Prima"
+            // Retiradas: "Retirada de lucro"
             const totalFixasPagas = filteredDespesas.reduce((acc, d) => {
                 const cat = (d.categoria || '').toLowerCase();
-                const desc = (d.descricao || '').toLowerCase();
-                if (cat.includes('fixa') || desc.includes('dia 15') || desc.includes('dia 30')) {
-                    return acc + (Number(d.valor) || 0);
-                }
+                if (cat.includes('fixa')) return acc + (Number(d.valor) || 0);
                 return acc;
             }, 0);
 
-            // 133. Pagamentos de Matéria Prima Efetuados
             const totalMateriaPrimaPagas = filteredDespesas.reduce((acc, d) => {
                 const cat = (d.categoria || '').toLowerCase();
-                if (cat.includes('matéria') || cat.includes('materia')) {
-                    return acc + (Number(d.valor) || 0);
-                }
+                if (cat.includes('matéria prima') || cat.includes('materia prima')) return acc + (Number(d.valor) || 0);
                 return acc;
             }, 0);
 
-            // 143. Outras exclusões (Retirada de lucro não é despesa operacional)
             const totalRetiradas = filteredDespesas.reduce((acc, d) => {
                 const cat = (d.categoria || '').toLowerCase();
                 if (cat.includes('retirada')) return acc + (Number(d.valor) || 0);
                 return acc;
             }, 0);
 
-            // 153. Despesas Mensais (Variáveis): Geral - FixasPagas - MP - Retiradas
+            // Despesas Mensais (Variáveis): Geral - FixasPagas - MP - Retiradas
             const totalDespesasMensais = totalDespesasGeral - totalFixasPagas - totalMateriaPrimaPagas - totalRetiradas;
             const totalDespesasFixas = totalFixedBudget;
 
