@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './ProducaoView.css';
+import ConfiguracaoValoresModal from '../components/ConfiguracaoValoresModal';
+import GastoMateriaPrimaModal from '../components/GastoMateriaPrimaModal';
 
 const MONTHS = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -540,171 +542,38 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 </div>
             </section>
 
-            {/* Modal de Adicionar Gasto */}
-            {isAddModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '440px' }}>
-                        <div className="modal-header">
-                            <h2 style={{ fontSize: '1.2rem' }}>{editingId ? 'Editar Gasto' : 'Adicionar Gasto'} de Matéria Prima</h2>
-                            <button onClick={() => {
-                                setIsAddModalOpen(false);
-                                setEditingId(null);
-                                setForm({
-                                    data: new Date().toISOString().split('T')[0],
-                                    preco_kg_alta: config.precoKgAlta,
-                                    qtd_sacos_alta: '',
-                                    preco_kg_baixa: config.precoKgBaixa,
-                                    qtd_baixa: '',
-                                    produtos: []
-                                });
-                            }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>✕</button>
-                        </div>
-                        <form onSubmit={handleSaveProducao}>
-                            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                <div className="form-group">
-                                    <label>Data</label>
-                                    <input type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} required className="orange-border" />
-                                </div>
+            <GastoMateriaPrimaModal 
+                isOpen={isAddModalOpen}
+                onClose={() => {
+                    setIsAddModalOpen(false);
+                    setEditingId(null);
+                    setForm({
+                        data: new Date().toISOString().split('T')[0],
+                        preco_kg_alta: config.precoKgAlta,
+                        qtd_sacos_alta: '',
+                        preco_kg_baixa: config.precoKgBaixa,
+                        qtd_baixa: '',
+                        produtos: []
+                    });
+                }}
+                form={form}
+                setForm={setForm}
+                config={config}
+                onSave={handleSaveProducao}
+                saving={saving}
+                editingId={editingId}
+                addProductRow={addProductRow}
+                removeProductRow={removeProductRow}
+                updateProductRow={updateProductRow}
+            />
 
-                                <div className="form-group">
-                                    <label>Preço KG Material Alta</label>
-                                    <input type="number" step="0.01" value={form.preco_kg_alta} onChange={e => setForm({ ...form, preco_kg_alta: e.target.value })} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Quantidade de Sacos (Alta)</label>
-                                    <input type="number" step="0.1" placeholder="Ex: 2.5" value={form.qtd_sacos_alta} onChange={e => setForm({ ...form, qtd_sacos_alta: e.target.value })} />
-                                    <small className="form-help">Valor por saco: {fmt(form.preco_kg_alta * config.kgPorSaco)}</small>
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Preço KG Material Baixa</label>
-                                    <input type="number" step="0.01" value={form.preco_kg_baixa} onChange={e => setForm({ ...form, preco_kg_baixa: e.target.value })} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label>Quantidade de Sacos (Baixa)</label>
-                                    <input type="number" step="0.1" placeholder="Ex: 2.5" value={form.qtd_baixa} onChange={e => setForm({ ...form, qtd_baixa: e.target.value })} />
-                                    <small className="form-help">Valor por saco: {fmt(form.preco_kg_baixa * config.kgPorSaco)}</small>
-                                </div>
-
-                                <div style={{ borderTop: '1px solid #334155', marginTop: '1.5rem', paddingTop: '1rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <h4 style={{ margin: 0 }}>Produtos Fabricados</h4>
-                                        <button type="button" className="btn-add" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={addProductRow}>
-                                            <Plus size={14} /> Adicionar Produto
-                                        </button>
-                                    </div>
-
-                                    {form.produtos.map((p, idx) => (
-                                        <div key={idx} className="product-row">
-                                            <div className="product-field">
-                                                <label>Tipo</label>
-                                                <select value={p.tipo} onChange={e => updateProductRow(idx, 'tipo', e.target.value)}>
-                                                    {config.produtos.map(opt => (
-                                                        <option key={opt.tipo} value={opt.tipo}>{opt.tipo}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="product-field">
-                                                <label>Qtd</label>
-                                                <input
-                                                    type="number"
-                                                    value={p.quantidade}
-                                                    onChange={e => updateProductRow(idx, 'quantidade', e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="product-field">
-                                                <label>Preço Und</label>
-                                                <div className="product-value-display">
-                                                    {fmt(p.valor_un)}
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className="action-btn delete"
-                                                style={{ height: '38px', width: '38px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                onClick={() => removeProductRow(idx)}
-                                            >
-                                                <Trash size={16} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn-secondary" onClick={() => {
-                                    setIsAddModalOpen(false);
-                                    setEditingId(null);
-                                    setForm({
-                                        data: new Date().toISOString().split('T')[0],
-                                        preco_kg_alta: config.precoKgAlta,
-                                        qtd_sacos_alta: '',
-                                        preco_kg_baixa: config.precoKgBaixa,
-                                        qtd_baixa: '',
-                                        produtos: []
-                                    });
-                                }}>Cancelar</button>
-                                <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Salvando...' : (editingId ? 'Atualizar' : 'Salvar')}</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* Config Modal */}
-            {isConfigModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2>Configurar Valores Padrão</h2>
-                            <button onClick={() => setIsConfigModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>✕</button>
-                        </div>
-                        <div className="modal-body">
-                            <div className="form-group">
-                                <label>KG por Saco (Padrão: 25)</label>
-                                <input type="number" value={config.kgPorSaco} onChange={e => setConfig({ ...config, kgPorSaco: parseFloat(e.target.value) })} />
-                            </div>
-                            <div className="form-group">
-                                <label>Preço KG Alta (Padrão)</label>
-                                <input type="number" step="0.01" value={config.precoKgAlta} onChange={e => setConfig({ ...config, precoKgAlta: parseFloat(e.target.value) })} />
-                            </div>
-                            <div className="form-group">
-                                <label>Preço KG Baixa (Padrão)</label>
-                                <input type="number" step="0.01" value={config.precoKgBaixa} onChange={e => setConfig({ ...config, precoKgBaixa: parseFloat(e.target.value) })} />
-                            </div>
-
-                            <h4 style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>Garrafas e Preços de Venda</h4>
-                            {config.produtos.map((p, idx) => (
-                                <div key={idx} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                    <input placeholder="Tipo" value={p.tipo} onChange={e => {
-                                        const newP = [...config.produtos];
-                                        newP[idx].tipo = e.target.value;
-                                        setConfig({ ...config, produtos: newP });
-                                    }} />
-                                    <input type="number" placeholder="Valor" value={p.valor} onChange={e => {
-                                        const newP = [...config.produtos];
-                                        newP[idx].valor = parseFloat(e.target.value);
-                                        setConfig({ ...config, produtos: newP });
-                                    }} />
-                                    <button className="action-btn delete" onClick={() => {
-                                        const newP = [...config.produtos];
-                                        newP.splice(idx, 1);
-                                        setConfig({ ...config, produtos: newP });
-                                    }}><Trash size={14} /></button>
-                                </div>
-                            ))}
-                            <button className="btn-add" style={{ width: '100%', marginTop: '0.5rem' }} onClick={() => setConfig({ ...config, produtos: [...config.produtos, { tipo: '', valor: 0 }] })}>
-                                + Adicionar Novo Tipo
-                            </button>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn-secondary" onClick={() => setIsConfigModalOpen(false)}>Cancelar</button>
-                            <button className="btn-primary" onClick={saveConfig}>Salvar Configuração</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfiguracaoValoresModal 
+                isOpen={isConfigModalOpen}
+                onClose={() => setIsConfigModalOpen(false)}
+                config={config}
+                setConfig={setConfig}
+                onSave={saveConfig}
+            />
         </div>
     );
 };
