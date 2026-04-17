@@ -243,22 +243,11 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
     const [materiaPrimaTarget, setMateriaPrimaTarget] = useState(35291.25);
 
     useEffect(() => {
-        const key = `wsa_mp_target_${selectedYear}_${selectedMonth}`;
-        const saved = localStorage.getItem(key);
-        if (saved !== null) {
-            setMateriaPrimaTarget(Number(saved));
-        } else {
-            // Fallback to the old universal key if exists, or default
-            const oldUniversal = localStorage.getItem('wsa_mp_target');
-            setMateriaPrimaTarget(oldUniversal ? Number(oldUniversal) : 35291.25);
-        }
+        // Agora o valor virá do banco de dados (fetchDashboardData)
     }, [selectedMonth, selectedYear]);
 
     const updateTarget = (val) => {
-        const n = parseFloat(val) || 0;
-        setMateriaPrimaTarget(n);
-        const key = `wsa_mp_target_${selectedYear}_${selectedMonth}`;
-        localStorage.setItem(key, n);
+        // Desativado pois agora o valor vem da tabela gastos_materia_prima
     };
 
     const MONTH_NAMES = [
@@ -535,6 +524,21 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 totalVendaMes
             });
 
+            // 4. Buscar Custo Sob Produção (Matéria Prima) para o Total Gasto
+            const { data: prodData } = await supabase
+                .from('gastos_materia_prima')
+                .select('valor, data');
+
+            const totalCustoMateriaPrima = (prodData || []).reduce((acc, p) => {
+                const pDate = new Date(p.data + 'T12:00:00');
+                if (pDate.getMonth() === selectedMonth && pDate.getFullYear() === selectedYear) {
+                    return acc + (Number(p.valor) || 0);
+                }
+                return acc;
+            }, 0);
+
+            setMateriaPrimaTarget(totalCustoMateriaPrima);
+
         } catch (err) {
             console.error('Erro ao carregar dashboard:', err);
         }
@@ -752,21 +756,9 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                     <div className="db-flow-card orange">
                                         <div className="db-flow-icon"><Target size={16} /></div>
                                         <div className="db-flow-info">
-                                            <span>Total Gasto (Mês)</span>
-                                            <div className="db-flow-editable" onClick={() => setIsEditingTarget(true)}>
-                                                {isEditingTarget ? (
-                                                    <input
-                                                        type="number"
-                                                        autoFocus
-                                                        step="0.01"
-                                                        value={materiaPrimaTarget}
-                                                        onChange={e => updateTarget(e.target.value)}
-                                                        onBlur={() => setIsEditingTarget(false)}
-                                                        onKeyDown={e => e.key === 'Enter' && setIsEditingTarget(false)}
-                                                    />
-                                                ) : (
-                                                    <strong>{fmt(materiaPrimaTarget)}</strong>
-                                                )}
+                                            <span>Total Gasto (Custo sob Produção)</span>
+                                            <div>
+                                                <strong>{fmt(materiaPrimaTarget)}</strong>
                                             </div>
                                         </div>
                                     </div>

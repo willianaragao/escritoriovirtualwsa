@@ -33,6 +33,12 @@ const EstoqueView = ({ businessUnit }) => {
     const [manualStock, setManualStock] = useState([]);
     const [orders, setOrders] = useState([]);
 
+    // Modal Edit State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [newQty, setNewQty] = useState('');
+    const [saving, setSaving] = useState(false);
+
     useEffect(() => {
         fetchData();
     }, [selectedMonth, selectedYear]);
@@ -40,15 +46,17 @@ const EstoqueView = ({ businessUnit }) => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // 1. Fetch Manual Stock
+            // 1. Fetch Manual Stock (Filtering only PEAD, removing PET)
             const { data: mData } = await supabase.from('produtos').select('*').order('nome');
-            const manual = (mData || []).map(p => ({
-                id: p.id,
-                nome: p.nome,
-                qty: p.estoque_atual || 0,
-                custo: p.preco_unitario || 0,
-                status: (p.estoque_atual || 0) < 10 ? 'Baixo' : 'Normal'
-            }));
+            const manual = (mData || [])
+                .filter(p => !p.nome.toUpperCase().includes('PET'))
+                .map(p => ({
+                    id: p.id,
+                    nome: p.nome,
+                    qty: p.estoque_atual || 0,
+                    custo: p.preco_unitario || 0,
+                    status: (p.estoque_atual || 0) < 10 ? 'Baixo' : 'Normal'
+                }));
             setManualStock(manual);
 
             // 2. Fetch Orders for the period
@@ -111,6 +119,33 @@ const EstoqueView = ({ businessUnit }) => {
             console.error('Error:', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEditClick = (p) => {
+        setEditingProduct(p);
+        setNewQty(p.qty);
+        setIsEditModalOpen(true);
+    };
+
+    const handleSaveStock = async () => {
+        if (!editingProduct) return;
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('produtos')
+                .update({ estoque_atual: Number(newQty) })
+                .eq('id', editingProduct.id);
+
+            if (error) throw error;
+
+            setIsEditModalOpen(false);
+            fetchData();
+        } catch (err) {
+            console.error('Erro ao salvar estoque:', err);
+            alert('Erro ao salvar estoque. Verifique sua conexão.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -262,7 +297,7 @@ const EstoqueView = ({ businessUnit }) => {
                                     <td><span className="est-badge est-badge-gray">{m.status}</span></td>
                                     <td className="est-td-bold">{fmt(m.qty * m.custo)}</td>
                                     <td className="est-actions">
-                                        <button className="est-action-btn"><Edit3 size={14} /></button>
+                                        <button className="est-action-btn" onClick={() => handleEditClick(m)}><Edit3 size={14} /></button>
                                         <button className="est-action-btn del"><Trash2 size={14} /></button>
                                     </td>
                                 </tr>
@@ -270,6 +305,32 @@ const EstoqueView = ({ businessUnit }) => {
                         </tbody>
                     </table>
                 </div>
+
+                {isEditModalOpen && (
+                    <div className="est-modal-overlay">
+                        <div className="est-modal">
+                            <h3>Editar Estoque</h3>
+                            <p>Atualize a quantidade em estoque para: <strong>{editingProduct?.nome}</strong></p>
+                            
+                            <div className="est-modal-field">
+                                <label>Quantidade Atual</label>
+                                <input 
+                                    type="number" 
+                                    value={newQty}
+                                    onChange={(e) => setNewQty(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="est-modal-actions">
+                                <button className="btn-cancel" onClick={() => setIsEditModalOpen(false)}>Cancelar</button>
+                                <button className="btn-save" onClick={handleSaveStock} disabled={saving}>
+                                    {saving ? 'Gravando...' : 'Salvar Alteração'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* ── Section 3: Orders Summary ── */}
