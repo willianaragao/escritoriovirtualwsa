@@ -177,7 +177,11 @@
 }
 
 .item-type-input {
-  flex: 2;
+  flex: 2.2;
+}
+ 
+.item-weight-input {
+  flex: 1.2;
 }
 
 .item-value-input {

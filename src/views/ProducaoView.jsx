@@ -19,10 +19,10 @@ const MONTHS = [
 const fmt = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
 const DEFAULT_PRODUCTS = [
-    { tipo: '500ml', valor: 58.00 },
-    { tipo: '450ml', valor: 52.00 },
-    { tipo: '300ml', valor: 47.00 },
-    { tipo: '1 litro', valor: 46.00 }
+    { tipo: '500ml', valor: 58.00, peso: 0.00 },
+    { tipo: '450ml', valor: 52.00, peso: 0.00 },
+    { tipo: '300ml', valor: 47.00, peso: 0.00 },
+    { tipo: '1 litro', valor: 46.00, peso: 0.00 }
 ];
 
 const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear }) => {

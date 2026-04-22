@@ -21,7 +21,7 @@ const ConfiguracaoValoresModal = ({ isOpen, onClose, config, setConfig, onSave }
   const handleAddProduct = () => {
     setConfig({
       ...config,
-      produtos: [...config.produtos, { tipo: '', valor: 0 }]
+      produtos: [...config.produtos, { tipo: '', valor: 0, peso: 0 }]
     });
   };
 
@@ -115,6 +115,17 @@ const ConfiguracaoValoresModal = ({ isOpen, onClose, config, setConfig, onSave }
                     className="premium-input" 
                     value={p.tipo} 
                     onChange={e => handleUpdateProduct(idx, 'tipo', e.target.value)}
+                  />
+                </div>
+                <div className="premium-input-wrapper item-weight-input has-icon">
+                  <Weight size={14} className="input-icon-left" />
+                  <input 
+                    type="number" 
+                    step="0.001"
+                    placeholder="Peso (g)" 
+                    className="premium-input" 
+                    value={p.peso || ''} 
+                    onChange={e => handleUpdateProduct(idx, 'peso', parseFloat(e.target.value))}
                   />
                 </div>
                 <div className="premium-input-wrapper item-value-input has-icon">

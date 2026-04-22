@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
     Search, Calendar, ChevronDown,
     MessageCircle, Edit3, Trash2,
-    X, Check, Loader, CreditCard, Package, Plus
+    X, Check, Loader, CreditCard, Package, Plus, Weight, DollarSign
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './PedidosView.css';
@@ -93,6 +93,11 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const years = Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i);
+ 
+    const [config] = useState(() => {
+        const saved = localStorage.getItem('wsa_producao_config_v3');
+        return saved ? JSON.parse(saved) : { produtos: [] };
+    });
 
     /* ---- Edit modal state ---- */
     const [editPedido, setEditPedido] = useState(null);
@@ -768,12 +773,26 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                     </div>
                     <div className="pv-summary-grid">
                         {(() => {
+                            const currentConfig = JSON.parse(localStorage.getItem('wsa_producao_config_v3') || '{"produtos":[]}');
                             const totals = {};
+                            let totalCustoProducao = 0;
+                            let totalKg = 0;
+
                             filteredList.forEach(p => {
                                 (p.pedidos_produtos || []).forEach(item => {
                                     const size = getBottleSize(item.produtos?.nome);
                                     const qty = Number(item.quantidade || 0);
                                     totals[size] = (totals[size] || 0) + qty;
+
+                                    // Peso (Kg) - Aplicado para TODAS as garrafas
+                                    const prodConfig = (currentConfig.produtos || []).find(cp => 
+                                        cp.tipo.toLowerCase().replace(/\s/g, '') === size.toLowerCase().replace(/\s/g, '')
+                                    );
+
+                                    if (prodConfig && prodConfig.peso) {
+                                        // Multiplica o número de fardos diretamente pelo peso definido (em Kg)
+                                        totalKg += (qty * prodConfig.peso);
+                                    }
                                 });
                             });
 
@@ -785,12 +804,44 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
                             if (sortedSizes.length === 0) return <div className="pv-summary-empty">Sem itens nos pedidos pendentes.</div>;
 
-                            return sortedSizes.map(([size, count]) => (
+                            const productCards = sortedSizes.map(([size, count]) => (
                                 <div key={size} className="pv-summary-card">
-                                    <span className="pv-summary-size">{size}</span>
-                                    <span className="pv-summary-count">{count.toLocaleString()} <small>fardos</small></span>
+                                    <div className="pv-summary-card-header">
+                                        <Package size={14} className="pv-card-icon" />
+                                        <span className="pv-summary-size">{size}</span>
+                                    </div>
+                                    <span className="pv-summary-count">
+                                        {count.toLocaleString()} <small>fardos</small>
+                                    </span>
                                 </div>
                             ));
+
+                            // Custo de Fabricação = Total Kg * Preço KG Alta (das configurações)
+                            totalCustoProducao = totalKg * (currentConfig.precoKgAlta || 0);
+
+                            return (
+                                <>
+                                    {productCards}
+                                    <div className="pv-summary-card kg-card">
+                                        <div className="pv-summary-card-header">
+                                            <Weight size={14} className="pv-card-icon" />
+                                            <span className="pv-summary-size">Total Kg Fabricação</span>
+                                        </div>
+                                        <span className="pv-summary-count">
+                                            {totalKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <small>Kg</small>
+                                        </span>
+                                    </div>
+                                    <div className="pv-summary-card cost-card">
+                                        <div className="pv-summary-card-header">
+                                            <DollarSign size={14} className="pv-card-icon" />
+                                            <span className="pv-summary-size">Custo Estimado</span>
+                                        </div>
+                                        <span className="pv-summary-count">
+                                            {fmt(totalCustoProducao)}
+                                        </span>
+                                    </div>
+                                </>
+                            );
                         })()}
                     </div>
                 </div>
