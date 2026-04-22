@@ -56,15 +56,17 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             const parsed = JSON.parse(saved);
             let updated = false;
 
+            const normalize = (s) => (s || '').toLowerCase().replace(/\s/g, '').replace(/(\d+)l$/, '$1litro');
+
             // Ensure 450ml is present
-            if (parsed.produtos && !parsed.produtos.find(p => p.tipo === '450ml')) {
-                parsed.produtos.push({ tipo: '450ml', valor: 52.00 });
+            if (parsed.produtos && !parsed.produtos.find(p => normalize(p.tipo) === '450ml')) {
+                parsed.produtos.push({ tipo: '450ml', valor: 52.00, peso: 0 });
                 updated = true;
             }
 
             // Ensure 1 litro is present
-            if (parsed.produtos && !parsed.produtos.find(p => p.tipo === '1 litro')) {
-                parsed.produtos.push({ tipo: '1 litro', valor: 46.00 });
+            if (parsed.produtos && !parsed.produtos.find(p => normalize(p.tipo) === '1litro')) {
+                parsed.produtos.push({ tipo: '1 litro', valor: 46.00, peso: 0 });
                 updated = true;
             }
 

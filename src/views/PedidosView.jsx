@@ -784,10 +784,12 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                     const qty = Number(item.quantidade || 0);
                                     totals[size] = (totals[size] || 0) + qty;
 
-                                    // Calculo de Peso e Custo atualizado
                                     // Peso (Kg) - Aplicado para TODAS as garrafas
+                                    const normalizeSize = (s) => s.toLowerCase().replace(/\s/g, '').replace(/(\d+)l$/, '$1litro');
+                                    const normalizedCurrent = normalizeSize(size);
+
                                     const prodConfig = (currentConfig.produtos || []).find(cp => 
-                                        cp.tipo.toLowerCase().replace(/\s/g, '') === size.toLowerCase().replace(/\s/g, '')
+                                        normalizeSize(cp.tipo) === normalizedCurrent
                                     );
 
                                     if (prodConfig && prodConfig.peso) {
