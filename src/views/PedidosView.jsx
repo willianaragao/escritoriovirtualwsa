@@ -148,8 +148,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     }, []);
 
     /* ---- Fetch pedidos ---- */
-    const fetchPedidos = React.useCallback(async () => {
-        setLoading(true);
+    const fetchPedidos = React.useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('pedidos')
@@ -215,7 +215,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         } catch (err) {
             console.error(err);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     }, [status, selectedMonth, selectedYear, businessUnit]);
 
@@ -417,7 +417,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             }
             const { error } = await supabase.from('pedidos').delete().eq('id', pedido.id);
             if (error) throw error;
-            await fetchPedidos();
+            await fetchPedidos(true);
         } catch (err) {
             alert('Erro ao excluir: ' + err.message);
         }
@@ -683,7 +683,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             }
 
             // 4. Reflect changes locally
-            await fetchPedidos();
+            await fetchPedidos(true);
             closeEdit();
         } catch (err) {
             alert('Erro ao salvar: ' + err.message);
