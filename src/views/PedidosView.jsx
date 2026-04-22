@@ -784,6 +784,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                     const qty = Number(item.quantidade || 0);
                                     totals[size] = (totals[size] || 0) + qty;
 
+                                    // Calculo de Peso e Custo atualizado
                                     // Peso (Kg) - Aplicado para TODAS as garrafas
                                     const prodConfig = (currentConfig.produtos || []).find(cp => 
                                         cp.tipo.toLowerCase().replace(/\s/g, '') === size.toLowerCase().replace(/\s/g, '')
