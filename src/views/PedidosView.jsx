@@ -148,82 +148,80 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     }, []);
 
     /* ---- Fetch pedidos ---- */
-    useEffect(() => {
-        const fetchPedidos = async () => {
-            setLoading(true);
-            try {
-                const { data, error } = await supabase
-                    .from('pedidos')
-                    .select('*, clientes(nome, telefone), pedidos_produtos(*, produtos(nome))')
-                    .eq('business_unit', businessUnit)
-                    .order('data_pedido', { ascending: false });
+    const fetchPedidos = React.useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase
+                .from('pedidos')
+                .select('*, clientes(nome, telefone), pedidos_produtos(*, produtos(nome))')
+                .eq('business_unit', businessUnit)
+                .order('data_pedido', { ascending: false });
 
-                if (error) throw error;
+            if (error) throw error;
 
-                const filtered = (data || []).map(p => ({
-                    ...p,
-                    data_pedido: p.data_pedido ? p.data_pedido.split('T')[0] : null
-                })).filter(p => {
-                    if (!p.data_pedido) return false;
+            const filtered = (data || []).map(p => ({
+                ...p,
+                data_pedido: p.data_pedido ? p.data_pedido.split('T')[0] : null
+            })).filter(p => {
+                if (!p.data_pedido) return false;
 
-                    const normalizedStatus = (p.status || '').toLowerCase().trim();
-                    const isDebit = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus);
-                    const isPending = normalizedStatus === 'pendente';
-                    const isPaid = normalizedStatus === 'pago' || Number(p.condicoes_pagamento?.valor_recebido || 0) > 0;
+                const normalizedStatus = (p.status || '').toLowerCase().trim();
+                const isDebit = ['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus);
+                const isPending = normalizedStatus === 'pendente';
+                const isPaid = normalizedStatus === 'pago' || Number(p.condicoes_pagamento?.valor_recebido || 0) > 0;
 
-                    // Match view category
-                    if (status === 'a_receber') {
-                        if (!isDebit) return false;
-                        if (!['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus)) return false;
-                    } else if (status === 'pendente') {
-                        if (!isPending) return false;
-                    } else if (status === 'pago') {
-                        if (!isPaid) return false;
-                    } else {
-                        if (p.status !== status) return false;
-                    }
+                // Match view category
+                if (status === 'a_receber') {
+                    if (!isDebit) return false;
+                    if (!['a_receber', 'parcialmente_pago', 'aguardando_pagamento', 'aguardando pagamento', 'parcialmente pago'].includes(normalizedStatus)) return false;
+                } else if (status === 'pendente') {
+                    if (!isPending) return false;
+                } else if (status === 'pago') {
+                    if (!isPaid) return false;
+                } else {
+                    if (p.status !== status) return false;
+                }
 
-                    const d = new Date(p.data_pedido + 'T12:00:00');
-                    let pMonth = d.getMonth();
-                    let pYear = d.getFullYear();
+                const d = new Date(p.data_pedido + 'T12:00:00');
+                let pMonth = d.getMonth();
+                let pYear = d.getFullYear();
 
-                    // Priority to mes_referencia
-                    if (p.mes_referencia) {
-                        const monthsNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                        const refIdx = monthsNames.indexOf(p.mes_referencia.toLowerCase());
-                        if (refIdx !== -1) pMonth = refIdx;
-                    }
+                // Priority to mes_referencia
+                if (p.mes_referencia) {
+                    const monthsNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                    const refIdx = monthsNames.indexOf(p.mes_referencia.toLowerCase());
+                    if (refIdx !== -1) pMonth = refIdx;
+                }
 
-                    return pMonth === selectedMonth && pYear === selectedYear;
-                });
+                return pMonth === selectedMonth && pYear === selectedYear;
+            });
 
-                setPedidos(filtered);
-                const totalCalculado = filtered.reduce((acc, p) => {
-                    const valTotal = Number(p.valor_total) || 0;
-                    const nParc = Number(p.numero_parcelas) || Number(p.condicoes_pagamento?.numeroParcelas) || 1;
-                    const pPagas = Number(p.parcelas_pagas) || 0;
+            setPedidos(filtered);
+            const totalCalculado = filtered.reduce((acc, p) => {
+                const valTotal = Number(p.valor_total) || 0;
+                const valorPago = Number(p.condicoes_pagamento?.valor_recebido || 0);
 
-                    let valorPago = Number(p.condicoes_pagamento?.valor_recebido || 0);
-
-                    if (status === 'a_receber') {
-                        const pendente = valTotal - valorPago;
-                        return acc + pendente;
-                    }
-                    if (status === 'pago') {
-                        if (p.status === 'pago') return acc + valTotal;
-                        return acc + valorPago;
-                    }
-                    return acc + valTotal;
-                }, 0);
-                setTotal(totalCalculado);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPedidos();
+                if (status === 'a_receber') {
+                    const pendente = valTotal - valorPago;
+                    return acc + pendente;
+                }
+                if (status === 'pago') {
+                    if (p.status === 'pago') return acc + valTotal;
+                    return acc + valorPago;
+                }
+                return acc + valTotal;
+            }, 0);
+            setTotal(totalCalculado);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     }, [status, selectedMonth, selectedYear, businessUnit]);
+
+    useEffect(() => {
+        fetchPedidos();
+    }, [fetchPedidos]);
 
     /* ---- Fetch products for edit ---- */
     useEffect(() => {
@@ -419,8 +417,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             }
             const { error } = await supabase.from('pedidos').delete().eq('id', pedido.id);
             if (error) throw error;
-            setPedidos(prev => prev.filter(p => p.id !== pedido.id));
-            setTotal(prev => prev - (pedido.valor_total || 0));
+            await fetchPedidos();
         } catch (err) {
             alert('Erro ao excluir: ' + err.message);
         }
@@ -686,19 +683,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
             }
 
             // 4. Reflect changes locally
-            setPedidos(prev => prev.map(p =>
-                p.id === editPedido.id
-                    ? {
-                        ...p,
-                        valor_total: editTotal,
-                        status: finalStatus,
-                        condicoes_pagamento: condicoes,
-                        numero_parcelas: Number(eParcelas),
-                        parcelas_pagas: calculatedPagas
-                    }
-                    : p
-            ));
-            setTotal(prev => prev - (editPedido.valor_total || 0) + editTotal);
+            await fetchPedidos();
             closeEdit();
         } catch (err) {
             alert('Erro ao salvar: ' + err.message);
