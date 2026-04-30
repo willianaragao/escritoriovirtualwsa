@@ -87,7 +87,7 @@ function App() {
         case 'dividas':
           return businessUnit === 'PET' 
             ? <PedidosAPagarPET {...commonProps} />
-            : <DividasFixas {...commonProps} />;
+            : <DividasFixas {...commonProps} user={user} />;
         case 'categorias':
           return <Categorias businessUnit={businessUnit} /> ;
         case 'clientes':

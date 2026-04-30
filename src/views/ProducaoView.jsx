@@ -40,7 +40,8 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
         materialAlta: 0,
         materialBaixa: 0,
         materialAltaSacos: 0,
-        materialBaixaSacos: 0
+        materialBaixaSacos: 0,
+        totalKg: 0
     });
 
     const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -187,7 +188,36 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             const totalDespesasFixas = totalFixedBudget;
 
             // Calculations
-            const totalProdVal = currentProducoes.reduce((acc, p) => acc + (Number(p.valor_producao) || 0), 0);
+            let calcTotalProdVal = 0;
+            currentProducoes.forEach(p => {
+                let vProd = Number(p.valor_producao) || 0;
+                if (vProd === 0) {
+                    if (p.produtos && Array.isArray(p.produtos) && p.produtos.length > 0) {
+                        vProd = p.produtos.reduce((sum, pr) => sum + (Number(pr.quantidade) * Number(pr.valor_un)), 0);
+                    } else if (p.descricao) {
+                        const regex = /(\d+)\s*x\s*(\d*\s*[a-zA-Z]+)/g;
+                        let match;
+                        while ((match = regex.exec(p.descricao)) !== null) {
+                            const qtd = parseInt(match[1]);
+                            const tipo = match[2].trim().toLowerCase().replace(/\s/g, '');
+                            let price = 0;
+                            const prodDef = config.produtos.find(c => c.tipo.toLowerCase().replace(/\s/g, '') === tipo);
+                            if (prodDef) {
+                                price = prodDef.valor;
+                            } else {
+                                if (tipo === '500ml') price = 58;
+                                else if (tipo === '450ml') price = 52;
+                                else if (tipo === '300ml') price = 47;
+                                else if (tipo === '1litro' || tipo === '1 litro') price = 46;
+                            }
+                            vProd += qtd * price;
+                        }
+                    }
+                }
+                calcTotalProdVal += vProd;
+            });
+
+            const totalProdVal = calcTotalProdVal;
             const totalCustoVal = currentProducoes.reduce((acc, p) => acc + (Number(p.valor) || 0), 0);
             const lucroProd = totalProdVal - totalCustoVal;
 
@@ -259,7 +289,8 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                 materialAlta: matAlta,
                 materialBaixa: matBaixa,
                 materialAltaSacos: matAltaSacos,
-                materialBaixaSacos: matBaixaSacos
+                materialBaixaSacos: matBaixaSacos,
+                totalKg: (matAltaSacos + matBaixaSacos) * config.kgPorSaco
             });
 
         } catch (err) {
@@ -454,6 +485,10 @@ const ProducaoView = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
                         <div className="detail-row">
                             <span className="detail-label">Material Baixa:</span>
                             <span className="detail-value">{fmt(stats.materialBaixa)} ({stats.materialBaixaSacos} sacos)</span>
+                        </div>
+                        <div className="detail-row detail-final" style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                            <span className="detail-label" style={{ color: '#fff' }}>Total em KG:</span>
+                            <span className="detail-value text-green">{stats.totalKg} kg</span>
                         </div>
                     </div>
                 </div>

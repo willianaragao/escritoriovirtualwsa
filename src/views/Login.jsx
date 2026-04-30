@@ -26,7 +26,7 @@ const Login = ({ onLoginSuccess }) => {
                 // If the user provided these specific credentials, they might not be in auth.users yet
                 if (email === 'willianao84@gmail.com' && password === '24531104') {
                     console.log('Using recovery bypass for primary user');
-                    onLoginSuccess({ email, id: 15 });
+                    onLoginSuccess({ email, id: '027e57cb-3f96-43b3-9eee-954988f784e5' });
                     return;
                 }
                 throw authError;

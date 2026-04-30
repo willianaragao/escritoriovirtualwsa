@@ -25,14 +25,13 @@ const EMPTY_FORM = {
     observacoes: ''
 };
 
-const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit }) => {
+const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, businessUnit, user }) => {
     const now = new Date();
     // Removed local selectedMonth/Year
     const [showMonthPicker, setShowMonthPicker] = useState(false);
 
     const [dividas, setDividas] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [userId, setUserId] = useState(null);
 
     // Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,9 +39,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
     const [form, setForm] = useState({ ...EMPTY_FORM });
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null));
-    }, []);
+    const userId = user?.id || user?.user?.id;
 
     useEffect(() => {
         fetchDividas();
@@ -154,7 +151,7 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             fetchDividas();
         } catch (err) {
             console.error('Error toggling payment:', err);
-            alert('Erro ao alterar status de pagamento.');
+            alert(`Erro ao alterar status: ${err.message || 'Erro desconhecido'}`);
         }
     };
 
@@ -188,8 +185,8 @@ const DividasFixas = ({ selectedMonth, setSelectedMonth, selectedYear, setSelect
             setIsModalOpen(false);
             fetchDividas();
         } catch (err) {
-            console.error(err);
-            alert('Erro ao salvar dívida.');
+            console.error('Erro detalhado ao salvar dívida:', err);
+            alert(`Erro ao salvar dívida: ${err.message || 'Verifique se todos os campos estão corretos.'}`);
         } finally {
             setSaving(false);
         }
