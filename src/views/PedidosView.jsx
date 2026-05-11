@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
     Search, Calendar, ChevronDown,
     MessageCircle, Edit3, Trash2,
-    X, Check, Loader, CreditCard, Package, Plus, Weight, DollarSign
+    X, Check, Loader, CreditCard, Package, Plus, Weight, DollarSign, TrendingUp
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './PedidosView.css';
@@ -886,6 +886,15 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                         </div>
                                         <span className="pv-summary-count">
                                             {fmt(totalCustoProducao)}
+                                        </span>
+                                    </div>
+                                    <div className="pv-summary-card profit-card">
+                                        <div className="pv-summary-card-header">
+                                            <TrendingUp size={14} className="pv-card-icon" />
+                                            <span className="pv-summary-size">Lucro Líquido (Previsto)</span>
+                                        </div>
+                                        <span className="pv-summary-count">
+                                            {fmt(filteredTotal - totalCustoProducao)}
                                         </span>
                                     </div>
                                 </>

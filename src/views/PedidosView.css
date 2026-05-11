@@ -1398,6 +1398,19 @@
     color: #f87171;
 }
 
+.profit-card {
+    border-left: 3px solid #10b981;
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.6), rgba(16, 185, 129, 0.05));
+}
+
+.profit-card .pv-card-icon {
+    color: #10b981;
+}
+
+.profit-card .pv-summary-count {
+    color: #34d399;
+}
+
 .pv-summary-empty {
     grid-column: 1 / -1;
     text-align: center;
