@@ -519,6 +519,18 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const editCustoTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.cost || 0)), 0);
     const editLucroTotal = editTotal - editCustoTotal;
 
+    const editTotalKg = editItens.reduce((acc, item) => {
+        const size = getBottleSize(item.produtos?.nome);
+        const qty = Number(item.qty || 0);
+        const normalizeSize = (s) => s.toLowerCase().replace(/\s/g, '').replace(/(\d+)l$/, '$1litro');
+        const normalizedCurrent = normalizeSize(size);
+        const prodConfig = (config.produtos || []).find(cp => normalizeSize(cp.tipo) === normalizedCurrent);
+        if (prodConfig && prodConfig.peso) return acc + (qty * prodConfig.peso);
+        return acc;
+    }, 0);
+
+    const editCustoFabricacao = editTotalKg * (config.precoKgAlta || 0);
+
     // Sincroniza manualParcelas com o split proporcional apenas quando o número de parcelas 
     // ou o valor total do pedido muda (ex: alteração de itens).
     useEffect(() => {
@@ -1053,17 +1065,40 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                             </div>
                                         </div>
 
-                                        <div className="pv-edit-subtotal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', textAlign: 'center', background: 'rgba(15, 23, 42, 0.6)', padding: '0.8rem 1.2rem', marginTop: '1rem' }}>
+                                        <div className="pv-edit-subtotal" style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: 'repeat(5, 1fr)', 
+                                            gap: '0.75rem', 
+                                            textAlign: 'center', 
+                                            background: 'rgba(15, 23, 42, 0.6)', 
+                                            padding: '1rem', 
+                                            marginTop: '1rem',
+                                            borderRadius: '8px'
+                                        }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Custo Produção</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                                                    <Weight size={12} color="#3b82f6" />
+                                                    <span style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Kg</span>
+                                                </div>
+                                                <strong style={{ color: '#3b82f6', fontSize: '0.95rem' }}>{editTotalKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <small style={{ fontSize: '0.65rem' }}>Kg</small></strong>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+                                                    <DollarSign size={12} color="#ef4444" />
+                                                    <span style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Custo Est.</span>
+                                                </div>
+                                                <strong style={{ color: '#ef4444', fontSize: '0.95rem' }}>{fmt(editCustoFabricacao)}</strong>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Custo Prod.</span>
                                                 <strong style={{ color: '#cbd5e1', fontSize: '0.95rem' }}>{fmt(editCustoTotal)}</strong>
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Lucro Projetado</span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Lucro Proj.</span>
                                                 <strong style={{ color: '#10b981', fontSize: '0.95rem' }}>{fmt(editLucroTotal)}</strong>
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                <span style={{ fontSize: '0.7rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Valor do Pedido</span>
+                                                <span style={{ fontSize: '0.6rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Valor Pedido</span>
                                                 <strong style={{ color: '#f59e0b', fontSize: '1.1rem' }}>{fmt(editTotal)}</strong>
                                             </div>
                                         </div>
