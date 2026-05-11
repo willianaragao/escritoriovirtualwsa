@@ -4,8 +4,9 @@ import {
     AlertCircle, Clock, CreditCard,
     ChevronDown, Award, Crown, Medal,
     Landmark, Banknote, ChevronLeft, ChevronRight,
-    Target, ArrowRightLeft, Hourglass, Package, ChevronUp, GripHorizontal, Sparkles
+    Target, ArrowRightLeft, Hourglass, Package, ChevronUp, GripHorizontal, Sparkles, Users
 } from 'lucide-react';
+
 import { supabase } from '../lib/supabase';
 import './Dashboard.css';
 
