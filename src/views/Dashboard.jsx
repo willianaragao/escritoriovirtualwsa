@@ -200,7 +200,66 @@ const DonutChart = ({ slices = [] }) => {
     );
 };
 
-const ProfitComparisonChart = ({ sales, cost }) => {
+const PeadFinancialArchitectureContent = ({ stats, materiaPrimaTarget, chartSlices }) => {
+    const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    
+    // 1. Faturamento representa o valor de "entradas"
+    const faturamento = stats.entradas || 0;
+    
+    // 2. Pedidos a receber representa o valor de "a_receber"
+    const aReceber = stats.a_receber || 0;
+    
+    // 3. Pendentes representa o valor de "pendentes"
+    const pendentes = stats.pendentes || 0;
+    
+    // 4. Despesas (tudo menos a categoria de materia prima)
+    const paidMP = (chartSlices || []).find(s => s.label.toLowerCase().includes('matéria'))?.valor || 0;
+    const despesasExcluindoMP = Math.max(0, (stats.saidas || 0) - paidMP);
+    
+    // 5. Total gasto materia prima
+    const mpTotal = materiaPrimaTarget || 0;
+    
+    // 6. Dividas fixas
+    const dividasFixas = stats.dividas_fixas || 0;
+    
+    // 7. Lucro (faturamento + pedidos a receber + pendentes - despesas - gasto materia prima - dividas fixas)
+    const lucroFinal = faturamento + aReceber + pendentes - despesasExcluindoMP - mpTotal - dividasFixas;
+
+    const items = [
+        { label: 'Faturamento (Entradas)', val: faturamento, color: 'blue' },
+        { label: 'Pedidos a Receber', val: aReceber, color: 'indigo' },
+        { label: 'Pendentes', val: pendentes, color: 'orange' },
+        { label: 'Despesas (Operacionais)', val: despesasExcluindoMP, color: 'red' },
+        { label: 'Total Gasto Matéria Prima', val: mpTotal, color: 'orange' },
+        { label: 'Dívidas Fixas', val: dividasFixas, color: 'purple' },
+        { label: 'Lucro Projetado', val: lucroFinal, color: 'green' }
+    ];
+    
+    const base = Math.max(...items.map(i => Math.abs(i.val))) || 1;
+
+    return (
+        <>
+            <div className="db-profit-chart-title">
+                <Landmark size={16} /> Resumo Financeiro PEAD
+            </div>
+            <div className="db-profit-bars" style={{ gap: '0.8rem' }}>
+                {items.map((it, idx) => (
+                    <div className="db-profit-bar-group" key={idx} style={{ gap: '0.3rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.68rem' }}>{it.label}</span>
+                            <strong style={{ fontSize: '0.85rem' }}>{fmt(it.val)}</strong>
+                        </div>
+                        <div className="db-pb-track" style={{ height: '8px' }}>
+                            <div className={`db-pb-fill ${it.color}`} style={{ width: `${Math.min(100, (Math.abs(it.val) / base) * 100)}%` }}></div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </>
+    );
+};
+
+const ProfitComparisonContent = ({ sales, cost, title }) => {
     const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
     
     const profit = Math.max(0, sales - cost);
@@ -208,9 +267,9 @@ const ProfitComparisonChart = ({ sales, cost }) => {
     const profitPct = sales > 0 ? (profit / sales) * 100 : 0;
 
     return (
-        <div className="db-profit-chart-section">
+        <>
             <div className="db-profit-chart-title">
-                <TrendingUp size={16} /> Lucro Líquido do Mês
+                <TrendingUp size={16} /> {title}
             </div>
             <div className="db-profit-bars">
                 <div className="db-profit-bar-group">
@@ -243,9 +302,77 @@ const ProfitComparisonChart = ({ sales, cost }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
+
+const ProfitComparisonChart = ({ sales, cost, title = "Lucro Líquido do Mês" }) => (
+    <div className="db-profit-chart-section">
+        <ProfitComparisonContent sales={sales} cost={cost} title={title} />
+    </div>
+);
+
+const FlowComparisonContent = ({ materiaPrimaTarget, saldo, saldoDevedor, previsaoTotal, businessUnit }) => {
+    const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    const base = materiaPrimaTarget || 1;
+
+    return (
+        <>
+            <div className="db-profit-chart-title">
+                <Target size={16} /> Fluxo de Caixa
+            </div>
+            <div className="db-profit-bars">
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Total Gasto (Matéria Prima)</span>
+                        <strong>{fmt(materiaPrimaTarget)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill orange" style={{ width: '100%' }}></div>
+                    </div>
+                </div>
+                
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Saldo Atual</span>
+                        <strong>{fmt(saldo)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill blue" style={{ width: `${Math.min(100, (saldo / base) * 100)}%` }}></div>
+                    </div>
+                </div>
+
+                {businessUnit !== 'PET' && (
+                    <div className="db-profit-bar-group">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>Saldo Devedor MP</span>
+                            <strong>{fmt(saldoDevedor)}</strong>
+                        </div>
+                        <div className="db-pb-track">
+                            <div className="db-pb-fill red" style={{ width: `${Math.min(100, (saldoDevedor / base) * 100)}%` }}></div>
+                        </div>
+                    </div>
+                )}
+                
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Previsão Recebimentos</span>
+                        <strong>{fmt(previsaoTotal)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill indigo" style={{ width: `${Math.min(100, (previsaoTotal / base) * 100)}%` }}></div>
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+const FlowComparisonChart = (props) => (
+    <div className="db-profit-chart-section">
+        <FlowComparisonContent {...props} />
+    </div>
+);
 
 
 /* ============================================================
@@ -723,7 +850,17 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                 <div className="chart-section">
                                     <DonutChart slices={stats.dataCategorias} />
                                 </div>
-                                <ProfitComparisonChart sales={stats.totalVendaMes} cost={stats.totalCustoMes} />
+                                {businessUnit === 'PEAD' ? (
+                                    <div className="db-profit-chart-section">
+                                        <PeadFinancialArchitectureContent 
+                                            stats={stats}
+                                            materiaPrimaTarget={materiaPrimaTarget}
+                                            chartSlices={chartSlices}
+                                        />
+                                    </div>
+                                ) : (
+                                    <ProfitComparisonChart sales={stats.totalVendaMes} cost={stats.totalCustoMes} />
+                                )}
                             </div>
 
                             <div className="list-section">
@@ -879,56 +1016,21 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                                 </div>
                             )}
 
-                            <div className="db-flow-bars-section">
-                                <h4>Fluxo de Caixa</h4>
-                                <div className="db-flow-bars">
-                                    {/* Barra Total Gasto */}
-                                    <div className="db-flow-bar-row">
-                                        <div className="db-fb-header">
-                                            <span>Total Gasto com Matéria Prima</span>
-                                            <span>{fmt(materiaPrimaTarget)}</span>
-                                        </div>
-                                        <div className="db-fb-track">
-                                            <div className="db-fb-fill orange" style={{ width: '100%' }} />
-                                        </div>
-                                    </div>
-
-                                    {/* Barra Saldo Atual */}
-                                    <div className="db-flow-bar-row">
-                                        <div className="db-fb-header">
-                                            <span>Saldo Atual</span>
-                                            <span>{fmt(stats.saldo)}</span>
-                                        </div>
-                                        <div className="db-fb-track">
-                                            <div className="db-fb-fill blue" style={{ width: `${Math.min(100, (stats.saldo / materiaPrimaTarget) * 100)}%` }} />
-                                        </div>
-                                    </div>
-
-                                    {/* Barra Saldo Devedor */}
-                                    {businessUnit !== 'PET' && (
-                                        <div className="db-flow-bar-row">
-                                            <div className="db-fb-header">
-                                                <span>Saldo Devedor Matéria Prima</span>
-                                                <span>{fmt(saldoDevedor)}</span>
-                                            </div>
-                                            <div className="db-fb-track">
-                                                <div className="db-fb-fill red" style={{ width: `${Math.min(100, (saldoDevedor / materiaPrimaTarget) * 100)}%` }} />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Barra Previsão */}
-                                    <div className="db-flow-bar-row">
-                                        <div className="db-fb-header">
-                                            <span>Previsão de Recebimentos</span>
-                                            <span>{fmt(previsaoTotal)}</span>
-                                        </div>
-                                        <div className="db-fb-track">
-                                            <div className="db-fb-fill indigo" style={{ width: `${Math.min(100, (previsaoTotal / materiaPrimaTarget) * 100)}%` }} />
-                                        </div>
-                                    </div>
+                            {businessUnit === 'PEAD' ? (
+                                <div className="db-flow-bars-section">
+                                    <ProfitComparisonContent sales={stats.totalVendaMes} cost={stats.totalCustoMes} title="Lucro Real do Mês" />
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="db-flow-bars-section">
+                                    <FlowComparisonContent 
+                                        materiaPrimaTarget={materiaPrimaTarget}
+                                        saldo={stats.saldo}
+                                        saldoDevedor={saldoDevedor}
+                                        previsaoTotal={previsaoTotal}
+                                        businessUnit={businessUnit}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                     )}
