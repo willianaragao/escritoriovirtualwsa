@@ -716,7 +716,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 </div>
 
                 <div className={`dashboard-content-grid ${viewMode === 'materia' ? 'materia-mode' : ''}`}>
-                    {viewMode === 'chart' && (
+                    {viewMode === 'chart' ? (
                         <>
                             <div className="db-profit-summary-row">
                                 <div className="chart-section">
