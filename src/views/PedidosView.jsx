@@ -869,25 +869,29 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
                             return (
                                 <>
-                                    {productCards}
-                                    <div className="pv-summary-card kg-card">
-                                        <div className="pv-summary-card-header">
-                                            <Weight size={14} className="pv-card-icon" />
-                                            <span className="pv-summary-size">Total Kg Fabricação</span>
-                                        </div>
-                                        <span className="pv-summary-count">
-                                            {totalKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <small>Kg</small>
-                                        </span>
-                                    </div>
-                                    <div className="pv-summary-card cost-card">
-                                        <div className="pv-summary-card-header">
-                                            <DollarSign size={14} className="pv-card-icon" />
-                                            <span className="pv-summary-size">Custo Estimado</span>
-                                        </div>
-                                        <span className="pv-summary-count">
-                                            {fmt(totalCustoProducao)}
-                                        </span>
-                                    </div>
+                                    {businessUnit !== 'PET' && (
+                                        <>
+                                            {productCards}
+                                            <div className="pv-summary-card kg-card">
+                                                <div className="pv-summary-card-header">
+                                                    <Weight size={14} className="pv-card-icon" />
+                                                    <span className="pv-summary-size">Total Kg Fabricação</span>
+                                                </div>
+                                                <span className="pv-summary-count">
+                                                    {totalKg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <small>Kg</small>
+                                                </span>
+                                            </div>
+                                            <div className="pv-summary-card cost-card">
+                                                <div className="pv-summary-card-header">
+                                                    <DollarSign size={14} className="pv-card-icon" />
+                                                    <span className="pv-summary-size">Custo Estimado</span>
+                                                </div>
+                                                <span className="pv-summary-count">
+                                                    {fmt(totalCustoProducao)}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="pv-summary-card profit-card">
                                         <div className="pv-summary-card-header">
                                             <TrendingUp size={14} className="pv-card-icon" />

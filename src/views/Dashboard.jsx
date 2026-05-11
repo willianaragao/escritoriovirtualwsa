@@ -199,6 +199,54 @@ const DonutChart = ({ slices = [] }) => {
     );
 };
 
+const ProfitComparisonChart = ({ sales, cost }) => {
+    const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    
+    const profit = Math.max(0, sales - cost);
+    const costPct = sales > 0 ? (cost / sales) * 100 : 0;
+    const profitPct = sales > 0 ? (profit / sales) * 100 : 0;
+
+    return (
+        <div className="db-profit-chart-section">
+            <div className="db-profit-chart-title">
+                <TrendingUp size={16} /> Lucro Líquido do Mês
+            </div>
+            <div className="db-profit-bars">
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Faturamento</span>
+                        <strong>{fmt(sales)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill blue" style={{ width: '100%' }}></div>
+                    </div>
+                </div>
+                
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Custo Operacional</span>
+                        <strong>{fmt(cost)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill orange" style={{ width: `${Math.min(100, costPct)}%` }}></div>
+                    </div>
+                </div>
+                
+                <div className="db-profit-bar-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Lucro Real</span>
+                        <strong>{fmt(profit)}</strong>
+                    </div>
+                    <div className="db-pb-track">
+                        <div className="db-pb-fill green" style={{ width: `${Math.min(100, profitPct)}%` }}></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 /* ============================================================
    STAT CARD
 ============================================================ */
@@ -518,10 +566,11 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 banco: finalBanco,
                 caixa: finalCaixa,
                 dividas_fixas: totalDivFixas,
-                a_receber,
                 pendentes,
+                a_receber,
+                totalVendaMes,
                 totalCustoMes,
-                totalVendaMes
+                dataCategorias: newSlices
             });
 
             // 4. Buscar Custo Sob Produção (Matéria Prima) para o Total Gasto
@@ -667,45 +716,44 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 </div>
 
                 <div className={`dashboard-content-grid ${viewMode === 'materia' ? 'materia-mode' : ''}`}>
-                    {viewMode === 'chart' ? (
+                    {viewMode === 'chart' && (
                         <>
-                            {/* Donut chart */}
-                            <div className="chart-section">
-                                <h4>Despesas por Categoria</h4>
-                                <DonutChart slices={chartSlices} />
+                            <div className="db-profit-summary-row">
+                                <div className="chart-section">
+                                    <DonutChart slices={stats.dataCategorias} />
+                                </div>
+                                <ProfitComparisonChart sales={stats.totalVendaMes} cost={stats.totalCustoMes} />
                             </div>
 
-                            {/* Client ranking */}
                             <div className="list-section">
-                                <h4 className="db-ranking-title">
-                                    <Award size={16} />
-                                    Top Clientes Compradores
-                                </h4>
-
+                                <h4 className="db-ranking-title"><Users size={18} /> Top Clientes</h4>
                                 <div className="db-ranking-list">
-                                    {topClients.map((c, idx) => {
-                                        const pct = (c.val / maxVal) * 100;
-                                        const accent = '#10b981';
-                                        return (
-                                            <div key={c.rank} className="db-client-card"
-                                                style={{ '--accent': accent }}>
-                                                <div className="db-client-rank" style={{ background: `${accent}22`, color: accent }}>
-                                                    {idx < 3 ? RANK_ICONS[idx] : <span>{c.rank}</span>}
-                                                </div>
-                                                <div className="db-client-info">
-                                                    <div className="db-client-name">{c.name}</div>
-                                                    <div className="db-client-bar-track">
-                                                        <div className="db-client-bar-fill"
-                                                            style={{ width: `${pct}%`, background: accent }} />
-                                                    </div>
-                                                </div>
-                                                <div className="db-client-val" style={{ color: accent }}>
-                                                    {fmt(c.val)}
+                                    {topClients.map((client, idx) => (
+                                        <div key={idx} className="db-client-card" style={{ '--delay': `${idx * 0.05}s` }}>
+                                            <div className="db-client-rank" style={{ 
+                                                background: idx === 0 ? 'rgba(234, 179, 8, 0.2)' : 
+                                                            idx === 1 ? 'rgba(148, 163, 184, 0.2)' :
+                                                            idx === 2 ? 'rgba(180, 83, 9, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                color: idx === 0 ? '#fbbf24' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#d97706' : '#94a3b8'
+                                            }}>
+                                                {client.rank}
+                                            </div>
+                                            <div className="db-client-info">
+                                                <div className="db-client-name">{client.name}</div>
+                                                <div className="db-client-bar-track">
+                                                    <div className="db-client-bar-fill" style={{ 
+                                                        width: `${topClients[0]?.val > 0 ? (client.val / topClients[0].val) * 100 : 0}%`,
+                                                        background: idx === 0 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #3b82f6, #2563eb)'
+                                                    }} />
                                                 </div>
                                             </div>
-                                        );
-                                    })}
+                                            <div className="db-client-val" style={{ color: idx === 0 ? '#fbbf24' : '#fff' }}>
+                                                {fmt(client.val)}
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
+
                             </div>
                         </>
                     ) : (

@@ -961,3 +961,96 @@
         font-size: 0.85rem;
     }
 }
+
+/* ── Profit Comparison Chart ── */
+.db-profit-chart-section {
+    background: rgba(15, 23, 42, 0.3);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex: 1;
+    min-width: 300px;
+}
+
+.db-profit-chart-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.db-profit-chart-title svg {
+    color: #10b981;
+}
+
+.db-profit-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.db-profit-bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.db-profit-bar-group span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.db-profit-bar-group strong {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    align-self: flex-end;
+}
+
+.db-pb-track {
+    height: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+}
+
+.db-pb-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.db-pb-fill.blue {
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.db-pb-fill.orange {
+    background: linear-gradient(90deg, #f97316, #fbbf24);
+    box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+}
+
+.db-pb-fill.green {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.db-profit-summary-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 1100px) {
+    .db-profit-summary-row {
+        grid-template-columns: 1fr;
+    }
+}
