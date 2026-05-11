@@ -519,17 +519,27 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const editCustoTotal = editItens.reduce((acc, it) => acc + (Number(it.qty) * Number(it.cost || 0)), 0);
     const editLucroTotal = editTotal - editCustoTotal;
 
-    const editTotalKg = editItens.reduce((acc, item) => {
-        const size = getBottleSize(item.produtos?.nome);
-        const qty = Number(item.qty || 0);
-        const normalizeSize = (s) => s.toLowerCase().replace(/\s/g, '').replace(/(\d+)l$/, '$1litro');
-        const normalizedCurrent = normalizeSize(size);
-        const prodConfig = (config.produtos || []).find(cp => normalizeSize(cp.tipo) === normalizedCurrent);
-        if (prodConfig && prodConfig.peso) return acc + (qty * prodConfig.peso);
-        return acc;
-    }, 0);
+    // Cálculo de Peso e Custo de Fabricação lendo diretamente do localStorage para evitar dados obsoletos
+    const { editTotalKg, editCustoFabricacao } = (() => {
+        const currentConfig = JSON.parse(localStorage.getItem('wsa_producao_config_v3') || '{"produtos":[], "precoKgAlta":0}');
+        const normalize = (s) => (s || '').toLowerCase().trim().replace(/\s/g, '').replace(/litros?$/, 'litro').replace(/(\d+)l$/, '$1litro');
+        
+        const kg = editItens.reduce((acc, item) => {
+            const prodName = item.produtos?.nome || '';
+            const size = getBottleSize(prodName);
+            const qty = Number(item.qty || item.quantidade || 0);
+            const normalizedCurrent = normalize(size);
+            
+            const prodConfig = (currentConfig.produtos || []).find(cp => {
+                const n = normalize(cp.tipo);
+                return n === normalizedCurrent || n.replace(/s$/, '') === normalizedCurrent.replace(/s$/, '');
+            });
 
-    const editCustoFabricacao = editTotalKg * (config.precoKgAlta || 0);
+            if (prodConfig && prodConfig.peso) return acc + (qty * prodConfig.peso);
+            return acc;
+        }, 0);
+        return { editTotalKg: kg, editCustoFabricacao: kg * (Number(currentConfig.precoKgAlta) || 0) };
+    })();
 
     // Sincroniza manualParcelas com o split proporcional apenas quando o número de parcelas 
     // ou o valor total do pedido muda (ex: alteração de itens).
