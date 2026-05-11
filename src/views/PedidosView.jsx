@@ -153,7 +153,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         try {
             const { data, error } = await supabase
                 .from('pedidos')
-                .select('*, clientes(nome, telefone), pedidos_produtos(*, produtos(nome))')
+                .select('*, clientes(nome, telefone), pedidos_produtos(*, produtos(nome, tipo, custo_producao))')
                 .eq('business_unit', businessUnit)
                 .order('data_pedido', { ascending: false });
 
@@ -450,7 +450,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
         try {
             const { data, error } = await supabase
                 .from('pedidos_produtos')
-                .select('*, produtos(nome, custo_producao)')
+                .select('*, produtos(nome, custo_producao, tipo)')
                 .eq('pedido_id', pedido.id);
             if (error) throw error;
             setEditItens((data || []).map(it => ({
@@ -460,6 +460,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                 cost: cond.customCosts && cond.customCosts[it.produto_id] !== undefined
                     ? cond.customCosts[it.produto_id]
                     : (it.produtos?.custo_producao || it.produtos?.preco_custo || 0),
+                produtos: it.produtos
             })));
         } catch (err) {
             alert('Erro ao carregar itens: ' + err.message);
@@ -521,24 +522,48 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
 
     // Cálculo de Peso e Custo de Fabricação lendo diretamente do localStorage para evitar dados obsoletos
     const { editTotalKg, editCustoFabricacao } = (() => {
-        const currentConfig = JSON.parse(localStorage.getItem('wsa_producao_config_v3') || '{"produtos":[], "precoKgAlta":0}');
+        const currentConfig = JSON.parse(localStorage.getItem('wsa_producao_config_v3') || '{"produtos":[], "precoKgAlta":0, "precoKgBaixa":0}');
         const normalize = (s) => (s || '').toLowerCase().trim().replace(/\s/g, '').replace(/litros?$/, 'litro').replace(/(\d+)l$/, '$1litro');
         
-        const kg = editItens.reduce((acc, item) => {
+        const res = editItens.reduce((acc, item) => {
             const prodName = item.produtos?.nome || '';
             const size = getBottleSize(prodName);
+            const units = getUnitsPerPack(prodName);
             const qty = Number(item.qty || item.quantidade || 0);
             const normalizedCurrent = normalize(size);
+            const prodConfig = (currentConfig.produtos || []).find(cp => normalize(cp.tipo) === normalizedCurrent);
             
-            const prodConfig = (currentConfig.produtos || []).find(cp => {
-                const n = normalize(cp.tipo);
-                return n === normalizedCurrent || n.replace(/s$/, '') === normalizedCurrent.replace(/s$/, '');
-            });
+            if (!prodConfig) {
+                console.warn(`Configuração de peso não encontrada para o tipo: ${size} (normalizado: ${normalizedCurrent})`);
+            }
 
-            if (prodConfig && prodConfig.peso) return acc + (qty * prodConfig.peso);
+            // O peso cadastrado (ex: 1.6 ou 1600)
+            let weightValue = Number(prodConfig?.peso) || 0;
+            
+            if (weightValue === 0) {
+                // Fallbacks baseados em Kg
+                if (normalizedCurrent.includes('200ml')) weightValue = 1.2;
+                else if (normalizedCurrent.includes('300ml')) weightValue = 1.3;
+                else if (normalizedCurrent.includes('500ml')) weightValue = 1.6;
+                else if (normalizedCurrent.includes('1litro')) weightValue = 1.4;
+                else if (normalizedCurrent.includes('450ml')) weightValue = 1.5;
+            }
+
+            // Se o valor for maior que 50, assumimos que foi digitado em gramas (ex: 1600) e convertemos
+            // Se for menor, assumimos que já está em Kg (ex: 1.6)
+            const weightInKg = weightValue > 50 ? weightValue / 1000 : weightValue;
+            const itemKg = qty * weightInKg;
+            
+            // Determina preço do material (Alta/Baixa) baseado no tipo do produto
+            const isPet = (item.produtos?.tipo || '').toUpperCase() === 'PET';
+            const priceKg = isPet ? (Number(currentConfig.precoKgBaixa) || 0) : (Number(currentConfig.precoKgAlta) || 0);
+            
+            acc.kg += itemKg;
+            acc.cost += (itemKg * priceKg);
             return acc;
-        }, 0);
-        return { editTotalKg: kg, editCustoFabricacao: kg * (Number(currentConfig.precoKgAlta) || 0) };
+        }, { kg: 0, cost: 0 });
+
+        return { editTotalKg: res.kg, editCustoFabricacao: res.cost };
     })();
 
     // Sincroniza manualParcelas com o split proporcional apenas quando o número de parcelas 
@@ -785,24 +810,37 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                             let totalCustoProducao = 0;
                             let totalKg = 0;
 
+                            const normalize = (s) => (s || '').toLowerCase().trim().replace(/\s/g, '').replace(/litros?$/, 'litro').replace(/(\d+)l$/, '$1litro');
+
                             filteredList.forEach(p => {
                                 (p.pedidos_produtos || []).forEach(item => {
-                                    const size = getBottleSize(item.produtos?.nome);
+                                    const prodName = item.produtos?.nome || '';
+                                    const size = getBottleSize(prodName);
+                                    const units = getUnitsPerPack(prodName);
                                     const qty = Number(item.quantidade || 0);
                                     totals[size] = (totals[size] || 0) + qty;
 
-                                    // Peso (Kg) - Aplicado para TODAS as garrafas
-                                    const normalizeSize = (s) => s.toLowerCase().replace(/\s/g, '').replace(/(\d+)l$/, '$1litro');
-                                    const normalizedCurrent = normalizeSize(size);
+                                    const normalizedCurrent = normalize(size);
+                                    const prodConfig = (currentConfig.produtos || []).find(cp => normalize(cp.tipo) === normalizedCurrent);
 
-                                    const prodConfig = (currentConfig.produtos || []).find(cp => 
-                                        normalizeSize(cp.tipo) === normalizedCurrent
-                                    );
-
-                                    if (prodConfig && prodConfig.peso) {
-                                        // Multiplica o número de fardos diretamente pelo peso definido (em Kg)
-                                        totalKg += (qty * prodConfig.peso);
+                                    let weightValue = Number(prodConfig?.peso) || 0;
+                                    
+                                    // Fallbacks baseados em Kg
+                                    if (weightValue === 0) {
+                                        if (normalizedCurrent.includes('200ml')) weightValue = 1.2;
+                                        else if (normalizedCurrent.includes('300ml')) weightValue = 1.3;
+                                        else if (normalizedCurrent.includes('500ml')) weightValue = 1.6;
+                                        else if (normalizedCurrent.includes('1litro')) weightValue = 1.4;
+                                        else if (normalizedCurrent.includes('450ml')) weightValue = 1.5;
                                     }
+
+                                    const weightInKg = weightValue > 50 ? weightValue / 1000 : weightValue;
+                                    const itemKg = qty * weightInKg;
+                                    totalKg += itemKg;
+
+                                    const isPet = (item.produtos?.tipo || '').toUpperCase() === 'PET';
+                                    const priceKg = isPet ? (Number(currentConfig.precoKgBaixa) || 0) : (Number(currentConfig.precoKgAlta) || 0);
+                                    totalCustoProducao += (itemKg * priceKg);
                                 });
                             });
 
@@ -826,8 +864,8 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                 </div>
                             ));
 
-                            // Custo de Fabricação = Total Kg * Preço KG Alta (das configurações)
-                            totalCustoProducao = totalKg * (currentConfig.precoKgAlta || 0);
+                            // Custo de Fabricação já calculado no loop acima
+                            // totalCustoProducao = totalKg * (currentConfig.precoKgAlta || 0);
 
                             return (
                                 <>
