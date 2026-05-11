@@ -1181,6 +1181,18 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Observações */}
+                                        <div className="pv-edit-field" style={{ marginTop: '1.2rem' }}>
+                                            <label>Observações</label>
+                                            <textarea 
+                                                className="pv-edit-input" 
+                                                style={{ minHeight: '80px', resize: 'vertical', paddingTop: '8px' }}
+                                                value={eObs}
+                                                onChange={e => setEObs(e.target.value)}
+                                                placeholder="Observações do pedido..."
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* ── Condições de Pagamento ── */}

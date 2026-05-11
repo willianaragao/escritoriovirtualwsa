@@ -195,26 +195,51 @@ const ClientesView = ({ user }) => {
         if (!selectedCliente) return;
         setSaving(true);
         try {
-            // Logic: UPSERT into clientes_produtos_precos
-            const upsertData = Object.entries(customPrices).map(([prodId, price]) => ({
-                cliente_id: selectedCliente.id,
-                produto_id: prodId,
-                preco_personalizado: parseFloat(price) || 0
-            }));
+            // Logic: Prepare data, converting commas to dots and filtering out empty values
+            const upsertData = Object.entries(customPrices)
+                .map(([prodId, price]) => {
+                    if (price === '' || price === null || price === undefined) return null;
+                    
+                    const numericPrice = typeof price === 'string' 
+                        ? parseFloat(price.replace(',', '.')) 
+                        : price;
+                    
+                    if (isNaN(numericPrice)) return null;
+                    
+                    return {
+                        cliente_id: selectedCliente.id,
+                        produto_id: prodId,
+                        preco_personalizado: numericPrice
+                    };
+                })
+                .filter(item => item !== null);
 
-            // First delete existing to avoid complications with unique constraints if they aren't set up perfectly
-            await supabase.from('clientes_produtos_precos').delete().eq('cliente_id', selectedCliente.id);
+            // First delete existing to ensure we only have the new custom prices
+            const { error: delError } = await supabase
+                .from('clientes_produtos_precos')
+                .delete()
+                .eq('cliente_id', selectedCliente.id);
+            
+            if (delError) throw delError;
 
+            // Only insert if there are prices to save
             if (upsertData.length > 0) {
-                const { error } = await supabase.from('clientes_produtos_precos').insert(upsertData);
-                if (error) throw error;
+                const { error: insError } = await supabase
+                    .from('clientes_produtos_precos')
+                    .insert(upsertData);
+                if (insError) throw insError;
             }
 
             setIsModalOpen(false);
+            document.body.style.overflow = 'auto';
             alert('Preços salvos com sucesso!');
         } catch (err) {
             console.error('Error saving prices:', err);
-            alert('Erro ao salvar preços.');
+            if (err.code === '42501') {
+                alert('Erro de Permissão (RLS): A tabela "clientes_produtos_precos" está com o Row-Level Security ativado no Supabase, mas não possui uma política que permita a inserção. \n\nPor favor, peça ao administrador para desativar o RLS ou adicionar uma política de permissão para esta tabela.');
+            } else {
+                alert('Erro ao salvar preços: ' + (err.message || 'Erro desconhecido'));
+            }
         } finally {
             setSaving(false);
         }
@@ -502,7 +527,7 @@ const ClientesView = ({ user }) => {
                                                                     type="text"
                                                                     className="form-input"
                                                                     placeholder="R$ 0,00"
-                                                                    value={customPrices[p.id] || ''}
+                                                                    value={customPrices[p.id] !== undefined && customPrices[p.id] !== null ? customPrices[p.id] : ''}
                                                                     onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
                                                                 />
                                                             </td>
@@ -540,7 +565,7 @@ const ClientesView = ({ user }) => {
                                                                     type="text"
                                                                     className="form-input"
                                                                     placeholder="R$ 0,00"
-                                                                    value={customPrices[p.id] || ''}
+                                                                    value={customPrices[p.id] !== undefined && customPrices[p.id] !== null ? customPrices[p.id] : ''}
                                                                     onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
                                                                 />
                                                             </td>
@@ -576,7 +601,7 @@ const ClientesView = ({ user }) => {
                                                                         type="text"
                                                                         className="form-input"
                                                                         placeholder="Preço Personalizado"
-                                                                        value={customPrices[p.id] || ''}
+                                                                        value={customPrices[p.id] !== undefined && customPrices[p.id] !== null ? customPrices[p.id] : ''}
                                                                         onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
                                                                     />
                                                                 </td>
@@ -621,7 +646,7 @@ const ClientesView = ({ user }) => {
                                                                         type="text"
                                                                         className="form-input"
                                                                         placeholder="Preço Personalizado"
-                                                                        value={customPrices[p.id] || ''}
+                                                                        value={customPrices[p.id] !== undefined && customPrices[p.id] !== null ? customPrices[p.id] : ''}
                                                                         onChange={(e) => setCustomPrices({ ...customPrices, [p.id]: e.target.value })}
                                                                     />
                                                                 </td>
@@ -644,7 +669,7 @@ const ClientesView = ({ user }) => {
                                 {/* Left Spacer to help centering the save button */}
                                 <div className="footer-spacer-left"></div>
 
-                                <button className="btn-save" onClick={() => { handleSavePrices(); document.body.style.overflow = 'auto'; }} disabled={saving}>
+                                <button className="btn-save" onClick={handleSavePrices} disabled={saving}>
                                     <Save size={18} />
                                     {saving ? 'Salvando...' : 'Salvar Preços'}
                                 </button>
