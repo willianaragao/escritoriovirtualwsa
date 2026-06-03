@@ -20,6 +20,10 @@
     gap: 0.75rem;
 }
 
+.df-header-left {
+    flex: 1;
+}
+
 .df-header-left h1 {
     font-size: 1.45rem;
     font-weight: 800;
@@ -198,6 +202,37 @@
 .df-btn-nova:hover {
     background: #fbbf24;
     transform: translateY(-1px);
+}
+
+/* Botão "+" compacto — substitui o antigo "Nova Dívida Fixa" */
+.df-btn-nova-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: #f59e0b;
+    color: #0f172a;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.25);
+}
+
+.df-btn-nova-mobile:hover {
+    background: #fbbf24;
+}
+
+.df-btn-nova-mobile:active {
+    transform: scale(0.94);
+}
+
+.df-btn-nova-mobile:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* --- TABLE WRAPPER --- */
@@ -590,4 +625,312 @@
 .df-btn-save:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+/* =============================================
+   SEARCH BAR
+   ============================================= */
+.df-search-row {
+    margin: 0 2rem 1rem;
+}
+
+.df-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 0 0.95rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.df-search-box:hover {
+    border-color: #475569;
+}
+
+.df-search-box:focus-within {
+    border-color: #f59e0b;
+    background: #1a2436;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.df-search-icon {
+    color: #64748b;
+    flex-shrink: 0;
+    transition: color 0.2s;
+}
+
+.df-search-box:focus-within .df-search-icon {
+    color: #f59e0b;
+}
+
+.df-search-box .df-search-input {
+    flex: 1;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    outline: none;
+    box-shadow: none !important;
+    -webkit-appearance: none;
+    appearance: none;
+    color: #e2e8f0 !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.75rem 0;
+    width: 100%;
+}
+
+.df-search-box .df-search-input:focus {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none;
+    box-shadow: none !important;
+}
+
+.df-search-input::placeholder {
+    color: #64748b;
+    font-weight: 400;
+}
+
+/* Remove o "quadrado"/decoração nativa de campos de busca (WebKit) */
+.df-search-input::-webkit-search-decoration,
+.df-search-input::-webkit-search-cancel-button,
+.df-search-input::-webkit-search-results-button,
+.df-search-input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+}
+
+.df-search-clear {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.df-search-clear:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+/* =============================================
+   RESPONSIVE — TABLET
+   ============================================= */
+@media (max-width: 768px) {
+    /* Margem única no container — tudo alinhado à mesma linha */
+    .df-container {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    .df-header {
+        padding: 1.25rem 0 0.75rem;
+        align-items: flex-start;
+        gap: 0.75rem 1rem;
+    }
+
+    .df-header-right {
+        width: 100%;
+        order: 3;
+    }
+
+    .df-month-selector {
+        width: 100%;
+    }
+
+    .df-month-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.7rem 0.85rem;
+        font-size: 0.85rem;
+    }
+
+    .df-month-popup {
+        left: 0;
+        right: 0;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* Todos zerados — herdam o alinhamento do padding do container */
+    .df-totals-row {
+        margin: 0 0 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+    }
+
+    .df-search-row {
+        margin: 0 0 1rem;
+    }
+
+    .df-table-wrapper {
+        margin: 0;
+    }
+}
+
+/* =============================================
+   RESPONSIVE — MOBILE (card layout)
+   ============================================= */
+@media (max-width: 600px) {
+    /* Sem painel/“quadrado” por trás — só o fundo da página entre os cards */
+    .df-table-wrapper {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible;
+        padding: 0;
+    }
+
+    .df-table {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .df-table,
+    .df-table tbody {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .df-table thead {
+        display: none;
+    }
+
+    /* Card simples e individual: nome + valor + status */
+    .df-table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        box-sizing: border-box;
+        width: 100%;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 14px;
+        margin-bottom: 1.1rem;
+        padding: 1.1rem 1.15rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .df-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .df-table tbody tr:hover {
+        background: #1e293b;
+    }
+
+    /* Card pago → bordas verdes */
+    .df-table tbody tr.df-row-paga {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 1px #16a34a, 0 6px 18px rgba(22, 163, 74, 0.18);
+    }
+
+    /* Reset das células dentro do card */
+    .df-table tbody td {
+        display: block;
+        box-sizing: border-box;
+        padding: 0;
+        border: none;
+        text-align: left;
+    }
+
+    .df-table tbody td::before {
+        content: none;
+    }
+
+    /* Esconde campos não essenciais no card mobile */
+    .df-td-venc,
+    .df-td-pago-toggle,
+    .df-td-actions {
+        display: none !important;
+    }
+
+    /* Nome da dívida — linha inteira, destaque */
+    .df-td-desc {
+        order: 1;
+        width: 100%;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #f1f5f9;
+        margin-bottom: 0.7rem;
+    }
+
+    /* Valor — embaixo à esquerda */
+    .df-td-valor {
+        order: 2;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #f59e0b;
+    }
+
+    /* Status — embaixo à direita */
+    .df-table tbody td[data-label="Status"] {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .df-table tbody tr.df-row-paga .df-td-valor {
+        color: #4ade80;
+    }
+
+    .df-empty {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+    }
+
+    .df-table tbody td.df-empty::before {
+        content: none;
+    }
+
+    .df-modal-box {
+        width: auto;
+        max-width: calc(100% - 1.5rem);
+        margin: 0 0.75rem;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .df-row-2col {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .df-modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .df-btn-cancel,
+    .df-btn-save {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .df-header-left h1 {
+        font-size: 1.3rem;
+    }
+
+    .df-total-value {
+        font-size: 1.4rem;
+    }
 }
