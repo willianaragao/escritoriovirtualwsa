@@ -884,6 +884,30 @@
 
 /* ── Mobile Layout Fixes ── */
 @media (max-width: 768px) {
+    /* Filtro de mês: ancorar à esquerda (gatilho fica à esquerda no mobile)
+       e largura responsiva para não cortar a 1ª coluna de meses. */
+    .db-month-picker {
+        left: 0;
+        right: auto;
+        width: min(320px, calc(100vw - 2rem));
+        box-sizing: border-box;
+        padding: 1rem 1.1rem;
+    }
+
+    .db-mp-months {
+        gap: 0.5rem;
+    }
+
+    .db-mp-months button {
+        padding: 0.7rem 0.4rem;
+        font-size: 0.82rem;
+    }
+
+    .db-mp-years button {
+        padding: 0.45rem 1rem;
+        font-size: 0.88rem;
+    }
+
     .db-donut-wrap {
         flex-direction: column;
         gap: 1.5rem;
