@@ -743,7 +743,7 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                         {showMonthPicker && (
                             <div className="db-month-picker" onClick={e => e.stopPropagation()}>
                                 <div className="db-mp-years">
-                                    {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
+                                    {[selectedYear - 1, selectedYear, selectedYear + 1].filter(y => y >= 2026).map(y => (
                                         <button key={y} className={y === selectedYear ? 'active' : ''} onClick={() => setSelectedYear(y)}>{y}</button>
                                     ))}
                                 </div>

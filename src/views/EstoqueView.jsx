@@ -155,7 +155,7 @@ const EstoqueView = ({ businessUnit }) => {
     const valorTotalEstoque = manualStock.reduce((acc, item) => acc + (item.qty * item.custo), 0);
 
     const monthLabel = `${MONTHS[selectedMonth]} de ${selectedYear}`;
-    const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
+    const years = Array.from({ length: 5 }, (_, i) => Math.max(2026, now.getFullYear()) + i);
 
     return (
         <div className="est-container">

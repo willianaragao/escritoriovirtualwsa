@@ -92,7 +92,7 @@ const PedidosView = ({ status, title, selectedMonth, setSelectedMonth, selectedY
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const years = Array.from({ length: 7 }, (_, i) => now.getFullYear() - 3 + i);
+    const years = Array.from({ length: 5 }, (_, i) => Math.max(2026, now.getFullYear()) + i);
  
     const [config] = useState(() => {
         const saved = localStorage.getItem('wsa_producao_config_v3');

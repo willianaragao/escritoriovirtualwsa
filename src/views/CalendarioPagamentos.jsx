@@ -306,7 +306,7 @@ const CalendarioPagamentos = ({ selectedMonth, setSelectedMonth, selectedYear, s
         window.open(url, '_blank');
     };
 
-    const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
+    const years = Array.from({ length: 5 }, (_, i) => Math.max(2026, now.getFullYear()) + i);
 
     return (
         <div className="cal-container">

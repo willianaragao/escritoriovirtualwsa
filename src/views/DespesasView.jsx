@@ -343,7 +343,7 @@ const DespesasView = ({ user, selectedMonth, setSelectedMonth, selectedYear, set
                         {showMonthPicker && (
                             <div className="despesas-month-popup">
                                 <div className="despesas-month-year-row">
-                                    {[selectedYear - 1, selectedYear, selectedYear + 1].map(y => (
+                                    {[selectedYear - 1, selectedYear, selectedYear + 1].filter(y => y >= 2026).map(y => (
                                         <button
                                             key={y}
                                             className={`despesas-year-btn ${y === selectedYear ? 'active' : ''}`}
