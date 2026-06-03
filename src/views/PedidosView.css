@@ -1044,7 +1044,42 @@
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
+    /* Filtro de mês: gatilho fica à esquerda no mobile — ancorar left:0 e
+       largura responsiva para não cortar a 1ª coluna de meses. */
+    .pv-month-selector {
+        width: 100%;
+    }
+
+    .pv-month-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.65rem 0.85rem;
+    }
+
+    .pv-month-popup {
+        left: 0;
+        right: auto;
+        min-width: 0;
+        width: min(340px, calc(100vw - 2rem));
+        box-sizing: border-box;
+        padding: 1rem 1.1rem;
+    }
+
+    .pv-month-grid {
+        gap: 0.5rem;
+    }
+
+    .pv-month-pill {
+        padding: 0.65rem 0;
+        font-size: 0.82rem;
+    }
+
+    .pv-year-btn {
+        padding: 0.4rem 0.9rem;
+        font-size: 0.85rem;
+    }
+
     .pv-totals-row {
         margin: 0 1rem 1rem;
         flex-direction: column;
