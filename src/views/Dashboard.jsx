@@ -646,26 +646,48 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             }
 
             const mesRef = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
-            const mapByDesc = {};
+            const TEMPLATE_MONTH = '2026-05';
 
-            // First pass: master records
-            (divFix || []).forEach(d => {
-                if (!d.mes_referencia) mapByDesc[d.descricao || d.nome] = d;
-            });
-            // Second pass: monthly specific records override master
-            (divFix || []).forEach(d => {
-                if (d.mes_referencia === mesRef) mapByDesc[d.descricao || d.nome] = d;
-            });
-
-            const totalDivFixas = Object.values(mapByDesc).reduce((acc, d) => {
-                // Somente ativas e não pagas (para o saldo devedor do dashboard)
-                if (d.ativa !== false && !d.paga) {
-                    const totalD = Number(d.valor || d.valor_mensal) || 0;
-                    const pagoD = Number(d.valor_pago) || 0;
-                    return acc + (totalD - pagoD);
-                }
-                return acc;
-            }, 0);
+            let totalDivFixas = 0;
+            if (businessUnit === 'PET') {
+                // Para PET, a lógica permanece a mesma ou similar, se houver
+                const mapByDesc = {};
+                (divFix || []).forEach(d => {
+                    if (!d.mes_referencia) mapByDesc[d.nome || d.descricao] = d;
+                });
+                (divFix || []).forEach(d => {
+                    if (d.mes_referencia === mesRef) mapByDesc[d.nome || d.descricao] = d;
+                });
+                totalDivFixas = Object.values(mapByDesc).reduce((acc, d) => {
+                    if (d.ativa !== false && !d.paga) {
+                        const totalD = Number(d.valor || d.valor_mensal) || 0;
+                        const pagoD = Number(d.valor_pago) || 0;
+                        return acc + (totalD - pagoD);
+                    }
+                    return acc;
+                }, 0);
+            } else {
+                // Lógica idêntica ao DividasFixas.jsx
+                const templateData = divFix.filter(d => d.mes_referencia === TEMPLATE_MONTH);
+                const monthData = divFix.filter(d => d.mes_referencia === mesRef);
+                
+                const monthMap = {};
+                (monthData || []).forEach(d => { monthMap[d.descricao] = d; });
+                
+                const merged = templateData.map(template => {
+                    if (monthMap[template.descricao]) {
+                        return monthMap[template.descricao];
+                    }
+                    return { ...template, paga: false };
+                });
+                
+                totalDivFixas = merged.reduce((acc, d) => {
+                    if (d.ativa !== false && !d.paga) {
+                        return acc + (Number(d.valor || d.valor_mensal) || 0);
+                    }
+                    return acc;
+                }, 0);
+            }
 
             // Dynamic Offsets based on the selected period
             const periodKey = `${selectedYear}-${selectedMonth}`;
