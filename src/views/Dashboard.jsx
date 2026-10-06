@@ -437,16 +437,23 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
 
     const fetchDashboardData = async () => {
         try {
-            const { data: allPedidos, error: pedErr } = await supabase
-                .from('pedidos')
-                .select(`
-                    valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, 
-                    clientes(nome),
-                    pedidos_produtos(quantidade, produtos(custo_producao))
-                `)
-                .eq('business_unit', businessUnit);
-
-            if (pedErr) throw pedErr;
+            const allPedidos = [];
+            const PED_PAGE = 1000;
+            for (let from = 0; ; from += PED_PAGE) {
+                const { data: pData, error: pedErr } = await supabase
+                    .from('pedidos')
+                    .select(`
+                        id, valor_total, status, condicoes_pagamento, data_pedido, mes_referencia, numero_parcelas, parcelas_pagas, 
+                        clientes(nome),
+                        pedidos_produtos(quantidade, produtos(custo_producao))
+                    `)
+                    .eq('business_unit', businessUnit)
+                    .order('id', { ascending: false })
+                    .range(from, from + PED_PAGE - 1);
+                if (pedErr) throw pedErr;
+                allPedidos.push(...(pData || []));
+                if (!pData || pData.length < PED_PAGE) break;
+            }
 
             let entradas = 0;
             let totalCustoMes = 0;
@@ -553,18 +560,25 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
             setTopClients(ranking.slice(0, 7).map((item, idx) => ({ ...item, rank: idx + 1 })));
 
             // 2. Despesas (Saídas & Categorias)
-            let allDespesas = [];
-            let queryDesp = supabase.from('despesas').select('valor, data, categoria, meio_pagamento');
-            
-            if (businessUnit === 'PET') {
-                queryDesp = queryDesp.eq('business_unit', 'PET');
-            } else {
-                queryDesp = queryDesp.or('business_unit.eq.PEAD,business_unit.is.null');
+            // O Supabase limita cada resposta a 1000 linhas; sem paginar, as despesas mais
+            // recentes ficavam de fora e deixavam de ser subtraídas do saldo.
+            const allDespesas = [];
+            const PAGE = 1000;
+            for (let from = 0; ; from += PAGE) {
+                let queryDesp = supabase.from('despesas').select('valor, data, categoria, meio_pagamento');
+                if (businessUnit === 'PET') {
+                    queryDesp = queryDesp.eq('business_unit', 'PET');
+                } else {
+                    queryDesp = queryDesp.or('business_unit.eq.PEAD,business_unit.is.null');
+                }
+                const { data: dData, error: dErr } = await queryDesp
+                    .order('data', { ascending: false })
+                    .order('id', { ascending: false })
+                    .range(from, from + PAGE - 1);
+                if (dErr) throw dErr;
+                allDespesas.push(...(dData || []));
+                if (!dData || dData.length < PAGE) break;
             }
-
-            const { data: dData, error: dErr } = await queryDesp;
-            if (dErr) throw dErr;
-            allDespesas = dData || [];
 
             let saidas = 0;
             const categoryMap = {};
