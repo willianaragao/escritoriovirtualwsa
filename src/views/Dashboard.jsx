@@ -716,6 +716,8 @@ const Dashboard = ({ onNavigate, selectedMonth, setSelectedMonth, selectedYear, 
                 } else if (periodKey === '2026-2') { // Março 2026 specific adjustment
                     BANCO_OFFSET = -407.35; 
                     CAIXA_OFFSET = -407;    
+                } else if (periodKey === '2026-9') { // Outubro 2026: R$ 175,00 a mais no caixa (valor recebido que sobrou após exclusão)
+                    CAIXA_OFFSET = -175;
                 }
             }
 
